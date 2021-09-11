@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% if title %}{{ title }}{% else %}Microsub Dashboard{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <main>
+      <a href="#main" class="accessibility_label">Skip to main content</a>
+      <nav>
+        {% if session.get("me") %}
+        <p><a href="/feeds">Microsub Dashboard</a></p>
+        {% else %}
+        <p><a href="/">Microsub Dashboard</a></p>
+        {% endif %}
+        {% if session.get("me") %}
+        <ul>
+          <li>Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</li>
+          <li><a href="/logout">Logout</a></li>
+        </ul>
+        {% else %}
+        <ul>
+          <li><a href="/login">Login</a></li>
+        </ul>
+        {% endif %}
+      </nav>
+      <div id="main">
+        {% block content %}
+        {% endblock %}
+      </div>
+      <p class="accessibility_label"><a href="#main">Go Back to the Top</a></p>
+    </main>
+  </body>
+</html>
