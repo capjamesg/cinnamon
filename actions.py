@@ -212,7 +212,7 @@ def create_follow():
         if cursor.fetchone():
             return jsonify({"error": "You are already following this feed in the {} channel.".format(request.form.get("channel"))}), 400
 
-        cursor.execute("INSERT INTO following VALUES(?, ?)", (request.form.get("channel"), request.form.get("url")))
+        cursor.execute("INSERT INTO following VALUES(?, ?)", (request.form.get("channel"), request.form.get("url").strip()))
 
         return {"type": "feed", "url": request.form.get("url")}
 
@@ -259,13 +259,13 @@ def remove_entry():
         for entry in request.args.getlist("entry"):
             with connection:
                 cursor = connection.cursor()
-                cursor.execute("DELETE FROM timeline WHERE channel = ? AND identifier = ?", (request.args.get("channel"), entry ))
+                cursor.execute("DELETE FROM timeline WHERE channel = ? AND uid = ?", (request.args.get("channel"), entry ))
 
                 return {"type": "remove_entry"}
     else:
         with connection:
             cursor = connection.cursor()
-            cursor.execute("DELETE FROM timeline WHERE channel = ? AND identifier = ?", (request.args.get("channel"), request.args.get("entry") ))
+            cursor.execute("DELETE FROM timeline WHERE channel = ? AND uid = ?", (request.args.get("channel"), request.args.get("entry") ))
 
             return {"type": "remove_entry"}
 
