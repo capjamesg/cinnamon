@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+  <section>
+      <h1>Microsub Server</h1>
+      <p>Welcome to the jamesg.blog Microsub server.</p>
+      {% if session.get("me") %}
+      <section class="green_notification">
+        <p>You are logged in as {{ session.get("me").replace("https://", "").replace("http://", "").strip("/") }}.</p>
+        <p class="error"><a href="/feeds">Click here to go to the Microsub dashboard.</a></p>
+      </section>
+      {% else %}
+        <p>This server is not currently open for registrations.</p>
+        <p><a href="https://jamesg.blog">Go back to my blog</a></p>
+      {% endif %}
+  </section>
+{% endblock %}
