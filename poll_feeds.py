@@ -1,4 +1,3 @@
-from flask import Flask, request, abort, jsonify, send_from_directory
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
@@ -65,13 +64,13 @@ def poll_feeds():
         for s in subscriptions:
             url = s[0]
 
+            print(url)
+
             # get channel uid
             try:
                 channel_uid = cursor.execute("SELECT uid FROM channels WHERE uid = ?;", (s[1],)).fetchone()[0]
             except:
                 continue
-
-            print(url)
 
             # get content type of url
             try:
@@ -115,20 +114,11 @@ def poll_feeds():
                             "text":soup.get_text(),
                             "html": entry.content[0].value
                         }
-                    elif entry.get("description") and "youtube.com" not in url:
+                    elif entry.get("media_content") and len(entry.get("media_content")) > 0 and entry.get("media_content")[0].get("url") and entry.get("media_content")[0].get("type"):
                         soup = BeautifulSoup(entry.description, "html.parser")
-                        content = {
-                            "text":soup.get_text(),
-                            "html": entry.description
-                        }
-                    elif entry.get("content") and "youtube.com" in url:
-                        soup = BeautifulSoup(entry.description, "html.parser")
-                        # get yt:videoid
-                        youtube_videoid = soup.find("yt:videoid")
-                        title = soup.find("title")
                         content = {
                             "text": soup.get_text(),
-                            "html": "<iframe src='{}'></iframe><p>{}</p>".format(youtube_videoid, title)
+                            "html": "<audio controls><source src='" + entry.media_content[0].get("url") + "' type='" + entry.media_content[0].get("type") + "'></audio><p>" + soup.get_text() + "</p>"
                         }
                     elif entry.get("title") and entry.get("link"):
                         # get feed author
@@ -165,7 +155,8 @@ def poll_feeds():
                         "type": "entry",
                         "author": author,
                         "published": published,
-                        "content": content
+                        "content": content,
+                        "post-type": "entry"
                     }
 
                     published = published.split("T")[0]

@@ -4,11 +4,12 @@ from indieauth import requires_indieauth
 import requests
 from actions import *
 from config import *
+import os
 
 app = Flask(__name__)
 
 # set secret key
-app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+app.secret_key = os.urandom(24)
 app.config["TOKEN_ENDPOINT"] = "https://tokens.indieauth.com/token"
 app.config["ME"] = "https://jamesg.blog"
 
@@ -60,6 +61,18 @@ def home():
     else:
         return jsonify({"error": "invalid action"}), 400
 
+@app.route("/channels")
+@requires_indieauth
+def dashboard():
+    connection = sqlite3.connect("microsub.db")
+
+    with connection:
+        cursor = connection.cursor()
+
+        all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
+
+        return render_template("dashboard.html", title="Microsub Dashboard", channels=all_channels)
+
 @app.route("/feeds", methods=["GET", "POST"])
 @requires_indieauth
 def feed_list():
@@ -93,7 +106,7 @@ def feed_list():
 
         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
 
-        return render_template("dashboard.html", title="Microsub Dashboard", channels=all_channels)
+        return render_template("feed_management.html", title="Feed Management | Microsub Dashboard", channels=all_channels)
 
 @app.route("/reorder", methods=["POST"])
 @requires_indieauth
@@ -112,9 +125,9 @@ def reorder_channels_view():
         else:
             flash(r.json()["error"])
 
-        return redirect("/feeds")
+        return redirect("/channels")
     else:
-        return redirect("/feeds")
+        return redirect("/channels")
 
 @app.route("/create-channel", methods=["POST"])
 @requires_indieauth
@@ -132,9 +145,9 @@ def create_channel_view():
         else:
             flash(r.json()["error"])
 
-        return redirect("/feeds")
+        return redirect("/channels")
     else:
-        return redirect("/feeds")
+        return redirect("/channels")
 
 @app.route("/delete-channel", methods=["POST"])
 @requires_indieauth
@@ -153,9 +166,9 @@ def delete_channel_view():
         else:
             flash(r.json()["error"])
 
-        return redirect("/feeds")
+        return redirect("/channels")
     else:
-        return redirect("/feeds")
+        return redirect("/channels")
 
 @app.route("/unfollow", methods=["POST"])
 @requires_indieauth
@@ -181,7 +194,7 @@ def unfollow_view():
 @app.route("/login")
 def login():
     if session.get("me"):
-        return redirect("/feeds")
+        return redirect("/channels")
 
     return render_template("auth.html", title="Microsub Dashboard Login")
 
@@ -236,22 +249,29 @@ def discover_feed():
     # check for presence of mf2 hfeed
     h_feed = soup.find_all(class_="h-feed")
 
+    feeds = []
+
     if soup.find("link", rel="alternate", type="application/atom+xml"):
+        feeds.append(soup.find("link", rel="alternate", type="application/atom+xml").get("href"))
         flash("Atom feed found at {}".format(url + soup.find("link", rel="alternate", type="application/atom+xml")["href"]))
-        return redirect("/feeds")
-    elif soup.find("link", rel="alternate", type="application/rss+xml"):
+    if soup.find("link", rel="alternate", type="application/rss+xml"):
+        feeds.append(soup.find("link", rel="alternate", type="application/rss+xml").get("href"))
         flash("RSS feed found at {}".format(url + soup.find("link", rel="alternate", type="application/rss+xml")["href"]))
-        return redirect("/feeds")
-    elif soup.find("link", rel="feed", type="text/html"):
+    if soup.find("link", rel="feed", type="text/html"):
         # used for mircoformats rel=feed discovery
+        feeds.append(soup.find("link", rel="feed", type="text/html").get("href"))
         flash("h-feed found at {}".format(url + soup.find("link", rel="feed", type="text/html")["href"]))
-        return redirect("/feeds")
-    elif h_feed:
-        flash("h-feed found at {}".format(url + soup.find("link", rel="alternate", type="application/atom+xml")["href"]))
-        return redirect("/feeds")
-    else:
+
+    if h_feed and len(h_feed) > 0:
+        feeds.append(url)
+        flash("h-feed found at {}".format(url))
+
+    if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
-        return redirect("/feeds")
+
+    print(feeds)
+    
+    return redirect("/feeds")
 
 @app.route("/channel/<id>", methods=["GET", "POST"])
 @requires_indieauth
