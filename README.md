@@ -16,6 +16,10 @@ My Microsub server currently supports:
 
 This project is in active development. The entire Micropub specification is not yet incorporated into this project.
 
+## Screenshot
+
+![Microsub channel list](screenshot.png)
+
 ## Getting Started
 
 To use this Microsub server for yourself, please run the following command:
