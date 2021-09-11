@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+  <section>
+      <h1>Microsub Dashboard</h1>
+      <p>Sign in is powered by IndieAuth which means you can log in to the Microsub dashboard with your domain name.</p>
+      <p>Enter your domain name below to log in to the dashboard.</p>
+      <p>Only approved domains can sign in with IndieAuth below.</p>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+          <p class="error">
+              <em>{{ messages[0] }}</em>
+          </p>
+      {% endif %}
+      {% endwith %}
+      <form action="https://indieauth.com/auth" method="GET">
+        <label for="indie_auth_url">Web Address:</label><br>
+        <input id="indie_auth_url" type="text" name="me" placeholder="yourdomain.com" /><br>
+        <input type="submit" value="Sign In" />
+        <input type="hidden" name="client_id" value="https://microsub.jamesg.blog/" />
+        <input type="hidden" name="redirect_uri" value="https://microsub.jamesg.blog/callback" />
+        <input type="hidden" name="scope" value="create read update follow channels profile" />
+      </form>
+  </section>
+{% endblock %}
