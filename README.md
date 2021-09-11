@@ -24,11 +24,26 @@ To use this Microsub server for yourself, please run the following command:
 
 This command will install the dependencies you need to run the Microsub server.
 
+Next, you need to set up the database for the server. You can do this using the following command:
+
+    python3 seed.py
+
+Now that you have set up the datasbase, you are ready to run the Microsub server.
+
 Execute this command to run the server:
 
     python3 microsub.py
 
-## File definitions
+## Dependencies
+
+This project relies on the following libraries:
+
+- BeautifulSoup (bs4)
+- mf2py
+- feedparser
+- flask-indieauth
+
+## File Definitions
 
 Here is the structure of this project:
 
