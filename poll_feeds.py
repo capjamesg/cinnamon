@@ -94,8 +94,6 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
     else:
         content = {}
 
-    print(entry)
-
     if entry.get("published"):
         month_with_padded_zero = str(entry.published_parsed.tm_mon).zfill(2)
         day_with_padded_zero = str(entry.published_parsed.tm_mday).zfill(2)
@@ -139,9 +137,7 @@ def poll_feeds():
         for s in subscriptions:
             url = s[0]
 
-            print(url)
-
-            url = "https://rubenerd.com/feed/"
+            print("polling " + url)
 
             # get channel uid
             try:
