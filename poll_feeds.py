@@ -21,7 +21,7 @@ def process_hfeed(url, cursor, channel_uid):
     for item in mf2_raw["items"]:
         if item.get("type") and item.get("type")[0] == "h-feed":
             for child in item["children"]:
-                jf2 = to_jf2(child)
+                jf2 = microformats2.to_jf2(child)
 
                 if hcard:
                     jf2["author"] = {
@@ -48,7 +48,7 @@ def process_hfeed(url, cursor, channel_uid):
 
                 ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, ))
+                cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, ))
 
 def process_xml_feed(entry, feed, url, cursor, channel_uid):
     if entry.get("author"):
@@ -73,17 +73,11 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
             "photo": "https://" + url.replace("https://", "").replace("http://", "").split("/")[0] + "/favicon.ico"
         }
 
-    if entry.get("content") and "youtube.com" not in url:
+    if entry.get("content"):
         soup = BeautifulSoup(entry.content[0].value, "html.parser")
         content = {
             "text":soup.get_text(),
             "html": entry.content[0].value
-        }
-    elif entry.get("media_content") and len(entry.get("media_content")) > 0 and entry.get("media_content")[0].get("url") and entry.get("media_content")[0].get("type"):
-        soup = BeautifulSoup(entry.description, "html.parser")
-        content = {
-            "text": soup.get_text(),
-            "html": "<audio controls><source src='" + entry.media_content[0].get("url") + "' type='" + entry.media_content[0].get("type") + "'></audio><p>" + soup.get_text() + "</p>"
         }
     elif entry.get("title") and entry.get("link"):
         # get feed author
@@ -99,6 +93,8 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
         }
     else:
         content = {}
+
+    print(entry)
 
     if entry.get("published"):
         month_with_padded_zero = str(entry.published_parsed.tm_mon).zfill(2)
@@ -121,8 +117,12 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
         "author": author,
         "published": published,
         "content": content,
-        "post-type": "entry"
+        "post-type": "entry",
+        "name": entry.title,
     }
+
+    if entry.get("media_content") and len(entry.get("media_content")) > 0 and entry.get("media_content")[0].get("url") and entry.get("media_content")[0].get("type"):
+        result["video"] = entry.media_content[0].get("url")
 
     published = published.split("T")[0]
 
@@ -140,6 +140,8 @@ def poll_feeds():
             url = s[0]
 
             print(url)
+
+            url = "https://rubenerd.com/feed/"
 
             # get channel uid
             try:
@@ -168,9 +170,6 @@ def poll_feeds():
 
                 last_modified = feed.get("modified_parsed", None)
 
-                print(last_modified)
-                print(datetime.datetime.now() - datetime.timedelta(hours=12))
-
                 if last_modified and datetime.datetime.fromtimestamp(mktime(last_modified)) < datetime.datetime.now() - datetime.timedelta(hours=12):
                     print("{} has not been modified in the last 12 hours, skipping".format(url))
                     continue
@@ -194,7 +193,7 @@ def poll_feeds():
 
                     ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, ))
+                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, ))
             else:
                 process_hfeed(url, cursor, channel_uid)
 

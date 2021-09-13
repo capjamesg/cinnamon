@@ -24,11 +24,11 @@ def get_timeline():
         cursor = connection.cursor()
 
         if not after and not before:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? ORDER BY date DESC LIMIT 20;", (channel,)).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND hidden = 0 ORDER BY date DESC LIMIT 20;", (channel,)).fetchall()
         elif before and not after:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND date < ? ORDER BY date DESC LIMIT 20;", (channel, int(before), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;", (channel, int(before), )).fetchall()
         else:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND date < ? ORDER BY date DESC LIMIT 20;", (channel, int(after), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;", (channel, int(after), )).fetchall()
 
     items = [[json.loads(item[1]), item[3], item[5]] for item in item_list]
     
@@ -66,8 +66,8 @@ def mark_as_read():
     else:
         read = "unread"
 
-    if request.form.getlist("entry"):
-        for entry in request.form.getlist("entry"):
+    if request.form.getlist("entry[]"):
+        for entry in request.form.getlist("entry[]"):
             with connection:
                 cursor = connection.cursor()
                 cursor.execute("UPDATE timeline SET read_status = ? WHERE uid = ?", (read, entry, ))
@@ -178,11 +178,10 @@ def delete_channel():
 
     with connection:
         cursor = connection.cursor()
-        get_channel = cursor.execute("SELECT channel FROM channels WHERE uid = ?", (request.form.get("channel"),)).fetchone()
 
         cursor.execute("DELETE FROM channels WHERE uid = ?", (request.form.get("channel"),))
 
-        return jsonify({"channel": get_channel[0]}), 200
+        return jsonify({"message": "channel deleted"}), 200
 
 def get_follow():
     connection = sqlite3.connect("microsub.db")
@@ -221,7 +220,7 @@ def unfollow():
 
     with connection:
         cursor = connection.cursor()
-        cursor.execute("DELETE FROM following WHERE url = ?", (request.form.get("url"),))
+        cursor.execute("DELETE FROM following WHERE url = ? AND channel = ?", (request.form.get("url"), request.form.get("channel"), ))
 
         return {"type": "unfollow"}
 
@@ -255,17 +254,18 @@ def unmute():
 def remove_entry():
     connection = sqlite3.connect("microsub.db")
 
-    if request.args.getlist("entry"):
-        for entry in request.args.getlist("entry"):
+    if request.args.getlist("entry[]"):
+        for entry in request.args.getlist("entry[]"):
             with connection:
                 cursor = connection.cursor()
-                cursor.execute("DELETE FROM timeline WHERE channel = ? AND uid = ?", (request.args.get("channel"), entry ))
+                cursor.execute("UPDATE timeline SET hidden = 1 WHERE channel = ? AND uid = ?", (request.form.get("channel"), entry ))
 
                 return {"type": "remove_entry"}
     else:
         with connection:
             cursor = connection.cursor()
-            cursor.execute("DELETE FROM timeline WHERE channel = ? AND uid = ?", (request.args.get("channel"), request.args.get("entry") ))
+
+            cursor.execute("UPDATE timeline SET hidden = 1 channel = ? AND uid = ?", (request.form.get("channel"), request.form.get("entry") ))
 
             return {"type": "remove_entry"}
 

@@ -59,7 +59,7 @@ def home():
         else:
             return create_channel()
     else:
-        return jsonify({"error": "invalid action"}), 400
+        return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
 
 @app.route("/channels")
 @requires_indieauth
