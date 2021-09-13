@@ -59,6 +59,10 @@ Here is the structure of this project:
 - microsub.py - The web server code
 - poll_feeds.py - Polls RSS and microformats h-feeds and retrieves data to add to a user timeline
 
+## Muted Users Support
+
+This endpoint does not yet provide support for muting users. This feature is partially implemented in the codebase but not yet stable.
+
 ## License
 
 This project is licensed under the MIT license.

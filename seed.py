@@ -7,7 +7,8 @@ with connection:
 
     cursor.execute("""CREATE TABLE IF NOT EXISTS following(
         channel text,
-        url text
+        url text,
+        etag text
     )
     """)
 
@@ -24,7 +25,8 @@ with connection:
         date integer,
         read_status text,
         url text,
-        uid text
+        uid text,
+        hidden integer
     )
     """)
 
