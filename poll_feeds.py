@@ -94,8 +94,6 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
     else:
         content = {}
 
-    print(entry)
-
     if entry.get("published"):
         month_with_padded_zero = str(entry.published_parsed.tm_mon).zfill(2)
         day_with_padded_zero = str(entry.published_parsed.tm_mday).zfill(2)
@@ -122,7 +120,10 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
     }
 
     if entry.get("media_content") and len(entry.get("media_content")) > 0 and entry.get("media_content")[0].get("url") and entry.get("media_content")[0].get("type"):
-        result["video"] = entry.media_content[0].get("url")
+        if url.startswith("https://www.youtube.com") or url.startswith("http://www.youtube.com"):
+            result["video"] = "https://www.youtube.com/embed/" + entry.media_content[0].get("url").split("/")[-1].split("?")[0]
+        else:
+            result["video"] = entry.media_content[0].get("url")
 
     published = published.split("T")[0]
 
@@ -139,10 +140,6 @@ def poll_feeds():
         for s in subscriptions:
             url = s[0]
 
-            print(url)
-
-            url = "https://rubenerd.com/feed/"
-
             # get channel uid
             try:
                 channel_uid = cursor.execute("SELECT uid FROM channels WHERE uid = ?;", (s[1],)).fetchone()[0]
@@ -154,10 +151,13 @@ def poll_feeds():
                 r = requests.head(url)
             except:
                 continue
+
             if r.headers.get('content-type'):
                 content_type = r.headers['content-type']
             else:
                 content_type = ""
+
+            print("polling " + url)
 
             if "xml" in content_type or ".xml" in url:
                 feed = feedparser.parse(url)

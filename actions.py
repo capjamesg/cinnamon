@@ -1,4 +1,4 @@
-from flask import request, jsonify, session
+from flask import request, jsonify, escape
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
@@ -205,15 +205,18 @@ def create_follow():
     with connection:
         cursor = connection.cursor()
 
+        url = escape(request.form.get("url").strip())
+
         # check if following
-        cursor.execute("SELECT * FROM following WHERE channel = ? AND url = ?", (request.form.get("channel"), request.form.get("url")))
+        cursor.execute("SELECT * FROM following WHERE channel = ? AND url = ?", (request.form.get("channel"), url))
 
         if cursor.fetchone():
             return jsonify({"error": "You are already following this feed in the {} channel.".format(request.form.get("channel"))}), 400
 
-        cursor.execute("INSERT INTO following VALUES(?, ?)", (request.form.get("channel"), request.form.get("url").strip()))
+        # "" empty string is etag which will be populated in poll_feeds.py if available
+        cursor.execute("INSERT INTO following VALUES(?, ?, ?)", (request.form.get("channel"), url, "", ))
 
-        return {"type": "feed", "url": request.form.get("url")}
+        return {"type": "feed", "url": url}
 
 def unfollow():
     connection = sqlite3.connect("microsub.db")
