@@ -25,9 +25,6 @@ def home():
 
     if not action:
         return render_template("index.html")
-
-    print(action, method)
-    print(request.form)
     
     if action == "timeline" and request.method == "GET":
         return get_timeline()
@@ -83,7 +80,7 @@ def feed_list():
             "url": request.form.get("url")
         }
 
-        r = requests.post(URL, data=req)
+        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             connection = sqlite3.connect("microsub.db")
@@ -91,7 +88,7 @@ def feed_list():
             with connection:
                 cursor = connection.cursor()
 
-                get_channel_by_id = cursor.execute("SELECT channel FROM channels WHERE uid = ?", (request.form.get("channel"))).fetchone()
+                get_channel_by_id = cursor.execute("SELECT channel FROM channels WHERE uid = ?", (req["channel"], )).fetchone()
 
                 flash("You are now following {} in the {} channel.".format(request.form.get("url"), get_channel_by_id[0]))
         else:
@@ -118,7 +115,7 @@ def reorder_channels_view():
             "channels": request.form.getlist("channel")
         }
 
-        r = requests.post(URL, data=req)
+        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             flash("Your channels have been reordered.")
@@ -138,7 +135,7 @@ def create_channel_view():
             "name": request.form.get("name")
         }
 
-        r = requests.post(URL, data=req)
+        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             flash("You have created a new channel called {}.".format(request.form.get("name")))
@@ -183,11 +180,9 @@ def unfollow_view():
         r = requests.post(URL, data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
-            flash("You have unfollowed {} in the {} channel.".format(request.form.get("url"), request.form.get("channel")))
+            return jsonify(r.json()), 200
         else:
-            flash(r.json()["error"])
-        # redirect to last url
-        return redirect(request.referrer)
+            return jsonify(r.json()), 400
     else:
         return redirect("/feeds")
 
@@ -268,8 +263,6 @@ def discover_feed():
 
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
-
-    print(feeds)
     
     return redirect("/feeds")
 
@@ -286,8 +279,6 @@ def modify_channel(id):
         }
 
         r = requests.post(URL, data=req, headers={"Authorization": session.get("access_token")})
-
-        print(r.status_code)
 
         if r.status_code == 200:
             flash("The channel was successfully renamed to {}".format(request.form.get("name")))
