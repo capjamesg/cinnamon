@@ -32,16 +32,19 @@ def process_hfeed(url, cursor, channel_uid):
 
                 in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
 
-                parse_date = parse(jf2["published"])
+                if jf2.get("published"):
+                    parse_date = parse(jf2["published"])
 
-                if parse_date:
-                    month_with_padded_zero = str(parse_date.month).zfill(2)
-                    day_with_padded_zero = str(parse_date.day).zfill(2)
-                    date = "{}{}{}".format(parse_date.year, month_with_padded_zero, day_with_padded_zero)
+                    if parse_date:
+                        month_with_padded_zero = str(parse_date.month).zfill(2)
+                        day_with_padded_zero = str(parse_date.day).zfill(2)
+                        date = "{}{}{}".format(parse_date.year, month_with_padded_zero, day_with_padded_zero)
+                    else:
+                        month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
+                        day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
+                        date = "{}{}{}".format(datetime.datetime.now().year, month_with_padded_zero, day_with_padded_zero)
                 else:
-                    month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
-                    day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
-                    date = "{}{}{}".format(datetime.datetime.now().year, month_with_padded_zero, day_with_padded_zero)
+                    date = datetime.datetime.now().strftime("%Y%m%d")
 
                 if len(in_db) > 0:
                     continue
