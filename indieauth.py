@@ -64,14 +64,16 @@ def check_auth(access_token):
     if not access_token:
       current_app.logger.error('No access token.')
       return deny('No access token found.')
+
     request = Request(
       current_app.config['TOKEN_ENDPOINT'],
-      headers={"Authorization" : ("Bearer %s" % access_token)}
+      headers={"Authorization": ("Bearer %s" % access_token)}
     )
     contents = urlopen(request).read().decode('utf-8')
-    token_data = parse_qs(contents)
-    me = token_data['me'][0]
-    client_id = token_data['client_id'][0]
+    token_data = json.loads(contents)
+
+    me = token_data['me']
+    client_id = token_data['client_id']
     if me is None or client_id is None:
         current_app.logger.error("Invalid token [%s]" % contents)
         return deny('Invalid token')
@@ -84,7 +86,7 @@ def check_auth(access_token):
     scope = token_data['scope']
     if not isinstance(scope, str):
         scope = scope[0]
-    valid_scopes = ('post','create', 'read,write')
+    valid_scopes = ('post','create', 'read', 'follow', 'mute', 'block', 'channels')
     scope_ = scope.split()
     scope_valid = any((val in scope_) for val in valid_scopes)
 

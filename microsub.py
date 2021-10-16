@@ -1,21 +1,26 @@
-from flask import Flask, request, jsonify, send_from_directory, session, redirect, flash, render_template
+from flask import Flask, request, jsonify, send_from_directory, session, redirect, flash, render_template, current_app
 import sqlite3
 from indieauth import requires_indieauth
 import requests
 from actions import *
 from config import *
+import hashlib
+import base64
+import string
 import os
 
 app = Flask(__name__)
 
+# read config.py file
+app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
+
 # set secret key
-app.secret_key = os.urandom(24)
-app.config["TOKEN_ENDPOINT"] = "https://tokens.indieauth.com/token"
-app.config["ME"] = "https://jamesg.blog"
+app.secret_key = SECRET_KEY
 
 @app.route("/", methods=["GET", "POST"])
-@requires_indieauth
+# @requires_indieauth
 def home():
+    print(session)
     if request.form:
         action = request.form.get("action")
         method = request.form.get("method")
@@ -186,50 +191,104 @@ def unfollow_view():
     else:
         return redirect("/feeds")
 
-@app.route("/login")
-def login():
-    if session.get("me"):
-        return redirect("/channels")
-
-    return render_template("auth.html", title="Microsub Dashboard Login")
-
-@app.route("/logout")
-@requires_indieauth
-def logout():
-    session.pop("me")
-    return redirect("/login")
-
 @app.route("/callback")
 def indieauth_callback():
     code = request.args.get("code")
+    state = request.args.get("state")
+
+    if state != session.get("state"):
+        flash("Your authentication failed. Please try again.")
+        return redirect("/login")
 
     data = {
         "code": code,
-        "redirect_uri": URL + "callback",
-        "client_id": URL
+        "redirect_uri": CALLBACK_URL,
+        "client_id": CLIENT_ID,
+        "grant_type": "authorization_code",
+        "code_verifier": session["code_verifier"]
     }
 
     headers = {
         "Accept": "application/json"
     }
 
-    r = requests.post("https://tokens.indieauth.com/token", data=data, headers=headers)
-
+    r = requests.post(session.get("token_endpoint"), data=data, headers=headers)
+    
     if r.status_code != 200:
-        flash("Your authentication failed. Please try again.")
+        flash("There was an error with your token endpoint server.")
         return redirect("/login")
 
-    if r.json().get("me") != "https://jamesg.blog/":
+    # remove code verifier from session because the authentication flow has finished
+    session.pop("code_verifier")
+
+    if r.json().get("me").strip("/") != ME.strip("/"):
         flash("Your domain is not allowed to access this website.")
         return redirect("/login")
 
     session["me"] = r.json().get("me")
     session["access_token"] = r.json().get("access_token")
-    session["scope"] = r.json().get("scope")
 
     return redirect("/")
 
+@app.route("/logout")
+@requires_indieauth
+def logout():
+    session.pop("me")
+    session.pop("access_token")
+
+    return redirect("/home")
+
 @app.route("/discover", methods=["POST"])
+def discover_auth_endpoint():
+    domain = request.form.get("me")
+
+    r = requests.get(domain)
+
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    authorization_endpoint = soup.find("link", rel="authorization_endpoint")
+
+    if authorization_endpoint is None:
+        flash("An IndieAuth authorization ndpoint could not be found on your website.")
+        return redirect("/login")
+
+    if not authorization_endpoint.get("href").startswith("https://") and not authorization_endpoint.get("href").startswith("http://"):
+        flash("Your IndieAuth authorization endpoint published on your site must be a full HTTP URL.")
+        return redirect("/login")
+
+    token_endpoint = soup.find("link", rel="token_endpoint")
+
+    if token_endpoint is None:
+        flash("An IndieAuth token ndpoint could not be found on your website.")
+        return redirect("/login")
+
+    if not token_endpoint.get("href").startswith("https://") and not token_endpoint.get("href").startswith("http://"):
+        flash("Your IndieAuth token endpoint published on your site must be a full HTTP URL.")
+        return redirect("/login")
+
+    auth_endpoint = authorization_endpoint["href"]
+
+    random_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
+
+    session["code_verifier"] = random_code
+    session["authorization_endpoint"] = auth_endpoint
+    session["token_endpoint"] = token_endpoint["href"]
+
+    sha256_code = hashlib.sha256(random_code.encode('utf-8')).hexdigest()
+
+    code_challenge = base64.b64encode(sha256_code.encode('utf-8')).decode('utf-8')
+
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+
+    session["state"] = state
+
+    return redirect(auth_endpoint + "?client_id=" + CLIENT_ID + "&redirect_uri=" + CALLBACK_URL + "&scope=read follow mute block channels&response_type=code&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=" + state)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return render_template("auth.html", title="Webmention Dashboard Login")
+
+@app.route("/discover-feed", methods=["POST"])
 @requires_indieauth
 def discover_feed():
     url = request.form.get("url")
