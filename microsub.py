@@ -9,7 +9,7 @@ import base64
 import string
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="")
 
 # read config.py file
 app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
@@ -366,6 +366,10 @@ def method_not_allowed(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template("404.html", title="Server error", error=500), 500
+
+@app.route("/robots.txt")
+def robots():
+    return send_from_directory(app.static_folder, "robots.txt")
 
 if __name__ == "__main__":
     app.run()
