@@ -44,6 +44,14 @@ nav, .button_list {
 	align-items: center;
 	margin: 10px 0;
 }
+.main_content_box {
+	max-width: 35em;
+	background-color: white;
+	border-radius: 10px;
+	border: 1px solid lightgray;
+	padding: 20px;
+	margin: auto;
+}
 button, .random_button {
 	background-color: royalblue;
 	border-radius: 10px;
