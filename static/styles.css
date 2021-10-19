@@ -31,11 +31,20 @@ select {
     padding: 30px;
 	margin-bottom: 15px;
 }
-.notification {
+.notification, .green_notification {
 	border: 3px solid royalblue;
 	border-radius: 10px;
 	background: white;
 	padding: 20px;
+	margin-bottom: 15px;
+}
+.notification {
+	border: 1px solid royalblue;
+}
+.green_notification {
+	border: 1px solid lightgreen;
+	max-width: 35em;
+	margin: auto;
 	margin-bottom: 15px;
 }
 nav, .button_list {

@@ -17,10 +17,21 @@ app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
 # set secret key
 app.secret_key = SECRET_KEY
 
-@app.route("/", methods=["GET", "POST"])
-# @requires_indieauth
+def check_token():
+    check_token = requests.get(TOKEN_ENDPOINT, headers={"Authorization": "Bearer " + session["access_token"]})
+
+    if check_token.status_code != 200 or (check_token.json().get("me") and check_token.json()["me"] != ME):
+        return False
+
+    return True
+
+@app.route("/")
+def index():
+    return render_template("index.html", title="Home | Microsub Endpoint")
+
+@app.route("/endpoint", methods=["GET", "POST"])
+@requires_indieauth
 def home():
-    print(session)
     if request.form:
         action = request.form.get("action")
         method = request.form.get("method")
@@ -29,7 +40,7 @@ def home():
         method = request.args.get("method")
 
     if not action:
-        return render_template("index.html")
+        return jsonify({"error": "No action specified."}), 400
     
     if action == "timeline" and request.method == "GET":
         return get_timeline()
@@ -64,8 +75,12 @@ def home():
         return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
 
 @app.route("/channels")
-@requires_indieauth
 def dashboard():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     connection = sqlite3.connect("microsub.db")
 
     with connection:
@@ -76,8 +91,12 @@ def dashboard():
         return render_template("dashboard.html", title="Microsub Dashboard", channels=all_channels)
 
 @app.route("/feeds", methods=["GET", "POST"])
-@requires_indieauth
 def feed_list():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     if request.method == "POST":
         req = {
             "action": "follow",
@@ -111,8 +130,12 @@ def feed_list():
         return render_template("feed_management.html", title="Feed Management | Microsub Dashboard", channels=all_channels)
 
 @app.route("/reorder", methods=["POST"])
-@requires_indieauth
 def reorder_channels_view():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     if request.form.get("channel"):
         req = {
             "action": "channels",
@@ -132,8 +155,12 @@ def reorder_channels_view():
         return redirect("/channels")
 
 @app.route("/create-channel", methods=["POST"])
-@requires_indieauth
 def create_channel_view():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     if request.form.get("name"):
         req = {
             "action": "channels",
@@ -152,8 +179,12 @@ def create_channel_view():
         return redirect("/channels")
 
 @app.route("/delete-channel", methods=["POST"])
-@requires_indieauth
 def delete_channel_view():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     if request.form.get("channel"):
         req = {
             "action": "channels",
@@ -173,8 +204,12 @@ def delete_channel_view():
         return redirect("/channels")
 
 @app.route("/unfollow", methods=["POST"])
-@requires_indieauth
 def unfollow_view():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     if request.form.get("channel") and request.form.get("url"):
         req = {
             "action": "unfollow",
@@ -231,15 +266,19 @@ def indieauth_callback():
     return redirect("/")
 
 @app.route("/logout")
-@requires_indieauth
 def logout():
     session.pop("me")
     session.pop("access_token")
 
-    return redirect("/home")
+    return redirect("/login")
 
 @app.route("/discover", methods=["POST"])
 def discover_auth_endpoint():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     domain = request.form.get("me")
 
     r = requests.get(domain)
@@ -289,8 +328,12 @@ def login():
     return render_template("auth.html", title="Webmention Dashboard Login")
 
 @app.route("/discover-feed", methods=["POST"])
-@requires_indieauth
 def discover_feed():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     url = request.form.get("url")
 
     if not url.startswith("http://") and not url.startswith("https://"):
@@ -326,8 +369,12 @@ def discover_feed():
     return redirect("/feeds")
 
 @app.route("/channel/<id>", methods=["GET", "POST"])
-@requires_indieauth
 def modify_channel(id):
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
     connection = sqlite3.connect("microsub.db")
 
     if request.method == "POST":
@@ -370,6 +417,10 @@ def server_error(e):
 @app.route("/robots.txt")
 def robots():
     return send_from_directory(app.static_folder, "robots.txt")
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(app.static_folder, "favicon.ico")
 
 if __name__ == "__main__":
     app.run()
