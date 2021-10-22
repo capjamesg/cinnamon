@@ -1,0 +1,26 @@
+<li class="unread">
+    {% if w.get("name") %}
+    <h3><a href='{{ w["url"] }}'>{{ w["name"] }}</a></h3>
+    {% elif w.get("author") and w.get("author").get("name") %}
+    <h3><a href='{{ w["url"] }}'>Post by {{ w["author"]["name"] }}</a></h3>
+    {% endif %}
+    {% if w.get("published") %}
+    <p>Published on {{ w["published"] | strftime }}.</p>
+    {% endif %}
+    {% if w.get("photo") %}
+    <img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' />
+    {% endif %}
+    {% if w.get("content") and w["content"].get("text") %}
+    {% capture content %}{{ w["content"]["text"].split(" ")[:75] }}{% endcapture %}
+    <p>{{ " ".join(content) }}</p>{% if content | length > 75 %}...{% endif %}</p>
+    {% else %}
+    <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
+    {% endif %}
+    <p>
+        <a href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
+        <a href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
+        <a href="https://micropub.jamesg.blog/post?type=repost&repost-of={{ w['url'] }}" class="reaction">Repost 🔁</a>
+        <a href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
+        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
+    </p>
+</li>

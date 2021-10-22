@@ -2,6 +2,8 @@ from flask import request, jsonify, escape
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
+import feedparser
+import poll_feeds
 import random
 import string
 import json
@@ -23,12 +25,19 @@ def get_timeline():
     with connection:
         cursor = connection.cursor()
 
+        channel_arg = "WHERE channel = ?"
+        channel_tuple = (channel,)
+
+        if channel == "all":
+            channel_arg = ""
+            channel_tuple = ()
+
         if not after and not before:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND hidden = 0 ORDER BY date DESC LIMIT 20;", (channel,)).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline {} AND hidden = 0 ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple ).fetchall()
         elif before and not after:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;", (channel, int(before), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline {} AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(before), )).fetchall()
         else:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE channel = ? AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;", (channel, int(after), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline {} AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(after), )).fetchall()
 
     items = [[json.loads(item[1]), item[3], item[5]] for item in item_list]
     
@@ -120,6 +129,69 @@ def discover_urls():
                 elif item.name == "link" and item.get("rel") and item["rel"][0] == l:
                     endpoints[l] = item.get("href")
                     break
+
+def preview():
+    url = request.form.get("url")
+
+    r = requests.get(url)
+
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    # get content type of url
+    try:
+        r = requests.head(url)
+    except:
+        return jsonify({"error": "invalid url"}), 400
+
+    if r.headers.get('content-type'):
+        content_type = r.headers['content-type']
+    else:
+        content_type = ""
+
+    items_to_return = []
+
+    if "xml" in content_type or ".xml" in url:
+        feed = feedparser.parse(url)
+
+        for entry in feed.entries:
+            result, _ = poll_feeds.process_xml_feed(entry, feed, url)
+
+            items_to_return.append(result)
+    else:
+        results = poll_feeds.process_hfeed(url, add_to_db=False)
+
+        for result in results:
+            items_to_return.append(result)
+
+        content_type = "h-feed"
+
+    feed = {
+        "url": url,
+        "feed_type": content_type
+    }
+
+    # get homepage favicon
+    url_domain = url.split("/")[2]
+    url_protocol = url.split("/")[0]
+
+    url_to_check = url_protocol + "//" + url_domain
+
+    soup = BeautifulSoup(requests.get(url_to_check).text, "html.parser")
+
+    favicon = soup.find("link", rel="shortcut icon")
+
+    if favicon:
+        feed["icon"] = favicon.get("href")
+
+    if soup.find("title"):
+        feed["title"] = soup.find("title").text
+
+    result = {
+        "feed": feed,
+        "items": items_to_return
+    }
+
+    return jsonify(result), 200
 
 def get_channels():
     connection = sqlite3.connect("microsub.db")
@@ -216,6 +288,40 @@ def create_follow():
         # "" empty string is etag which will be populated in poll_feeds.py if available
         cursor.execute("INSERT INTO following VALUES(?, ?, ?)", (request.form.get("channel"), url, "", ))
 
+        # discover websub_hub
+
+        r = requests.get(url)
+
+        # check link headers for websub hub
+
+        link_header = r.headers.get("link")
+
+        hub = None
+
+        if link_header:
+            # parse link header
+            parsed_links = requests.utils.parse_header_links(link_header.rstrip('>').replace('>,<', ',<'))
+
+            for link in parsed_links:
+                if "rel" in link and "hub" in link["rel"]:
+                    hub = link["url"]
+                    break
+
+        if hub == None:
+            soup = BeautifulSoup(r.text, "html.parser")
+
+            hub_link_tags = soup.find_all("link", rel="hub")
+
+            if len(hub_link_tags) > 0:
+                hub = hub_link_tags[0].get("href")
+
+        if hub != None:
+            random_string = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
+
+            r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": "https://microsub.jamesg.blog/websub_callback})
+
+            cursor.execute("INSERT INTO websub_subscriptions (?, ?);", (url, random_string))
+
         return {"type": "feed", "url": url}
 
 def unfollow():
@@ -268,7 +374,7 @@ def remove_entry():
         with connection:
             cursor = connection.cursor()
 
-            cursor.execute("UPDATE timeline SET hidden = 1 channel = ? AND uid = ?", (request.form.get("channel"), request.form.get("entry") ))
+            cursor.execute("UPDATE timeline SET hidden = 1 WHERE channel = ? AND uid = ?", (request.form.get("channel"), request.form.get("entry") ))
 
             return {"type": "remove_entry"}
 

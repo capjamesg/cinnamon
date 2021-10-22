@@ -55,21 +55,27 @@ nav, .button_list {
 }
 .main_content_box {
 	max-width: 35em;
+}
+.content_box, .main_content_box {
 	background-color: white;
 	border-radius: 10px;
 	border: 1px solid lightgray;
 	padding: 20px;
 	margin: auto;
 }
-button, .random_button {
+button {
 	background-color: royalblue;
 	border-radius: 10px;
 	padding: 10px;
 	display: inline-block;
-}
-.random_button a, button {
+	margin-bottom: 10px;
+	display: block;
 	color: white;
 	border: none;
+	font-size: 16px;
+}
+.unread {
+	background-color: #f7f7f7 !important;
 }
 .random_button:hover {
 	cursor: pointer;
@@ -92,6 +98,7 @@ footer ul {
 ul {
 	list-style-type: none;
 	padding-left: 0;
+	margin-bottom: 0;
 }
 .announcement p {
 	margin-left: 5%;
@@ -122,22 +129,26 @@ h1 {
 }
 img {
 	border-radius: 10px;
+	display: block;
 }
 footer {
 	text-align: center;
 	margin-top: 5px;
 }
 .flex_left_home {
-	flex: 0 60%;
+	flex: 0 20%;
 }
 .flex_right_home {
-	flex: 1 40%;
+	flex: 1 50%;
 }
 div > .language-plaintext{
 	background-color: white;
 	border: 4px orange dotted;
 	border-radius: 3px;
 	padding: 10px;
+}
+img {
+	max-width: 100%;
 }
 pre {
     white-space: pre-wrap;
@@ -151,12 +162,17 @@ pre {
 		float: none !important;
 		margin-left: 0;
 	}
+
 	.flex_left_home, .flex_right_home {
 		flex: 0 100%;
 	}
 
 	nav li {
 		margin-bottom: 10px;
+	}
+	
+	textarea {
+		width: 100%;
 	}
 }
 input {
@@ -357,4 +373,50 @@ ol {
 }
 .active_tab {
   font-weight: 600;
+}
+.reaction {
+	padding: 10px;
+	margin-left: 5px;
+	border-radius: 10px;
+	border: 1px solid lightgrey;
+}
+.notification {
+	padding: 5px;
+	margin-left: 5px;
+	border-radius: 10px;
+	border: 1px solid lightgreen;
+	text-align: center;
+	background-color: white;
+}
+textarea {
+	padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: inline-block;
+    text-align: left;
+    min-width: 50%;
+    font-size: 1.0625rem;
+	box-sizing: border-box;
+}
+aside, .feed li {
+	padding: 10px;
+	background-color: white;
+	border-radius: 10px;
+	margin-right: 10px;
+	border: 1px solid lightgrey;
+	max-height: 100vh;
+    height: 100%;
+	margin-bottom: 20px;
+}
+ul {
+	margin-top: 0;
+}
+aside li {
+	margin-bottom: 10px;
+}
+.reaction a {
+	border-bottom: none;
+}
+.reaction a:focus {
+	border-bottom: none !important;
 }

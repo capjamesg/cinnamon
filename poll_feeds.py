@@ -11,29 +11,79 @@ from dateutil.parser import parse
 import microformats2
 from time import mktime
 
-def process_hfeed(url, cursor, channel_uid):
+def canonicalize_url(url, domain):
+    if url.startswith("http://") or url.startswith("https://"):
+        return url
+    elif url.startswith("//"):
+        return "https:" + domain.strip() + "/" + url
+    elif url.startswith("/"):
+        return "https://" + domain.strip() + "/" + url
+    else:
+        return "https://" + url
+
+def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
     r = requests.get(url)
 
     mf2_raw = mf2py.parse(r.text)
 
     hcard = [item for item in mf2_raw['items'] if item['type'][0] == 'h-card']
 
+    results = []
+
     for item in mf2_raw["items"]:
         if item.get("type") and item.get("type")[0] == "h-feed":
             for child in item["children"]:
-                jf2 = microformats2.to_jf2(child)
+                
+                jf2 = {
+                    "type": "entry",
+                    "url": canonicalize_url(child["properties"]["url"][0], url.split("/")[2]),
+                }
+
+                # check if in timeline before proceeding
+                # we don't want to add duplicate records to the timeline
+                # without this precaution, any post without a published date will resurface at the top of every feed
+
+                # in_timeline = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
+
+                # if len(in_timeline) > 0:
+                #     continue
 
                 if hcard:
                     jf2["author"] = {
                         "type": "card",
-                        "name": hcard[0]["properties"]["name"][0],
-                        "url": hcard[0]["properties"]["url"][0]
+                        "name": canonicalize_url(hcard[0]["properties"]["name"][0], url.split("/")[2]),
+                        "url": canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2]) 
                     }
 
-                in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
+                if add_to_db == True:
+                    in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
 
-                if jf2.get("published"):
-                    parse_date = parse(jf2["published"])
+                    if len(in_db) > 0:
+                        continue
+
+                if mf2_raw["properties"].get("photo"):
+                    jf2["photo"] = canonicalize_url(mf2_raw["properties"].get("photo")[0], url.split("/")[2]) 
+
+                if child["properties"].get("category"):
+                    jf2["category"] = child["properties"].get("category")[0]
+
+                if child["properties"].get("name"):
+                    jf2["name"] = child["properties"].get("name")[0]
+
+                if child["properties"].get("summary"):
+                    jf2["content"] = {
+                        "text": BeautifulSoup(child["properties"].get("summary")[0]).get_text(),
+                        "html": child["properties"].get("summary")[0]
+                    }
+
+                wm_properties = ["in-reply-to", "like-of", "bookmark-of", "repost-of"]
+
+                for w in wm_properties:
+                    if child["properties"].get(w):
+                        jf2[w] = child["properties"].get(w)[0]
+
+                if child.get("published"):
+                    parse_date = parse(child["published"][0])
 
                     if parse_date:
                         month_with_padded_zero = str(parse_date.month).zfill(2)
@@ -46,41 +96,67 @@ def process_hfeed(url, cursor, channel_uid):
                 else:
                     date = datetime.datetime.now().strftime("%Y%m%d")
 
-                if len(in_db) > 0:
-                    continue
-
                 ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, ))
+                jf2["published"] = date
 
-def process_xml_feed(entry, feed, url, cursor, channel_uid):
+                if add_to_db == True:
+                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, ))
+                
+                results.append(jf2)
+
+    return results
+
+def process_xml_feed(entry, feed, url):
     if entry.get("author"):
         author = {
             "type": "card",
             "name": entry.author,
-            "url": entry.author_detail,
-            "photo": "https://" + url.replace("https://", "").replace("http://", "").split("/")[0] + "/favicon.ico"
+            "url": entry.author_detail
         }
     elif feed.get("author"):
         author = {
             "type": "card",
             "name": feed.feed.author,
-            "url": feed.feed.author_detail,
-            "photo": "https://" + url.replace("https://", "").replace("http://", "").split("/")[0] + "/favicon.ico"
+            "url": feed.feed.author_detail
         }
     else:
         author = {
             "type": "card",
             "name": feed.feed.get("title"),
-            "url": feed.feed.get("link"),
-            "photo": "https://" + url.replace("https://", "").replace("http://", "").split("/")[0] + "/favicon.ico"
+            "url": feed.feed.get("link")
         }
+
+    # get home page
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    # get favicon
+    favicon = soup.find("link", rel="shortcut icon")
+
+    if favicon:
+        author["photo"] = favicon["href"]
 
     if entry.get("content"):
         soup = BeautifulSoup(entry.content[0].value, "html.parser")
+
         content = {
             "text":soup.get_text(),
             "html": entry.content[0].value
+        }
+    elif entry.get("summary"):
+        soup = BeautifulSoup(entry.summary, "html.parser")
+
+        content = {
+            "text":soup.get_text(),
+            "html": entry.summary
+        }
+    elif entry.get("description"):
+        soup = BeautifulSoup(entry.description, "html.parser")
+
+        content = {
+            "text":soup.get_text(),
+            "html": entry.description
         }
     elif entry.get("title") and entry.get("link"):
         # get feed author
@@ -121,6 +197,44 @@ def process_xml_feed(entry, feed, url, cursor, channel_uid):
         "post-type": "entry",
         "name": entry.title,
     }
+
+    if entry.get("link"):
+        retrieve_post = requests.get(entry.link)
+
+        parse_post = BeautifulSoup(retrieve_post.text, "html.parser")
+
+        # get og_image tag
+        og_image = parse_post.find("meta", property="og:image")
+
+        if og_image:
+            result["photo"] = og_image["content"]
+
+        if not result.get("photo"):
+            # we will remove header and nav tags so that we are more likely to find a "featured image" for the post
+            # remove <header> tags
+            for header in parse_post.find_all("header"):
+                header.decompose()
+
+            # remove <nav> tags
+            for nav in parse_post.find_all("nav"):
+                nav.decompose()
+
+            # get all images
+            all_images = parse_post.find_all("img")
+            
+            if all_images:
+                result["photo"] = all_images[0]["src"]
+
+    if content == {} and soup.find("meta", property="description"):
+        result["content"] = {
+            "text": soup.find("meta", property="description")["content"],
+            "html": soup.find("meta", property="description")["content"]
+        }
+    elif content == {} and soup.find("meta", property="og:description"):
+        result["content"] = {
+            "text": soup.find("meta", property="og:description")["content"],
+            "html": soup.find("meta", property="og:description")["content"]
+        }
 
     if entry.get("media_content") and len(entry.get("media_content")) > 0 and entry.get("media_content")[0].get("url") and entry.get("media_content")[0].get("type"):
         if url.startswith("https://www.youtube.com") or url.startswith("http://www.youtube.com"):
@@ -167,7 +281,7 @@ def poll_feeds():
 
                 etag = feed.get("etag", "")
 
-                if etag == s[2]:
+                if etag != "" and etag == s[2]:
                     print("{} has not changed since last poll, skipping".format(url))
                     continue
 
@@ -181,7 +295,7 @@ def poll_feeds():
                 cursor.execute("UPDATE following SET etag = ? WHERE url = ?;", (etag, url))
 
                 for entry in feed.entries:
-                    result, published = process_xml_feed(entry, feed, url, cursor, channel_uid)
+                    result, published = process_xml_feed(entry, feed, url)
 
                     if entry.get("link"):
                         result["url"] = entry.link
@@ -202,4 +316,5 @@ def poll_feeds():
 
     print("polled all subscriptions")
 
-poll_feeds()
+if __name__ == "__main__":
+    poll_feeds()

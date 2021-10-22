@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="main_content_box">
+    <h1>Subscribe to {{ feed["feed"]["title"] }}</h1>
+    {% if feed["feed"].get("icon") %}
+        <img src="{{ feed["feed"].get("icon") }}" alt="{{ feed["feed"].get("title") }} feed icon" />
+    {% endif %}
+    <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
+    <form action="/feeds" method="POST">
+        <input type="hidden" name="channel" id="channel" value="{{ channel_id }}" />
+        <input type="hidden" name="url" id="url" value="{{ feed["feed"]["url"] }}" />
+        <input type="hidden" name="action" id="action" value="follow" />
+        <input type="submit" value="Subscribe" />
+    </form>
+    <h2>Most recent entries</h2>
+    {% if feed.get("items") | length > 0 %}
+    <ul class="feed">
+      {% for w in feed.get("items") %}
+      {% includes "feed_item.html" %}
+      {% endfor %}
+    </ul>
+    {% else %}
+        <p>This feed does not currently have any entries.</p>
+    {% endif %}
+</section>
+{% endblock %}
