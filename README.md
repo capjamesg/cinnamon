@@ -1,10 +1,10 @@
-# Microsub Server
+# Microsub
 
-This repository contains the code that powers my personal Microsub server.
+This repository contains the code that powers my personal Microsub client and server.
 
-Microsub is an IndieWeb specification currently in development that separates the tasks of processing feeds and presenting feeds so that servers and feed readers can be developed independently but work together.
+[Microsub](https://indieweb.org/Microsub) is an IndieWeb specification currently in development that separates the tasks of processing feeds and presenting feeds so that servers and feed readers can be developed independently but work together.
 
-My Microsub server currently supports:
+The Microsub server currently supports:
 
 - Creating channels
 - Updating channel names
@@ -16,9 +16,15 @@ My Microsub server currently supports:
 
 This project is in active development. The entire Micropub specification is not yet incorporated into this project.
 
-## Screenshot
+## Screenshots
+
+### Subscription Management (Server)
 
 ![Microsub channel list](screenshot.png)
+
+### Feed Reader (Client)
+
+![Microsub feed](feed.png)
 
 ## Getting Started
 

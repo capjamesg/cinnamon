@@ -7,6 +7,8 @@
 
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
 
+    <link rel="webmention" href="https://webmention.jamesg.blog/endpoint" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
@@ -14,14 +16,16 @@
       <a href="#main" class="accessibility_label">Skip to main content</a>
       <nav>
         {% if session.get("me") %}
-        <p><a href="/channels">Microsub Dashboard</a></p>
+        <p><a href="/reader/all">Microsub Reader</a></p>
         {% else %}
-        <p><a href="/">Microsub Dashboard</a></p>
+        <p><a href="/">Microsub Reader</a></p>
         {% endif %}
         {% if session.get("me") %}
         <ul>
           <li>Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</li>
-          <li><a href="/feeds">Feed Management</a></li>
+          <li><a href="/reader/all">Home</a></li>
+          <li><a href="/channels">Channels</a></li>
+          <li><a href="/feeds">Feeds</a></li>
           <li><a href="/logout">Logout</a></li>
         </ul>
         {% else %}
