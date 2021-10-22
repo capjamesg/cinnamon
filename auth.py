@@ -98,7 +98,7 @@ def discover_auth_endpoint():
         flash("A Microsub server could not be found on your website. Please add a Microsub server to your site before proceeding.")
         return redirect("/login")
 
-    session["server_url"] = microsub_endpoint.get("href").strip("/")
+    session["server_url"] = microsub_endpoint.get("href")
 
     random_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
