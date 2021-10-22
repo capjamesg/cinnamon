@@ -14,7 +14,7 @@ def reader_redirect():
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token()
-
+    
     if auth_result == False:
         return redirect("/login")
     headers = {
@@ -27,20 +27,20 @@ def microsub_reader(channel):
     if request.args.get("before"):
         before = request.args.get("before")
 
-        microsub_req = requests.get(session.get("server_url") + "/?action=timeline&channel={}&before={}".format(channel, before), headers=headers)
+        microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}&before={}".format(channel, before), headers=headers)
     elif request.args.get("after"):
         after = request.args.get("after")
 
-        microsub_req = requests.get(session.get("server_url") + "/?action=timeline&channel={}&after={}".format(channel, after), headers=headers)
+        microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}&after={}".format(channel, after), headers=headers)
     else:
-        microsub_req = requests.get(session.get("server_url") + "/?action=timeline&channel={}".format(channel), headers=headers)
+        microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}".format(channel), headers=headers)
 
-    feeds = requests.get(session.get("server_url") + "/?action=follow&channel={}".format(channel), headers=headers).json()
+    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel), headers=headers).json()
 
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
 
-    channel_req = requests.get(session.get("server_url") + "/?action=channels", headers=headers)
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel][0]["name"]
 
@@ -104,3 +104,21 @@ def delete_entry_in_channel(channel, entry_id):
 
     flash("The entry was successfully deleted.")
     return redirect("/reader/{}".format(channel))
+
+@client.route("/settings")
+def settings():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    r = requests.get(session.get("server_url"), headers=headers)
+
+    return render_template("client/settings.html",
+        title="Settings | Microsub Reader",
+        channels=r.json()["channels"]
+    )

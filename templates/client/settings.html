@@ -5,9 +5,9 @@
     <section>
         <h2>User information</h2>
         <p>You are signed in as:</p>
-        <code><pre>{{ me.strip("/").replace("https://", "").replace("http://", "") }}</pre></code>
+        <code><pre>{{ session.get("me").strip("/").replace("https://", "").replace("http://", "") }}</pre></code>
         <p>Your access token is:</p>
-        <code><pre>{{ user }}</pre></code>
+        <code><pre>{{ session.get("access_token") }}</pre></code>
         <p>Your Microsub server is located at:</p>
         <code><pre>{{ session.get("server_url") }}</pre></code>
         <p>The following scopes have been approved for your account:</p>
