@@ -3,7 +3,8 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import feedparser
-import poll_feeds
+from . import poll_feeds
+# import poll_feeds
 import random
 import string
 import json
@@ -25,7 +26,7 @@ def get_timeline():
     with connection:
         cursor = connection.cursor()
 
-        channel_arg = "WHERE channel = ?"
+        channel_arg = "channel = ? AND"
         channel_tuple = (channel,)
 
         if channel == "all":
@@ -33,11 +34,11 @@ def get_timeline():
             channel_tuple = ()
 
         if not after and not before:
-            item_list = cursor.execute("SELECT * FROM timeline {} AND hidden = 0 ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple ).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple ).fetchall()
         elif before and not after:
-            item_list = cursor.execute("SELECT * FROM timeline {} AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(before), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(before), )).fetchall()
         else:
-            item_list = cursor.execute("SELECT * FROM timeline {} AND hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(after), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(after), )).fetchall()
 
     items = [[json.loads(item[1]), item[3], item[5]] for item in item_list]
     
@@ -63,7 +64,7 @@ def get_timeline():
     if not request.args.get("after") and not request.args.get("before"):
         before = None
 
-    return {"items": items, "paging": {"before": before, "after": after}}
+    return jsonify({"items": items, "paging": {"before": before, "after": after}}), 200
 
 def mark_as_read():
     connection = sqlite3.connect("microsub.db")
@@ -255,15 +256,19 @@ def delete_channel():
 
         return jsonify({"message": "channel deleted"}), 200
 
-def get_follow():
+def get_follow(channel):
     connection = sqlite3.connect("microsub.db")
 
-    if not request.args.get("channel"):
+    print(channel)
+
+    if not channel:
         return jsonify({}), 200
 
     with connection:
         cursor = connection.cursor()
-        results = cursor.execute("SELECT * FROM following WHERE channel = ?", (request.args.get("channel"),)).fetchall()
+        results = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
+
+        print(results)
 
         results = [{"type": "feed", "url": r[1]} for r in results]
 
@@ -285,12 +290,29 @@ def create_follow():
         if cursor.fetchone():
             return jsonify({"error": "You are already following this feed in the {} channel.".format(request.form.get("channel"))}), 400
 
-        # "" empty string is etag which will be populated in poll_feeds.py if available
-        cursor.execute("INSERT INTO following VALUES(?, ?, ?)", (request.form.get("channel"), url, "", ))
-
-        # discover websub_hub
+        # get information from feed web page
 
         r = requests.get(url)
+
+        title = url
+        favicon = ""
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        if soup.find("title"):
+            title = soup.find("title").text
+
+        # get favicon
+
+        favicon = soup.find("link", rel="shortcut icon")
+
+        if favicon:
+            favicon = favicon.get("href")        
+
+        # "" empty string is etag which will be populated in poll_feeds.py if available
+        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, ))
+
+        # discover websub_hub
 
         # check link headers for websub hub
 
@@ -308,8 +330,6 @@ def create_follow():
                     break
 
         if hub == None:
-            soup = BeautifulSoup(r.text, "html.parser")
-
             hub_link_tags = soup.find_all("link", rel="hub")
 
             if len(hub_link_tags) > 0:
@@ -318,7 +338,7 @@ def create_follow():
         if hub != None:
             random_string = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-            r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": "https://microsub.jamesg.blog/websub_callback})
+            r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": "https://microsub.jamesg.blog/websub_callback"})
 
             cursor.execute("INSERT INTO websub_subscriptions (?, ?);", (url, random_string))
 

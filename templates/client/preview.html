@@ -16,7 +16,7 @@
     {% if feed.get("items") | length > 0 %}
     <ul class="feed">
       {% for w in feed.get("items") %}
-      {% includes "feed_item.html" %}
+      {% include "client/feed_item.html" %}
       {% endfor %}
     </ul>
     {% else %}

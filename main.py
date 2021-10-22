@@ -1,29 +1,12 @@
-from flask import Flask, request, jsonify, send_from_directory, session, redirect, flash, render_template, current_app
-from indieauth import requires_indieauth
-from check_token import check_token
-from dateutil import parser
+from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
+from .indieauth import requires_indieauth
+from .check_token import check_token
 import sqlite3
 import requests
-from actions import *
-from config import *
-import os
+from .actions import *
+from .config import *
 
-main = Flask(__name__, static_folder="static", static_url_path="")
-
-# read config.py file
-main.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
-
-# set secret key
-main.secret_key = SECRET_KEY
-
-# filter used to parse dates
-# source: https://stackoverflow.com/questions/4830535/how-do-i-format-a-date-in-jinja2
-@main.template_filter('strftime')
-def _jinja2_filter_datetime(date, fmt=None):
-    date = parser.parse(date)
-    native = date.replace(tzinfo=None)
-    format= '%b %d, %Y'
-    return native.strftime(format) 
+main = Blueprint('main', __name__, template_folder='templates')
 
 @main.route("/")
 def index():
@@ -35,9 +18,11 @@ def home():
     if request.form:
         action = request.form.get("action")
         method = request.form.get("method")
+        channel = request.form.get("channel")
     else:
         action = request.args.get("action")
         method = request.args.get("method")
+        channel = request.args.get("channel")
 
     if not action:
         return jsonify({"error": "No action specified."}), 400
@@ -51,7 +36,7 @@ def home():
     elif action == "preview" and request.method == "POST":
         return preview()
     elif action == "follow" and request.method == "GET":
-        return get_follow()
+        return get_follow(channel)
     elif action == "follow" and request.method == "POST":
         return create_follow()
     elif action == "unfollow" and request.method == "POST":
@@ -236,6 +221,10 @@ def discover_feed():
         return redirect("/login")
 
     url = request.form.get("url")
+    channel = request.form.get("channel")
+
+    if not channel:
+        channel = "all"
 
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
@@ -267,7 +256,7 @@ def discover_feed():
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
     
-    return redirect("/feeds")
+    return redirect("/reader/{}".format(channel))
 
 @main.route("/channel/<id>", methods=["GET", "POST"])
 def modify_channel(id):
@@ -292,6 +281,8 @@ def modify_channel(id):
         else:
             flash("Something went wrong. Please try again.")
 
+        return redirect("/reader/{}".format(id))
+
     with connection:
         cursor = connection.cursor()
         channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (id,)).fetchone()
@@ -305,8 +296,6 @@ def preview_feed():
 
     if auth_result == False:
         return redirect("/login")
-
-    session["access_token"] = ""
 
     headers = {
         "Authorization": session["access_token"]
