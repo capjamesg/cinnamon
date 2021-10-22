@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main_content_box">
+    <h1>Your user settings</h1>
+    <section>
+        <h2>User information</h2>
+        <p>You are signed in as:</p>
+        <code><pre>{{ me.strip("/").replace("https://", "").replace("http://", "") }}</pre></code>
+        <p>Your access token is:</p>
+        <code><pre>{{ user }}</pre></code>
+        <p>Your Microsub server is located at:</p>
+        <code><pre>{{ session.get("server_url") }}</pre></code>
+        <p>The following scopes have been approved for your account:</p>
+        <code><pre>{{ session.get("scope") }}</pre></code>
+    </section>
+    <section>
+        <h2>Bookmarklet 🔖</h2>
+
+        <p>You can use the following bookmarklet to subscribe to a feed:</p>
+
+        <a href="javascript:(function(){window.location='https://microsub.jamesg.blog/feeds?url='+encodeURIComponent(window.location.href);})()">Subscribe</a>
+    </section>
+</div>
+{% endblock %}

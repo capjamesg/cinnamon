@@ -1,3 +1,7 @@
+from flask import session
+import requests
+from .config import TOKEN_ENDPOINT, ME
+
 def check_token():
     if not session.get("access_token"):
         return False

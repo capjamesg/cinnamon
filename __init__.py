@@ -1,12 +1,16 @@
 from flask import Flask, render_template, send_from_directory
+from dateutil import parser
 import os
 
 def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = os.urandom(32)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///search.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///microsub.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # read config.py file
+    app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
 
     # blueprint for non-auth parts of app
     from .main import main as main_blueprint
@@ -16,6 +20,19 @@ def create_app():
     from .client import client as client_blueprint
 
     app.register_blueprint(client_blueprint)
+
+    from .auth import auth as auth_blueprint
+
+    app.register_blueprint(auth_blueprint)
+
+    # filter used to parse dates
+    # source: https://stackoverflow.com/questions/4830535/how-do-i-format-a-date-in-jinja2
+    @app.template_filter('strftime')
+    def _jinja2_filter_datetime(date, fmt=None):
+        date = parser.parse(date)
+        native = date.replace(tzinfo=None)
+        format= '%b %d, %Y'
+        return native.strftime(format) 
 
     @app.errorhandler(404)
     def page_not_found(e):

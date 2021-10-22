@@ -8,7 +8,6 @@ import datetime
 import json
 import feedparser
 from dateutil.parser import parse
-import microformats2
 from time import mktime
 
 def canonicalize_url(url, domain):
@@ -22,7 +21,13 @@ def canonicalize_url(url, domain):
         return "https://" + url
 
 def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
-    r = requests.get(url)
+    session = requests.Session()
+    session.max_redirects = 2
+
+    try:
+        r = session.get(url, allow_redirects=True, timeout=10)
+    except:
+        return None
 
     mf2_raw = mf2py.parse(r.text)
 
@@ -32,8 +37,9 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
 
     for item in mf2_raw["items"]:
         if item.get("type") and item.get("type")[0] == "h-feed":
-            for child in item["children"]:
-                
+            if not item.get("children"):
+                return results
+            for child in item["children"][:10]:       
                 jf2 = {
                     "type": "entry",
                     "url": canonicalize_url(child["properties"]["url"][0], url.split("/")[2]),
@@ -43,23 +49,28 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
                 # we don't want to add duplicate records to the timeline
                 # without this precaution, any post without a published date will resurface at the top of every feed
 
-                # in_timeline = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
+                in_timeline = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
 
-                # if len(in_timeline) > 0:
-                #     continue
+                if len(in_timeline) > 0:
+                    continue
 
                 if hcard:
                     jf2["author"] = {
                         "type": "card",
                         "name": canonicalize_url(hcard[0]["properties"]["name"][0], url.split("/")[2]),
-                        "url": canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2]) 
+                        "url": canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2]),
                     }
+                    if hcard[0]["properties"].get("photo"):
+                        jf2["photo"] = canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2])
 
                 if add_to_db == True:
                     in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
 
                     if len(in_db) > 0:
                         continue
+
+                if not mf2_raw.get("properties"):
+                    continue
 
                 if mf2_raw["properties"].get("photo"):
                     jf2["photo"] = canonicalize_url(mf2_raw["properties"].get("photo")[0], url.split("/")[2]) 
@@ -128,7 +139,16 @@ def process_xml_feed(entry, feed, url):
         }
 
     # get home page
-    r = requests.get(url)
+    # get content type of url
+    session = requests.Session()
+    session.max_redirects = 2
+
+    try:
+        # follow one redirect
+        r = session.get(url, allow_redirects=True, timeout=10)
+    except:
+        return None, None
+
     soup = BeautifulSoup(r.text, "html.parser")
 
     # get favicon
@@ -222,8 +242,8 @@ def process_xml_feed(entry, feed, url):
             # get all images
             all_images = parse_post.find_all("img")
             
-            if all_images:
-                result["photo"] = all_images[0]["src"]
+            if all_images and len(all_images) > 0:
+                result["photo"] = all_images[0].get("src")
 
     if content == {} and soup.find("meta", property="description"):
         result["content"] = {
@@ -263,12 +283,15 @@ def poll_feeds():
             except:
                 continue
 
-            # get content type of url
+            session = requests.Session()
+            session.max_redirects = 2
+
             try:
-                r = requests.head(url)
+                r = session.head(url, allow_redirects=True, timeout=10)
             except:
                 continue
 
+            # get content type of url
             if r.headers.get('content-type'):
                 content_type = r.headers['content-type']
             else:
@@ -294,10 +317,10 @@ def poll_feeds():
                 # update following to add new etag so we can track modifications to a feed
                 cursor.execute("UPDATE following SET etag = ? WHERE url = ?;", (etag, url))
 
-                for entry in feed.entries:
+                for entry in feed.entries[:10]:
                     result, published = process_xml_feed(entry, feed, url)
 
-                    if entry.get("link"):
+                    if result != None and entry.get("link"):
                         result["url"] = entry.link
 
                         # check if url in db

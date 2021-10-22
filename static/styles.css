@@ -130,6 +130,7 @@ h1 {
 img {
 	border-radius: 10px;
 	display: block;
+	max-height: 30vh;
 }
 footer {
 	text-align: center;
@@ -203,6 +204,9 @@ details {
 summary {
 	padding-top: 5px;
 }
+details ul {
+	padding-top: 10px;
+}
 details > p {
 	margin-bottom: 0px;
 }
@@ -217,17 +221,17 @@ a {
 	padding-top: 20px;
 	padding-bottom: 20px;
 }
-.bottom-navigation .prev {
+.prev {
 	display: block;
 	width: 50%;
 }
 blockquote {
 	font-style: italic;
 }
-.bottom-navigation .prev, .prev a {
+.prev, .prev a {
 	float: left
 }
-.bottom-navigation .next {
+.next {
 	float: right;
 	width: 50%;
 	text-align: right;
@@ -333,6 +337,23 @@ input[type="submit"] {
 		float: right;
 		padding-left: 0;
 	}
+	.prev, .next {
+		width: 100% !important;
+		background-color: white;
+		border-radius: 10px;
+		padding: 10px;
+		margin-bottom: 10px;
+		border: 1px solid lightgrey;
+		box-sizing: border-box;
+		text-align: center;
+		float: none !important;
+	}
+	.prev a {
+		float: none !important;
+	}
+	.reaction_set {
+		text-align: center;
+	}
 }
 h1 {
 	display: inline-block;
@@ -377,6 +398,8 @@ ol {
 .reaction {
 	padding: 10px;
 	margin-left: 5px;
+	margin-bottom: 5px;
+	display: inline-block;
 	border-radius: 10px;
 	border: 1px solid lightgrey;
 }
@@ -404,9 +427,10 @@ aside, .feed li {
 	border-radius: 10px;
 	margin-right: 10px;
 	border: 1px solid lightgrey;
-	max-height: 100vh;
     height: 100%;
 	margin-bottom: 20px;
+	box-sizing: border-box;
+	width: 100%;
 }
 ul {
 	margin-top: 0;
@@ -419,4 +443,40 @@ aside li {
 }
 .reaction a:focus {
 	border-bottom: none !important;
+}
+
+/* Code adapted from https://www.w3schools.com/howto/howto_css_modals.asp */
+.modal {
+	z-index: 1;
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0,0,0,0.4);
+}
+.modal_content {
+	background-color: #fefefe;
+	margin: 15% auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 50%;
+	border-radius: 10px;
+}
+.close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+hr {
+	border: 1px solid lightgray;
 }
