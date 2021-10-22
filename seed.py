@@ -30,5 +30,10 @@ with connection:
     )
     """)
 
+    cursor.execute("""CREATE TABLE IF NOT EXISTS websub_subscriptions(
+        url text,
+        uid text
+    """)
+
     print("microsub.db has been seeded.")
     print("You are now ready to run the Microsub server.")
