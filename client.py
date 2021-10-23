@@ -14,8 +14,6 @@ def reader_redirect():
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token()
-
-    session["access_token"] = ".eJyNUctSqzAYfhfWx8ql9rTdlTqFIEXBkdvGSQKFpCRQk1LAOe9-gm5cuvy_68z_fWoQ41KId9meS65ttXL09DLdkWfiPcVGSPy9VyMHzzd4m4AREG-zUCKZv4IVYLVeuPb0TNY9ZAeZpwH3mSeQiWdjU7p2h1k8AdoOAT0aR5rpwXQ2FEeR0zSIRyeYhHN4W7jRDU9t75tGl1lej62Y-KyrURJP-fhAkLPhvjn0udlcAbkRlXuGqddkVnQqUq9THQS6kY7d48ofNxImwYiswMjIwyVLjAab-Jox5R83NEsGkbEDhSMQgAcUWXYz-1Vmne9thsxBIAtXKI31_NWeu5XWptA5XBGLBR535BQuXqLWtW_rXR5f4PLxAkM2OE_FS3VXhf2Il_ytbJb71d9zlK61Pxq8yrr9IBOUpOXvJS-6lnCpXl5L2Ynt_f0sWFDISlEtUNNWX4AysvKH6AevKCGhnFkQPO7Dg-_5qQK_pvxVwffo__4DdxW0Pg.YXLDew.bU5nuSro0vkNkodaDQbCVWQD8qs"
     session["server_url"] = "https://microsub.jamesg.blog/endpoint"
     if auth_result == False:
         return redirect("/login")
