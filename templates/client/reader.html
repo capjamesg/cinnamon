@@ -63,7 +63,7 @@
         <ul>
             {% for feed in feeds["items"] %}
                 <li>{% if feed.get("icon") %}<img src="{{ feed['icon'] }}" alt="{{ feed.title }} feed icon" style="width: 20px; height: 20px;">{% endif %}
-                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'].split("/")[2] }}{% endif %}</a></li>
+                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
             {% endfor %}
         </ul>
         {% else %}
@@ -145,7 +145,6 @@
     </div>
 </section>
 <script>
-    // show modal
     function trigger_modal(id) {
         var modal = document.getElementById(id);
         if (modal.style.display == "none") {
@@ -154,6 +153,7 @@
             modal.style.display = "none";
         }
     }
+
     function close_modal() {
         var modal = document.getElementsByClassName("modal");
         for (var i = 0; i < modal.length; i++) {
@@ -165,6 +165,15 @@
 
     window.onclick = function(event) {
         close_modal()
+    }
+
+    var close = document.getElementsByClassName("close");
+
+    for (var i = 0; i < close.length; i++) {
+        close[i].onclick = function() {
+            var modal = document.getElementsByClassName("modal");
+            modal.style.display = "none";
+        }
     }
 </script>
 

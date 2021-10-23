@@ -3,7 +3,8 @@
 {% if session.get("me") %}
 <section class="green_notification">
   <p>You are logged in as {{ session.get("me").replace("https://", "").replace("http://", "").strip("/") }}.</p>
-  <p class="error"><a href="/feeds">Click here to go to the Microsub dashboard.</a></p>
+  <p class="error"><a href="/reader/all">Click here to go to the Microsub reader.</a></p>
+  <p class="error"><a href="/feeds">Click here to go to the Microsub server dashboard.</a></p>
 </section>
 {% endif %}
 <section class="feed h-app h-x-app main_content_box">
@@ -18,9 +19,9 @@
     <p>The IndieWeb wiki contains the information you'll need to have about Micropub to get started. The official editor's draft of the specification is also available on the IndieWeb wiki.</p>
     <p>Some useful resources to look at are the following pages:</p>
     <ul>
-        <li><a href="https://indieweb.org/Microsub">Micropub</a></li>
-        <li><a href="https://indieweb.org/Microsub#Clients">Micropub Clients</a></li>
-        <li><a href="https://indieweb.org/Microsub#Servers">Micropub Servers</a></li>
+        <li><a href="https://indieweb.org/Microsub">Microsub</a></li>
+        <li><a href="https://indieweb.org/Microsub#Clients">Microsub Clients</a></li>
+        <li><a href="https://indieweb.org/Microsub#Servers">Microsub Servers</a></li>
         <li><a href="https://indieweb.org/Microsub-spec">Microsub Specification</a></li>
     </ul>
     <h2>Can I host my own Micropub client and server?</h2>

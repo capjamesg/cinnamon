@@ -1,24 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="main_content_box">
-    <h1>Your user settings</h1>
+    <h1>Your user settings ⚙️</h1>
     <section>
-        <h2>User information</h2>
-        <p>You are signed in as:</p>
-        <code><pre>{{ session.get("me").strip("/").replace("https://", "").replace("http://", "") }}</pre></code>
+        <h2>User information 📝</h2>
+        <p>You are signed in as: <a href='{{ session.get("me").split("/")[2] }}'>{{ session.get("me").split("/")[2] }}</a></code>
+        <p>Your Microsub server is located at: <a href='{{ session.get("server_url").split("/")[2] }}'>{{ session.get("server_url").split("/")[2] }}</a></p>
         <p>Your access token is:</p>
         <code><pre>{{ session.get("access_token") }}</pre></code>
-        <p>Your Microsub server is located at:</p>
-        <code><pre>{{ session.get("server_url") }}</pre></code>
-        <p>The following scopes have been approved for your account:</p>
-        <code><pre>{{ session.get("scope") }}</pre></code>
+        {% if session.get("scopes").split(" ") | length > 0 %}
+            <p>The following scopes have been approved for your account:</p>
+            <ul>
+                {% for scope in session.get("scopes").split(" ") %}
+                    <li>{{ scope }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No scopes have been approved for your account.</p>
+        {% endif %}
     </section>
     <section>
         <h2>Bookmarklet 🔖</h2>
 
         <p>You can use the following bookmarklet to subscribe to a feed:</p>
 
-        <a href="javascript:(function(){window.location='https://microsub.jamesg.blog/feeds?url='+encodeURIComponent(window.location.href);})()">Subscribe</a>
+        <p><a href="javascript:(function(){window.location='https://microsub.jamesg.blog/feeds?url='+encodeURIComponent(window.location.href);})()">Subscribe</a></p>
     </section>
 </div>
 {% endblock %}
