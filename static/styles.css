@@ -29,7 +29,7 @@ select {
     border-radius: 10px;
     background: white;
     padding: 30px;
-	margin-bottom: 15px;
+	margin-bottom: 15px !important;
 }
 .notification, .green_notification {
 	border: 3px solid royalblue;

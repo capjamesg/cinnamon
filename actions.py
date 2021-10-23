@@ -199,17 +199,28 @@ def get_channels():
 
     with connection:
         cursor = connection.cursor()
+
         cursor.execute("SELECT uid, channel FROM channels ORDER BY position ASC;")
 
         result = change_to_json(cursor)
+
+        final_result = []
+
+        total_unread = 0
 
         for r in result:
             get_unread = cursor.execute("SELECT COUNT(*) FROM timeline WHERE channel = ? AND read_status = 'unread';", (r["uid"],)).fetchone()
             r["unread"] = get_unread[0]
             r["name"] = r["channel"]
+            total_unread += r["unread"]
+            final_result.append(r)
             del r["channel"]
 
-        return jsonify({"channels": result}), 200
+        # add "all" as a special value
+        # used to show every post stored in the server
+        final_result.append({"uid": "all", "name": "All", "unread": total_unread})
+
+        return jsonify({"channels": final_result}), 200
 
 def create_channel():
     connection = sqlite3.connect("microsub.db")
@@ -266,7 +277,10 @@ def get_follow(channel):
 
     with connection:
         cursor = connection.cursor()
-        results = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
+        if channel == "all":
+            results = cursor.execute("SELECT * FROM following;").fetchall()
+        else:
+            results = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
 
         print(results)
 

@@ -49,10 +49,11 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
                 # we don't want to add duplicate records to the timeline
                 # without this precaution, any post without a published date will resurface at the top of every feed
 
-                in_timeline = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
+                if cursor != None:
+                    in_timeline = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
 
-                if len(in_timeline) > 0:
-                    continue
+                    if len(in_timeline) > 0:
+                        continue
 
                 if hcard:
                     jf2["author"] = {
@@ -60,14 +61,9 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
                         "name": canonicalize_url(hcard[0]["properties"]["name"][0], url.split("/")[2]),
                         "url": canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2]),
                     }
+                    
                     if hcard[0]["properties"].get("photo"):
                         jf2["photo"] = canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2])
-
-                if add_to_db == True:
-                    in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (jf2["url"],)).fetchall()
-
-                    if len(in_db) > 0:
-                        continue
 
                 if not mf2_raw.get("properties"):
                     continue

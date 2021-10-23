@@ -290,40 +290,6 @@ def modify_channel(id):
 
         return render_template("server/modify_channel.html", title="Modify {} Channel".format(channel[0]), channel=channel, feeds=feeds)
 
-@main.route("/preview")
-def preview_feed():
-    auth_result = check_token()
-
-    if auth_result == False:
-        return redirect("/login")
-
-    headers = {
-        "Authorization": session["access_token"]
-    }
-
-    url = request.args.get("url")
-    channel_id = request.args.get("channel")
-
-    if not url or not channel_id:
-        flash("Please specify a feed URL and channel ID when previewing a feed.")
-        return redirect("/")
-
-    data = {
-        "action": "preview",
-        "url": url,
-    }
-
-    microsub_req = requests.post("https://microsub.jamesg.blog/endpoint", data=data, headers=headers)
-
-    channel_req = requests.get("https://microsub.jamesg.blog/endpoint?action=channels", headers=headers)
-
-    return render_template("client/preview.html",
-        title="Preview Feed | Microsub Reader",
-        feed=microsub_req.json(),
-        channels=channel_req.json(),
-        channel=channel_id
-    )
-
 @main.route("/websub/<uid>", methods=["POST"])
 def save_new_post_from_websub(uid):
     connection = sqlite3.connect("microsub.db")

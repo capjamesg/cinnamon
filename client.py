@@ -14,7 +14,6 @@ def reader_redirect():
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token()
-    
     if auth_result == False:
         return redirect("/login")
     headers = {
@@ -42,7 +41,12 @@ def microsub_reader(channel):
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-    channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel][0]["name"]
+    channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel]
+
+    if len(channel_name) > 0:
+        channel_name = channel_name[0]["name"]
+    else:
+        channel_name = "All"
 
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
@@ -105,8 +109,8 @@ def delete_entry_in_channel(channel, entry_id):
     flash("The entry was successfully deleted.")
     return redirect("/reader/{}".format(channel))
 
-@client.route("/settings")
-def settings():
+@client.route("/preview")
+def preview_feed():
     auth_result = check_token()
 
     if auth_result == False:
@@ -116,9 +120,33 @@ def settings():
         "Authorization": session["access_token"]
     }
 
-    r = requests.get(session.get("server_url"), headers=headers)
+    url = request.args.get("url")
+    channel_id = request.args.get("channel")
+
+    if not url or not channel_id:
+        flash("Please specify a feed URL and channel ID when previewing a feed.")
+        return redirect("/reader/all")
+
+    data = {
+        "action": "preview",
+        "url": url,
+    }
+
+    microsub_req = requests.post("https://microsub.jamesg.blog/endpoint", data=data, headers=headers)
+
+    return render_template("client/preview.html",
+        title="Preview Feed | Microsub Reader",
+        feed=microsub_req.json(),
+        channel=channel_id
+    )
+
+@client.route("/settings")
+def settings():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
 
     return render_template("client/settings.html",
-        title="Settings | Microsub Reader",
-        channels=r.json()["channels"]
+        title="Settings | Microsub Reader"
     )
