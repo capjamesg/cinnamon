@@ -19,10 +19,12 @@ def home():
         action = request.form.get("action")
         method = request.form.get("method")
         channel = request.form.get("channel")
+        query = request.form.get("query")
     else:
         action = request.args.get("action")
         method = request.args.get("method")
         channel = request.args.get("channel")
+        query = request.args.get("query")
 
     if not action:
         return jsonify({"error": "No action specified."}), 400
@@ -35,7 +37,7 @@ def home():
         return mark_as_read()
     elif action == "preview" and request.method == "POST":
         return preview()
-    elif action == "search" and channel and request.method == "POST":
+    elif action == "search" and query and request.method == "POST":
         return search_for_content()
     elif action == "follow" and request.method == "GET":
         return get_follow(channel)
@@ -96,18 +98,11 @@ def feed_list():
         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
-            connection = sqlite3.connect("microsub.db")
-
-            with connection:
-                cursor = connection.cursor()
-
-                get_channel_by_id = cursor.execute("SELECT channel FROM channels WHERE uid = ?", (req["channel"], )).fetchone()
-
-                flash("You are now following {} in the {} channel.".format(request.form.get("url"), get_channel_by_id[0]))
+            flash("You are now following {}".format(request.form.get("url"), ))
         else:
             flash("Something went wrong. Please try again.")
 
-        return redirect("/feeds")
+        return redirect("/reader/all")
 
     connection = sqlite3.connect("microsub.db")
 
