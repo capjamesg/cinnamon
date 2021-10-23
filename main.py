@@ -35,6 +35,8 @@ def home():
         return mark_as_read()
     elif action == "preview" and request.method == "POST":
         return preview()
+    elif action == "search" and channel and request.method == "POST":
+        return search_for_content()
     elif action == "follow" and request.method == "GET":
         return get_follow(channel)
     elif action == "follow" and request.method == "POST":
@@ -91,7 +93,7 @@ def feed_list():
             "url": request.form.get("url")
         }
 
-        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
+        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             connection = sqlite3.connect("microsub.db")
@@ -330,6 +332,33 @@ def save_new_post_from_websub(uid):
                 items_to_return.append(result)
 
         return jsonify({"success": "Entry added to feed."}), 200
+
+@main.route("/websub_callback")
+def verify_websub_subscription():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
+    if not request.args.get("hub.mode"):
+        return jsonify({"error": "hub.mode not found"}), 400
+
+    if not request.args.get("hub.topic"):
+        return jsonify({"error": "No topic provided."}), 400
+
+    if request.args.get("hub.challenge"):
+        connection = sqlite3.connect("microsub.db")
+
+        with connection:
+            cursor = connection.cursor()
+            check_subscription = cursor.execute("SELECT * FROM websub_subscriptions WHERE url = ? AND random_string = ?", (request.args.get("hub.topic"), request.args.get("hub.challenge"), )).fetchone()
+
+            if not check_subscription:
+                return jsonify({"error": "Subscription does not exist."}), 400
+
+        return request.args.get("hub.challenge"), 200
+    else:
+        return jsonify({"error": "No challenge found."}), 400
 
 if __name__ == "__main__":
     main.run()

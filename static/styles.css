@@ -354,6 +354,9 @@ input[type="submit"] {
 	.reaction_set {
 		text-align: center;
 	}
+	button, input[type="submit"] {
+		width: 100% !important;
+	}
 }
 h1 {
 	display: inline-block;
@@ -432,6 +435,9 @@ aside, .feed li {
 	box-sizing: border-box;
 	width: 100%;
 }
+aside button {
+	width: 100%;
+}
 ul {
 	margin-top: 0;
 }
@@ -479,4 +485,15 @@ aside li {
 }
 hr {
 	border: 1px solid lightgray;
+}
+.search_button {
+	display: inline;
+}
+.search_bar {
+	width: 80%;
+}
+details, summary {
+	max-width: 100%;
+	width: 100%;
+	box-sizing: border-box;
 }

@@ -21,9 +21,19 @@
     {% if w.get("photo") %}
     <img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' />
     {% endif %}
+    {% if w.get("video") %}
+    <video controls>
+        <source src='{{ w["video"][0]["url"] }}' type='video/mp4'>
+    </video>
+    {% elif w.get("audio") %}
+    <audio controls>
+        <source src='{{ w["audio"][0]["url"] }}' type='audio/mpeg'>
+    </audio>
+    {% endif %}
     {% if w.get("content") and w["content"].get("text") %}
     {% set content = w["content"]["text"].split(" ")[:75] %}
-    <p>{{ " ".join(content) }}</p>{% if content | length > 75 %}...{% endif %}</p>
+    <p id="{{ w['_id'] }}">{{ " ".join(content) }} {% if content | length == 75 %}...{% endif %}<span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
+    {% if content | length == 75 %}<p><a onclick="show_all('{{ w['_id'] }}');" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
     {% else %}
     <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
     {% endif %}

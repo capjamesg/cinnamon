@@ -22,11 +22,6 @@
 <aside class="flex_left_home">
     <h2>Your Channels</h2>
     <ul>
-        {% if page_channel_uid == "all" %}
-        <li><a href="/reader/all" style="font-weight: 600;">All 📝</a></li>
-        {% else %}
-        <li><a href="/reader/all">All 📝</a></li>
-        {% endif %}
         {% for channel in channels %}
         <li>
             {% if channel.uid == page_channel_uid %}
@@ -73,31 +68,42 @@
 </aside>
 <section class="feed flex_right_home">
     {% if results | length > 0 %}
+    <form method="POST" action="/search" role="search">
+        <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+        <input type="text" name="query" placeholder="Search for a post" aria-label="Search for a post" class="search_bar">
+        <button class="search_button">Search</button>
     <ul>
-    {% set count = 0 %}
+    {% if is_searching == True %}
+        <li>
+            <p>Searching for: <b>{{ query }}</b></p>
+        </li>
+    {% endif %}
+    {% set count = namespace(value=0) %}
       {% for w in results %}
-      {% if (count > 0 and published_dates[count-1] and published_dates[count-1][:8] != published_dates[count][:8]) or count == 0 %}
+      {% if (count.value > 0 and published_dates[count.value-1] and published_dates[count.value-1][:8] != published_dates[count.value][:8]) or count.value == 0 %}
         {% if w.get("published") %}
         <h2>{{ w["published"] | strftime }}</h2>
         {% endif %}
         {% endif %}
         {% include "client/feed_item.html" %}
-      {% set count = count +1 %}
+      {% set count.value = count.value + 1 %}
       {% endfor %}
     </ul>
     {% else %}
     <p class="content_box">There are no posts in this channel. Check back later to see if any posts are added.</p>
     {% endif %}
-    <div class="bottom-navigation">
-        <div class="prev">
-            <p><a href="/reader/{{ page_channel_uid }}?before={{ before }}">See Older Posts</a></p>
+    {% if before_to_show != "" or after_to_show != "" %}
+        <div class="bottom-navigation">
+            <div class="prev">
+                <p><a href="/reader/{{ page_channel_uid }}?before={{ before_to_show }}">See Older Posts</a></p>
+            </div>
+            {% if before != None %}
+            <div class="next">
+                <p><a href="/reader/{{ page_channel_uid }}?after={{ after_to_show }}">See Newer Posts</a></p>
+            </div>
+            {% endif %}
         </div>
-        {% if before != None %}
-        <div class="next">
-            <p><a href="/reader/{{ page_channel_uid }}?before={{ before }}">See Newer Posts</a></p>
-        </div>
-        {% endif %}
-    </div>
+    {% endif %}
 </section>
 </div>
 <section class="content_box modal" style="display: none;" id="subscribe">
@@ -175,6 +181,21 @@
             modal.style.display = "none";
         }
     }
-</script>
 
+    function show_all(id) {
+        var item_to_show = document.getElementById(id + "-full");
+        var show_label = document.getElementById(id + "-show");
+        var original_text = document.getElementById(id);
+
+        original_text.innerText = original_text.innerText.replace("...", "");
+
+        if (item_to_show.style.display === "none") {
+            item_to_show.style.display = "inline";
+            show_label.innerHTML = "Show less";
+        } else {
+            item_to_show.style.display = "none";
+            show_label.innerHTML = "Show more";
+        }
+    }
+</script>
 {% endblock %}

@@ -131,6 +131,20 @@ def discover_urls():
                     endpoints[l] = item.get("href")
                     break
 
+def search_for_content():
+    connection = sqlite3.connect("microsub.db")
+
+    query = request.args.get("query")
+
+    with connection:
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT * FROM timeline WHERE channel = ? AND content LIKE ? ORDER BY date DESC;", ("all", "%{}%".format(query), ))
+
+        result = change_to_json(cursor)
+
+        return jsonify({"items": result}), 200
+
 def preview():
     url = request.form.get("url")
 
