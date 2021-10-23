@@ -1,6 +1,5 @@
 from flask import Blueprint, request, session, redirect, flash, render_template
 from .check_token import check_token
-from .indieauth import requires_indieauth
 import requests
 from .actions import *
 from .config import *
@@ -14,9 +13,10 @@ def reader_redirect():
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token()
-    session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+
     if auth_result == False:
         return redirect("/login")
+
     headers = {
         "Authorization": session["access_token"]
     }
@@ -166,12 +166,18 @@ def search_feed():
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
+    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel_id), headers=headers).json()
+
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
     return render_template("client/reader.html",
         title="Showing results for {} | Microsub Reader".format(query),
-        results=microsub_req.json(),
+        results=microsub_req.json()["items"],
         channel=channel_id,
         is_searching=True,
-        query=query
+        query=query,
+        feeds=feeds,
+        channels=channel_req.json()["channels"]
     )
 
 @client.route("/settings")

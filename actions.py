@@ -139,7 +139,7 @@ def search_for_content():
     with connection:
         cursor = connection.cursor()
 
-        cursor.execute("SELECT * FROM timeline WHERE channel = ? AND content LIKE ? ORDER BY date DESC;", ("all", "%{}%".format(query), ))
+        cursor.execute("SELECT * FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", ("%{}%".format(query), ))
 
         result = change_to_json(cursor)
 
@@ -232,7 +232,7 @@ def get_channels():
 
         # add "all" as a special value
         # used to show every post stored in the server
-        final_result.append({"uid": "all", "name": "All", "unread": total_unread})
+        final_result.insert(0, {"uid": "all", "name": "All", "unread": total_unread})
 
         return jsonify({"channels": final_result}), 200
 
@@ -368,7 +368,7 @@ def create_follow():
 
             r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": "https://microsub.jamesg.blog/websub_callback"})
 
-            cursor.execute("INSERT INTO websub_subscriptions (?, ?);", (url, random_string))
+            cursor.execute("INSERT INTO websub_subscriptions VALUES (?, ?);", (url, random_string))
 
         return {"type": "feed", "url": url}
 

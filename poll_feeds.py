@@ -263,18 +263,30 @@ def process_xml_feed(entry, feed, url):
 
     if entry.get("links"):
         for link in entry.get("links"):
-            if link.get("type") and link.get("type").startswith("video") and link.get("href"):
+            if link.get("type") and "video" in link.get("type") and link.get("href"):
                 result["video"] = [{"content_type": link.get("type"), "url": link.get("href")}]
                 break
-            elif link.get("type") and link.get("type").startswith("audio") and link.get("href"):
+            elif link.get("type") and "audio" in link.get("type") and link.get("href"):
                 result["audio"] = [{"content_type": link.get("type"), "url": link.get("href")}]
+                break
+    
+    if entry.get("media_content"):
+        for media in entry.get("media_content"):
+            if media.get("url").startswith("https://www.youtube.com") or media.get("url").startswith("http://www.youtube.com"):
+                media.get("url").replace("watch?v=", "embed/")
+
+            if media.get("type") and ("video" in media.get("type") or "x-shockwave-flash" in media.get("type")) and media.get("url"):
+                result["video"] = [{"content_type": media.get("type"), "url": media.get("url")}]
+                break
+            elif media.get("type") and "audio" in link.get("type") and media.get("url"):
+                result["audio"] = [{"content_type": media.get("type"), "url": media.get("url")}]
                 break
 
     published = published.split("T")[0]
 
     return result, published
 
-def process_json_feed(feed, item):
+def process_json_feed(item, feed):
     result = {
         "type": "entry",
     }
@@ -290,14 +302,13 @@ def process_json_feed(feed, item):
             result["author"]["url"] = canonicalize_url(feed.get("home_page_url"), item.get("url").split("/")[2], feed.get("home_page_url"))
         else:
             result["author"]["url"] = canonicalize_url(feed.get("feed_url"), item.get("url").split("/")[2], feed.get("feed_url"))
-        if item["author"].get("avatar"):
-            result["author"]["photo"] = item["author"].get("avatar")
-    elif item.get("author"):
+    elif item.get("author") != None:
         result["author"] = {
             "type": "card",
             "name": item.get("author"),
             "url": canonicalize_url(item.get("home_page_url"), item.get("home_page_url").split("/")[2], item.get("home_page_url"))
         }
+
         if item["author"].get("avatar"):
             result["author"]["photo"] = item["author"].get("avatar")
 
@@ -332,7 +343,8 @@ def process_json_feed(feed, item):
     result["published"] = date
 
     if item.get("content_html"):
-        result["content"]["text"] = item.get("content_html")
+        result["content"] = {}
+        result["content"]["text"] = BeautifulSoup(item.get("content_html"), "html.parser").get_text()
         result["content"]["html"] = item.get("content_html")
 
     if item.get("title"):
@@ -353,6 +365,8 @@ def poll_feeds():
         cursor = connection.cursor()
 
         subscriptions = cursor.execute("SELECT url, channel, etag FROM following;").fetchall()
+
+        subscriptions = [["https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A", "indiewebnaw", ""]]
 
         for s in subscriptions:
             url = s[0]
