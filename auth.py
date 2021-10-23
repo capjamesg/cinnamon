@@ -1,13 +1,13 @@
-from flask import Flask, request, session, redirect, flash, render_template
-from indieauth import requires_indieauth
+from flask import Blueprint, request, session, redirect, flash, render_template
+from .indieauth import requires_indieauth
 import requests
-from actions import *
-from config import *
+from .actions import *
+from .config import *
 import hashlib
 import base64
 import string
 
-auth = Flask(__name__, static_folder="static", static_url_path="")
+auth = Blueprint('auth', __name__)
 
 @auth.route("/callback")
 def indieauth_callback():
@@ -45,6 +45,7 @@ def indieauth_callback():
 
     session["me"] = r.json().get("me")
     session["access_token"] = r.json().get("access_token")
+    session["scope"] = r.json().get("scope")
 
     return redirect("/")
 
@@ -55,9 +56,9 @@ def logout():
 
     return redirect("/login")
 
-@auth.route("/login", methods=["GET", "POST"])
+@auth.route("/login", methods=["GET"])
 def login():
-    return render_template("auth.html", title="Webmention Dashboard Login")
+    return render_template("auth.html", title="Microsub Dashboard Login")
 
 @auth.route("/discover", methods=["POST"])
 def discover_auth_endpoint():
@@ -88,6 +89,16 @@ def discover_auth_endpoint():
         return redirect("/login")
 
     auth_endpoint = authorization_endpoint["href"]
+
+    # discover microsub endpoint during auth
+    # this is the endpoint to which all microsub requests will be sent
+    microsub_endpoint = soup.find("link", rel="microsub")
+
+    if microsub_endpoint is None:
+        flash("A Microsub server could not be found on your website. Please add a Microsub server to your site before proceeding.")
+        return redirect("/login")
+
+    session["server_url"] = microsub_endpoint.get("href")
 
     random_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 

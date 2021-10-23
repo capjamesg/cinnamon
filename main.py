@@ -1,29 +1,12 @@
-from flask import Flask, request, jsonify, send_from_directory, session, redirect, flash, render_template, current_app
-from indieauth import requires_indieauth
-from check_token import check_token
-from dateutil import parser
+from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
+from .indieauth import requires_indieauth
+from .check_token import check_token
 import sqlite3
 import requests
-from actions import *
-from config import *
-import os
+from .actions import *
+from .config import *
 
-main = Flask(__name__, static_folder="static", static_url_path="")
-
-# read config.py file
-main.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
-
-# set secret key
-main.secret_key = SECRET_KEY
-
-# filter used to parse dates
-# source: https://stackoverflow.com/questions/4830535/how-do-i-format-a-date-in-jinja2
-@main.template_filter('strftime')
-def _jinja2_filter_datetime(date, fmt=None):
-    date = parser.parse(date)
-    native = date.replace(tzinfo=None)
-    format= '%b %d, %Y'
-    return native.strftime(format) 
+main = Blueprint('main', __name__, template_folder='templates')
 
 @main.route("/")
 def index():
@@ -35,9 +18,11 @@ def home():
     if request.form:
         action = request.form.get("action")
         method = request.form.get("method")
+        channel = request.form.get("channel")
     else:
         action = request.args.get("action")
         method = request.args.get("method")
+        channel = request.args.get("channel")
 
     if not action:
         return jsonify({"error": "No action specified."}), 400
@@ -50,8 +35,10 @@ def home():
         return mark_as_read()
     elif action == "preview" and request.method == "POST":
         return preview()
+    elif action == "search" and channel and request.method == "POST":
+        return search_for_content()
     elif action == "follow" and request.method == "GET":
-        return get_follow()
+        return get_follow(channel)
     elif action == "follow" and request.method == "POST":
         return create_follow()
     elif action == "unfollow" and request.method == "POST":
@@ -106,7 +93,7 @@ def feed_list():
             "url": request.form.get("url")
         }
 
-        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
+        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             connection = sqlite3.connect("microsub.db")
@@ -236,6 +223,10 @@ def discover_feed():
         return redirect("/login")
 
     url = request.form.get("url")
+    channel = request.form.get("channel")
+
+    if not channel:
+        channel = "all"
 
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
@@ -267,7 +258,7 @@ def discover_feed():
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
     
-    return redirect("/feeds")
+    return redirect("/reader/{}".format(channel))
 
 @main.route("/channel/<id>", methods=["GET", "POST"])
 def modify_channel(id):
@@ -292,48 +283,14 @@ def modify_channel(id):
         else:
             flash("Something went wrong. Please try again.")
 
+        return redirect("/reader/{}".format(id))
+
     with connection:
         cursor = connection.cursor()
         channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (id,)).fetchone()
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
         return render_template("server/modify_channel.html", title="Modify {} Channel".format(channel[0]), channel=channel, feeds=feeds)
-
-@main.route("/preview")
-def preview_feed():
-    auth_result = check_token()
-
-    if auth_result == False:
-        return redirect("/login")
-
-    session["access_token"] = ""
-
-    headers = {
-        "Authorization": session["access_token"]
-    }
-
-    url = request.args.get("url")
-    channel_id = request.args.get("channel")
-
-    if not url or not channel_id:
-        flash("Please specify a feed URL and channel ID when previewing a feed.")
-        return redirect("/")
-
-    data = {
-        "action": "preview",
-        "url": url,
-    }
-
-    microsub_req = requests.post("https://microsub.jamesg.blog/endpoint", data=data, headers=headers)
-
-    channel_req = requests.get("https://microsub.jamesg.blog/endpoint?action=channels", headers=headers)
-
-    return render_template("client/preview.html",
-        title="Preview Feed | Microsub Reader",
-        feed=microsub_req.json(),
-        channels=channel_req.json(),
-        channel=channel_id
-    )
 
 @main.route("/websub/<uid>", methods=["POST"])
 def save_new_post_from_websub(uid):
@@ -375,6 +332,33 @@ def save_new_post_from_websub(uid):
                 items_to_return.append(result)
 
         return jsonify({"success": "Entry added to feed."}), 200
+
+@main.route("/websub_callback")
+def verify_websub_subscription():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
+    if not request.args.get("hub.mode"):
+        return jsonify({"error": "hub.mode not found"}), 400
+
+    if not request.args.get("hub.topic"):
+        return jsonify({"error": "No topic provided."}), 400
+
+    if request.args.get("hub.challenge"):
+        connection = sqlite3.connect("microsub.db")
+
+        with connection:
+            cursor = connection.cursor()
+            check_subscription = cursor.execute("SELECT * FROM websub_subscriptions WHERE url = ? AND random_string = ?", (request.args.get("hub.topic"), request.args.get("hub.challenge"), )).fetchone()
+
+            if not check_subscription:
+                return jsonify({"error": "Subscription does not exist."}), 400
+
+        return request.args.get("hub.challenge"), 200
+    else:
+        return jsonify({"error": "No challenge found."}), 400
 
 if __name__ == "__main__":
     main.run()

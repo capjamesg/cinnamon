@@ -8,7 +8,9 @@ with connection:
     cursor.execute("""CREATE TABLE IF NOT EXISTS following(
         channel text,
         url text,
-        etag text
+        etag text,
+        photo text,
+        name text
     )
     """)
 

@@ -22,11 +22,6 @@
 <aside class="flex_left_home">
     <h2>Your Channels</h2>
     <ul>
-        {% if page_channel_uid == "all" %}
-        <li><a href="/reader/all" style="font-weight: 600;">All 📝</a></li>
-        {% else %}
-        <li><a href="/reader/all">All 📝</a></li>
-        {% endif %}
         {% for channel in channels %}
         <li>
             {% if channel.uid == page_channel_uid %}
@@ -37,6 +32,10 @@
         </li>
         {% endfor %}
     </ul>
+    <hr>
+    <h3>Manage</h3>
+    <button onclick="trigger_modal('subscribe')">Subscribe to a new feed</button>
+    <button onclick="trigger_modal('channel_settings')">Channel Settings</button>
     {% if results | length > 0 %}
         <form method="POST" action="/read">
             <input type="hidden" name="channel" value="{{ page_channel_uid }}">
@@ -51,53 +50,152 @@
             <button>Mark All as Unread</button>
         </form>
     {% endif %}
+    <hr>
+    <h3>Feeds in this Channel</h3>
+    <details>
+        <summary>See feeds</summary>
+        {% if feeds["items"] | length > 0 %}
+        <ul>
+            {% for feed in feeds["items"] %}
+                <li>{% if feed.get("icon") %}<img src="{{ feed['icon'] }}" alt="{{ feed.title }} feed icon" style="width: 20px; height: 20px;">{% endif %}
+                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p>There are feeds in this channel yet.</p>
+        {% endif %}
+    </details>
 </aside>
 <section class="feed flex_right_home">
     {% if results | length > 0 %}
+    <form method="POST" action="/search" role="search">
+        <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+        <input type="text" name="query" placeholder="Search for a post" aria-label="Search for a post" class="search_bar">
+        <button class="search_button">Search</button>
     <ul>
-      {% for w in results %}
-      {% if (w.index > 0 and published_dates[w.index-1] and published_dates[w.index-1][:8] != published_dates[w.index][:8]) or w.index == 0 %}
-        {% if w.get("published") %}
-        <p>{{ w["published"] | strftime }}</p>
-        {% endif %}
-        {% endif %}
-        <li {% if w["_is_read"] == False %}class="unread"{% endif %}>
-            {% if w.get("name") %}
-            <h3><a href='{{ w["url"] }}'>{{ w["name"] }}</a></h3>
-            {% elif w.get("author") and w.get("author").get("name") %}
-            <h3><a href='{{ w["url"] }}'>Post by {{ w["author"]["name"] }}</a></h3>
-            {% endif %}
-            {% if w.get("published") %}
-            <p>Published on {{ w["published"] | strftime }}.</p>
-            {% endif %}
-            {% if w.get("photo") %}
-            <img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' />
-            {% endif %}
-            {% if w.get("content") and w["content"].get("text") %}
-            {% capture content %}{{ w["content"]["text"].split(" ")[:75] }}{% endcapture %}
-            <p>{{ " ".join(content) }}</p>{% if content | length > 75 %}...{% endif %}</p>
-            {% else %}
-            <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
-            {% endif %}
-            <p>
-                <a href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
-                <a href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
-                <a href="https://micropub.jamesg.blog/post?type=repost&repost-of={{ w['url'] }}" class="reaction">Repost 🔁</a>
-                <a href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
-                <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
-            </p>
+    {% if is_searching == True %}
+        <li>
+            <p>Searching for: <b>{{ query }}</b></p>
         </li>
+    {% endif %}
+    {% set count = namespace(value=0) %}
+      {% for w in results %}
+      {% if (count.value > 0 and published_dates[count.value-1] and published_dates[count.value-1][:8] != published_dates[count.value][:8]) or count.value == 0 %}
+        {% if w.get("published") %}
+        <h2>{{ w["published"] | strftime }}</h2>
+        {% endif %}
+        {% endif %}
+        {% include "client/feed_item.html" %}
+      {% set count.value = count.value + 1 %}
       {% endfor %}
     </ul>
     {% else %}
     <p class="content_box">There are no posts in this channel. Check back later to see if any posts are added.</p>
     {% endif %}
+    {% if before_to_show != "" or after_to_show != "" %}
+        <div class="bottom-navigation">
+            <div class="prev">
+                <p><a href="/reader/{{ page_channel_uid }}?before={{ before_to_show }}">See Older Posts</a></p>
+            </div>
+            {% if before != None %}
+            <div class="next">
+                <p><a href="/reader/{{ page_channel_uid }}?after={{ after_to_show }}">See Newer Posts</a></p>
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
 </section>
 </div>
-<section>
-    {% if before == True %}
-    <p><a href="/">See Newer Posts</a></p>
-    {% endif %}
-    <p><a href="/">See Older Posts</a></p>
+<section class="content_box modal" style="display: none;" id="subscribe">
+    <div class="modal_content">
+        <span class="close" onclick="close_modal()">&times;</span>
+        <h2>Subscribe to a Feed</h2>
+        <p>Use the form below to subscribe to a feed.</p>
+        <p>Microformats 2 (mf2) and RSS feeds are currently supported.</p>
+        <form action="/preview" method="GET">
+        <label for="channel">Channel Name:</label><br>
+        <select name="channel" id="channel">
+            {% for channel in channels %}
+            <option value="{{ channel.uid }}">{{ channel.name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="url">Feed Address:</label><br>
+        <input id="url" type="url" name="url" placeholder="https://jamesg.blog/feed.xml" /><br>
+        <input type="submit" value="Preview Subscription" />
+        </form>
+    </div>
 </section>
+<section class="content_box modal" style="display: none;" id="channel_settings">
+    <div class="modal_content">
+        <span class="close" onclick="close_modal()">&times;</span>
+        <h2>Channel Settings</h2>
+
+        <h3>Rename Channel</h3>
+        <form action="/channel/{{ page_channel_uid }}" method="POST">
+            <label for="channel">Channel Name:</label><br>
+            <input type="text" name="name" id="name" value="{{ channel_name }}" placeholder="Channel name"><br>
+            <input type="hidden" name="method" id="method" value="delete">
+            <input type="hidden" name="action" id="action" value="channels">
+            <input type="submit" value="Rename Channel">
+        </form>
+
+        <h3>Delete Channel</h3>
+        <p>You can delete this channel using the button below.</p>
+        <p>Deleting a channel is irreversible.</p>
+        <form action="/delete-channel" method="POST">
+            <input type="hidden" name="channel" id="channel" value="{{ page_channel_uid }}">
+            <input type="hidden" name="method" id="method" value="delete">
+            <input type="hidden" name="action" id="action" value="channels">
+            <input type="submit" value="Delete Channel">
+        </form>
+    </div>
+</section>
+<script>
+    function trigger_modal(id) {
+        var modal = document.getElementById(id);
+        if (modal.style.display == "none") {
+            modal.style.display = "block";
+        } else {
+            modal.style.display = "none";
+        }
+    }
+
+    function close_modal() {
+        var modal = document.getElementsByClassName("modal");
+        for (var i = 0; i < modal.length; i++) {
+            if (event.target == modal[i]) {
+                modal[i].style.display = "none";
+            }
+        }
+    }
+
+    window.onclick = function(event) {
+        close_modal()
+    }
+
+    var close = document.getElementsByClassName("close");
+
+    for (var i = 0; i < close.length; i++) {
+        close[i].onclick = function() {
+            var modal = document.getElementsByClassName("modal");
+            modal.style.display = "none";
+        }
+    }
+
+    function show_all(id) {
+        var item_to_show = document.getElementById(id + "-full");
+        var show_label = document.getElementById(id + "-show");
+        var original_text = document.getElementById(id);
+
+        original_text.innerText = original_text.innerText.replace("...", "");
+
+        if (item_to_show.style.display === "none") {
+            item_to_show.style.display = "inline";
+            show_label.innerHTML = "Show less";
+        } else {
+            item_to_show.style.display = "none";
+            show_label.innerHTML = "Show more";
+        }
+    }
+</script>
 {% endblock %}
