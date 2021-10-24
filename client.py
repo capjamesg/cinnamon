@@ -179,8 +179,6 @@ def search_feed():
         "query": query,
     }
 
-    print(channel_id)
-
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
     feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel_id), headers=headers).json()

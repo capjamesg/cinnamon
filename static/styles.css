@@ -224,6 +224,14 @@ button:focus > a {
 	float: right;
 	padding-left: 10px;
 }
+.notice {
+	padding: 15px;
+	margin-left: 5px;
+	border-radius: 10px;
+	border: 1px solid lightgrey;
+	text-align: left;
+	background-color: white;
+}
 
 a:hover {
 	color: #0000CD;
@@ -368,7 +376,7 @@ ol {
 	border: 1px solid lightgrey;
 }
 .notification {
-	padding: 5px;
+	padding: 15px;
 	margin-left: 5px;
 	border-radius: 10px;
 	border: 1px solid lightgreen;
