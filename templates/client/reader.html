@@ -35,9 +35,9 @@
         </ul>
         <hr>
         <h3>Manage</h3>
-        <button onclick="trigger_modal('search')">Search</button>
-        <button onclick="trigger_modal('subscribe')">Subscribe to a new feed</button>
-        <button onclick="trigger_modal('channel_settings')">Channel Settings</button>
+        <a href="/search" class="button_link" id="search_button" tabindex="0">Search</a>
+        <a href="/feeds" class="button_link" id="subscribe_to_feed" tabindex="0">Subscribe to a new feed</a>
+        <a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings" tabindex="0">Channel Settings</a>
         {% if results | length > 0 %}
             <form method="POST" action="/read">
                 <input type="hidden" name="channel" value="{{ page_channel_uid }}">
@@ -118,7 +118,9 @@
         <label for="channel">Channel Name:</label><br>
         <select name="channel" id="channel">
             {% for channel in channels %}
-            <option value="{{ channel.uid }}">{{ channel.name }}</option>
+                {% if channel.uid != "all" %}
+                    <option value="{{ channel.uid }}">{{ channel.name }}</option>
+                {% endif %}
             {% endfor %}
         </select><br>
         <label for="url">Feed Address:</label><br>
@@ -165,6 +167,12 @@
     </div>
 </section>
 <script>
+    var js_req = document.getElementsByClassName("js");
+
+    for (var i = 0; i < js_req.length; i++) {
+        js_req[i].style.display = "inline";
+    }
+    
     function trigger_modal(id) {
         var modal = document.getElementById(id);
         if (modal.style.display == "none") {
@@ -187,7 +195,7 @@
         close_modal()
     }
 
-    var close = document.getElementByClassName("close");
+    var close = document.getElementsByClassName("close");
 
     close.onclick = function() {
         close_modal()
@@ -217,6 +225,27 @@
             item_to_show.style.display = "none";
             show_label.innerHTML = "Show more";
         }
+    }
+    var search_button = document.getElementById("search_button");
+    var subscribe_to_feed = document.getElementById("subscribe_to_feed");
+    var channel_settings = document.getElementById("channel_settings");
+
+    console.log(search_button);
+    
+    search_button.href = "#";
+    subscribe_to_feed.href = "#";
+    channel_settings.href = "#";
+
+    search_button.onclick = function() {
+        trigger_modal("search");
+    }
+
+    subscribe_to_feed.onclick = function() {
+        trigger_modal("subscribe");
+    }
+
+    channel_settings.onclick = function() {
+        trigger_modal("channel_settings");
     }
 </script>
 {% endblock %}

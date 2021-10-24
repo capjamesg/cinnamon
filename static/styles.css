@@ -63,7 +63,7 @@ nav, .button_list {
 	padding: 20px;
 	margin: auto;
 }
-button {
+button, .button_link {
 	background-color: royalblue;
 	border-radius: 10px;
 	padding: 10px;
@@ -73,6 +73,10 @@ button {
 	color: white;
 	border: none;
 	font-size: 16px;
+	text-align: center;
+}
+.button_link a:hover {
+	color: white;
 }
 .unread {
 	background-color: #f7f7f7 !important;
@@ -524,4 +528,7 @@ audio {
 	width: 100%;
 	margin-top: 15px;
 	border-radius: 10px;
+}
+.js {
+	display: none;
 }

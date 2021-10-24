@@ -33,7 +33,7 @@
     {% if w.get("content") and w["content"].get("text") %}
     {% set content = w["content"]["text"].split(" ")[:75] %}
     <p id="{{ w['_id'] }}">{{ " ".join(content) }} {% if content | length == 75 %}...{% endif %}<span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
-    {% if content | length == 75 %}<p><a onclick="show_all('{{ w['_id'] }}');" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
+    {% if content | length == 75 %}<p class="js"><a onclick="show_all('{{ w['_id'] }}');" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
     {% else %}
     <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
     {% endif %}
