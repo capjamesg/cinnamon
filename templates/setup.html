@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+{% if session.get("me") %}
+<section class="green_notification">
+  <p>You are logged in as {{ session.get("me").replace("https://", "").replace("http://", "").strip("/") }}.</p>
+  <p class="error"><a href="/reader/all">Go to the feed reader.</a></p>
+  <p class="error"><a href="/feeds">Go to the server dashboard.</a></p>
+</section>
+{% endif %}
+<section class="feed h-app h-x-app main_content_box">
+    <img src="https://jamesg.blog/assets/coffeeshop.jpg" height="100" width="100" class="u-logo" alt="James sitting in a coffee shop, happily staring at a cup of coffee.">
+    <h1>Microsub Endpoint Setup Instructions</h1>
+    <p>This Microsub endpoint is run by {{ config.ME }}.</p>
+    <p class="notification">This endpoint is not open for registration. Please only follow the instructions below if you have already deployed your own endpoint. Otherwise, consider looking for a <a href="https://indieweb.org/Microsub">public Microsub server and client</a>.</p>
+    <h2>How to use this tool</h2>
+    <p>If you already have a Microsub server set up and connected to your website, you can go ahead and use the reader component of this service immediately. All you have to do is click "Login" and sign in with your domain name.</p>
+    <p>If you do not have a Microsub server set up, don't worry. You can use this site as a server!</p>
+    <p>To do so, add the following HTML tag to the head tag on your website home page:</p>
+    <code><link rel="microsub" href="https://microsub.jamesg.blog/endpoint"></code>
+    <p>That tag will let this service know you are using microsub.jamesg.blog as a Microsub server.</p>
+    <p>Once you have added the tag, you are ready to sign in! Click "Login" in the navigation bar to get started.</p>
+</section>
+{% endblock %}

@@ -14,11 +14,14 @@ def poll_feeds():
     with connection:
         cursor = connection.cursor()
 
-        subscriptions = cursor.execute("SELECT url, channel, etag FROM following;").fetchall()
-        # subscriptions = [["https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A", "indiewebnaw", ""]]
+        # don't poll feeds that have been blocked
+        # see https://indieweb.org/Microsub-spec#Blocking
+        
+        subscriptions = cursor.execute("SELECT url, channel, etag, id FROM following WHERE blocked = 0;").fetchall()
 
         for s in subscriptions:
             url = s[0]
+            feed_id = s[3]
 
             # get channel uid
             try:
@@ -77,7 +80,7 @@ def poll_feeds():
 
                     ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, ))
+                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, feed_id, ))
             elif "json" in content_type or url.endswith(".json"):
                 feed = requests.get(url)
 
@@ -108,9 +111,9 @@ def poll_feeds():
 
                         ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                        cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, ))
+                        cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, s[3] ))
             else:
-                hfeed.process_hfeed(url, cursor, channel_uid)
+                hfeed.process_hfeed(url, cursor, channel_uid, feed_id)
 
     print("polled all subscriptions")
 

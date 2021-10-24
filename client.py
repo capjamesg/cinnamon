@@ -125,8 +125,8 @@ def preview_feed():
     url = request.args.get("url")
     channel_id = request.args.get("channel")
 
-    if not url or not channel_id:
-        flash("Please specify a feed URL and channel ID when previewing a feed.")
+    if not url:
+        flash("Please specify a feed URL to preview a feed.")
         return redirect("/reader/all")
 
     data = {
@@ -138,7 +138,11 @@ def preview_feed():
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-    channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel_id]
+    if channel_id:
+        channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel_id][0]["name"]
+    else:
+        channel_name = "All"
+        channel_id = "all"
 
     if not channel_name:
         flash("The channel to which you tried to add a feed does not exist.")
@@ -148,7 +152,8 @@ def preview_feed():
         title="Preview Feed | Microsub Reader",
         feed=microsub_req.json(),
         channel=channel_id,
-        channel_name=channel_name[0]["name"]
+        channel_name=channel_name,
+        channels=channel_req.json()["channels"]
     )
 
 @client.route("/search", methods=["GET", "POST"])

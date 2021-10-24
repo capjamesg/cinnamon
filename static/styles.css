@@ -212,6 +212,18 @@ button:focus, input[type="submit"]:focus {
 button:focus > a {
 	color: black !important;
 }
+.error {
+	font-weight: 600;
+}
+
+.button_list {
+	border-top: 2px solid lightgray;
+}
+
+.button_list form {
+	float: right;
+	padding-left: 10px;
+}
 
 a:hover {
 	color: #0000CD;

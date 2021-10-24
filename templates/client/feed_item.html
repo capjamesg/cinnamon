@@ -24,27 +24,6 @@
     {% elif w.get("photo") %}
         <img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' />
     {% endif %}
-    <script>
-        function show_video(url, id) {
-            var iframe = document.createElement("iframe");
-            iframe.src = url;
-            iframe.width = "640";
-            iframe.height = "480";
-            iframe.frameborder = "0";
-            iframe.allowfullscreen = "true";
-            iframe.style.display = "block";
-            var to_replace = document.getElementById(id);
-            to_replace.parentNode.replaceChild(iframe, to_replace);
-        }
-
-        // replace urls on all embedded videos
-        var all_videos = document.getElementsByClassName("embedded_video");
-        
-        for (var i = 0; i < all_videos.length; i++) {
-            var id = all_videos[i].id;
-            all_videos[i].href = "#" + id + "-heading";
-        }
-    </script>
     {% if w.get("video") and (not w["video"][0]["url"].startswith("https://youtube.com") and not w["video"][0]["url"].startswith("https://www.youtube.com")) %}
         <video controls>
             <source src='{{ w["video"][0]["url"] }}' type='video/mp4'>
