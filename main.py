@@ -299,7 +299,7 @@ def modify_channel(id):
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
         if channel:
-            return render_template("server/channel.html", title="Channel | Microsub Dashboard", channel=channel, feeds=feeds)
+            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel), channel=channel, feeds=feeds)
         else:
             flash("The channel you were looking for could not be found.")
             return redirect("/reader/all")
