@@ -13,8 +13,12 @@ main = Blueprint('main', __name__, template_folder='templates')
 def index():
     return render_template("index.html", title="Home | Microsub Endpoint")
 
+@main.route("/setup")
+def setup():
+    return render_template("setup.html", title="Setup | Microsub Endpoint")
+
 @main.route("/endpoint", methods=["GET", "POST"])
-# @requires_indieauth
+@requires_indieauth
 def home():
     if request.form:
         action = request.form.get("action")
@@ -46,6 +50,10 @@ def home():
         return create_follow()
     elif action == "unfollow" and request.method == "POST":
         return unfollow()
+    elif action == "block" and request.method == "POST":
+        return block()
+    elif action == "unblock" and request.method == "POST":
+        return unblock()
     elif action == "mute" and request.method == "GET":
         return get_muted()
     elif action == "mute" and request.method == "POST":
@@ -55,7 +63,7 @@ def home():
     elif action == "channels" and request.method == "GET":
         return get_channels()
     elif action == "channels" and request.method == "POST":
-        if request.args.get("channel") and not method:
+        if request.form.get("name") and request.form.get("channel"):
             return update_channel()
         elif request.form.get("channels") and method == "order":
             return reorder_channels()
@@ -96,8 +104,6 @@ def feed_list():
             "url": request.form.get("url")
         }
 
-        print(req)
-
         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
@@ -130,7 +136,7 @@ def reorder_channels_view():
             "channels": request.form.getlist("channel")
         }
 
-        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
+        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             flash("Your channels have been reordered.")
@@ -154,7 +160,7 @@ def create_channel_view():
             "name": request.form.get("name")
         }
 
-        r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
+        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             flash("You have created a new channel called {}.".format(request.form.get("name")))
@@ -179,7 +185,7 @@ def delete_channel_view():
             "method": "delete"
         }
 
-        r = requests.post(URL, data=req, headers={"Authorization": session["access_token"]})
+        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session["access_token"]})
 
         if r.status_code == 200:
             flash("You have deleted the {} channel.".format(r.json()["channel"]))
@@ -204,7 +210,7 @@ def unfollow_view():
             "url": request.form.get("url")
         }
 
-        r = requests.post(URL, data=req, headers={"Authorization": session.get("access_token")})
+        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
             return jsonify(r.json()), 200
@@ -270,11 +276,13 @@ def modify_channel(id):
     if request.method == "POST":
         req = {
             "action": "channels",
-            "channel": request.form.getlist("channel"),
+            "channel": request.form.get("channel"),
             "name": request.form.get("name"),
         }
 
-        r = requests.post(URL, data=req, headers={"Authorization": session.get("access_token")})
+        print(req)
+
+        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
             flash("The channel was successfully renamed to {}".format(request.form.get("name")))
@@ -285,10 +293,86 @@ def modify_channel(id):
 
     with connection:
         cursor = connection.cursor()
+
         channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (id,)).fetchone()
+
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
-        return render_template("server/modify_channel.html", title="Modify {} Channel".format(channel[0]), channel=channel, feeds=feeds)
+        if channel:
+            return render_template("server/channel.html", title="Channel | Microsub Dashboard", channel=channel, feeds=feeds)
+        else:
+            flash("The channel you were looking for could not be found.")
+            return redirect("/reader/all")
+
+@main.route("/mute", methods=["POST"])
+def mute_view():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
+    action = request.form.get("action")
+
+    if action != "mute" and action != "unmute":
+        flash("Invalid action.")
+        return redirect("/reader/{}".format(request.form.get("channel")))
+
+    if request.form.get("channel"):
+        req = {
+            "action": action,
+            "channel": request.form.get("channel"),
+            "url": request.form.get("url")
+        }
+
+        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
+
+        if r.status_code == 200:
+            if action == "mute":
+                flash("You have muted {}.".format(r.json()["url"]))
+            elif action == "unmute":
+                flash("You have unmuted {}.".format(r.json()["url"]))
+        else:
+            flash(r.json()["error"])
+
+        return redirect("/channel/{}".format(request.form.get("channel")))
+    else:
+        return redirect("/channel/{}".format(request.form.get("channel")))
+
+@main.route("/block", methods=["POST"])
+def block_view():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
+    action = request.form.get("action")
+
+    if action != "block" and action != "unblock":
+        flash("Invalid action.")
+        return redirect("/reader/{}".format(request.form.get("channel")))
+
+    if request.form.get("channel"):
+        req = {
+            "action": action,
+            "channel": request.form.get("channel"),
+            "url": request.form.get("url")
+        }
+
+        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
+
+        print(r.json())
+
+        if r.status_code == 200:
+            if action == "block":
+                flash("You have blocked {}.".format(r.json()["url"]))
+            elif action == "unblock":
+                flash("You have unblocked {}.".format(r.json()["url"]))
+        else:
+            flash(r.json()["error"])
+
+        return redirect("/channel/{}".format(request.form.get("channel")))
+    else:
+        return redirect("/channel/{}".format(request.form.get("channel")))
 
 @main.route("/websub/<uid>", methods=["POST"])
 def save_new_post_from_websub(uid):

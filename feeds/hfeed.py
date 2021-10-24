@@ -8,7 +8,7 @@ from dateutil.parser import parse
 from bs4 import BeautifulSoup
 from .canonicalize_url import canonicalize_url as canonicalize_url
 
-def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
+def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True, feed_id=None):
     session = requests.Session()
     session.max_redirects = 2
 
@@ -98,7 +98,14 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
                 jf2["published"] = date
 
                 if add_to_db == True:
-                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, ))
+                    feed_id = cursor.execute("SELECT id FROM feeds WHERE url = ?", (url,)).fetchone()
+
+                    if not feed_id:
+                        continue
+
+                    feed_id = feed_id[0]
+                    
+                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, feed_id, ))
                 
                 results.append(jf2)
 

@@ -14,7 +14,41 @@
     {% if feeds %}
         <ul>
             {% for feed in feeds %}
-            <li><a href="{{ feed[1] }}">{{ feed[1] }}</a> <form action="/unfollow" method="POST"><input type="hidden" name="channel" id="channel" value="{{ channel[0] }}"><input type="hidden" name="url" id="url" value="{{ feed[1] }}"><input type="submit" value="Unfollow"></form><br></li>
+            {{ feed }}
+            <li>
+                <a href="{{ feed[1] }}">{{ feed[1] }}</a>
+                <form action="/unfollow" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
+                    <input type="hidden" name="url" value="{{ feed[1] }}">
+                    <input type="submit" value="Unfollow">
+                </form>
+                {% if feed[6] == 0 %}
+                <form action="/mute" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
+                    <input type="hidden" name="url" value="{{ feed[1] }}">
+                    <input type="hidden" name="action" value="mute">
+                    <input type="submit" value="Mute">
+                </form>
+                {% else %}
+                <form action="/mute" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
+                    <input type="hidden" name="url" value="{{ feed[1] }}">
+                    <input type="hidden" name="action" value="unmute">
+                    <input type="submit" value="Unmute">
+                </form>
+                {% endif %}
+                {% if feed[7] == 0 %}
+                <form action="/block" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
+                    <input type="hidden" name="url" value="{{ feed[1] }}">
+                    <input type="hidden" name="action" value="block">
+                    <input type="submit" value="Block">
+                </form>
+                {% else %}
+                <form action="/block" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
+                    <input type="hidden" name="url" value="{{ feed[1] }}">
+                    <input type="hidden" name="action" value="unblock">
+                    <input type="submit" value="Unblock">
+                </form>
+                {% endif %}
+                <br>
+            </li>
             {% endfor %}
         </ul>
     {% else %}
@@ -23,9 +57,11 @@
 </section>
 <section class="content_box">
     <h2>Rename Channel</h2>
+    {{ channel }}
     <form action="/channel/{{ channel[1] }}" method="POST">
         <label for="channel">Channel Name:</label><br>
-        <input type="text" name="name" id="name" value="{{ channel[0] }}" placeholder="Channel name"><br>
+        <input type="hidden" name="channel" id="channel" value="{{ channel[1] }}"><br>
+        <input type="text" name="name" value="{{ channel[0] }}" placeholder="Channel name"><br>
         <input type="hidden" name="method" id="method" value="delete">
         <input type="hidden" name="action" id="action" value="channels">
         <input type="submit" value="Rename Channel">
@@ -36,7 +72,7 @@
     <p>You can delete this channel using the button below.</p>
     <p>Deleting a channel is irreversible.</p>
     <form action="/delete-channel" method="POST">
-        <input type="hidden" name="channel" id="channel" value="{{ channel[1] }}">
+        <input type="hidden" name="channel" value="{{ channel[1] }}">
         <input type="hidden" name="method" id="method" value="delete">
         <input type="hidden" name="action" id="action" value="channels">
         <input type="submit" value="Delete Channel">

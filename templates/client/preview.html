@@ -6,9 +6,16 @@
         <img src="{{ feed["feed"].get("icon") }}" alt="{{ feed["feed"].get("title") }} feed icon" />
     {% endif %}
     <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
-    <p>Your subscription will be added to the {{ channel_name }} channel.</p>
+    <h2>Confirm subscription</h2>
     <form action="/feeds" method="POST">
-        <input type="hidden" name="channel" id="channel" value="{{ channel }}" />
+        <label for="channel">Name of the channel to which you want to add your subscription:</label><br>
+        <select name="channel" id="channel">
+            {% for c in channels %}
+                {% if c.uid != "all" %}
+                    <option value="{{ c.uid }}" {% if c.uid == channel %}selected{% endif %}>{{ c.name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select><br>
         <input type="hidden" name="url" id="url" value="{{ feed["feed"]["url"] }}" />
         <input type="hidden" name="action" id="action" value="follow" />
         <input type="submit" value="Subscribe" />

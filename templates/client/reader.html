@@ -96,9 +96,11 @@
     {% endif %}
     {% if after != "" or before != "" %}
         <div class="bottom-navigation">
-            <div class="prev">
-                <p><a href="/reader/{{ page_channel_uid }}?before={{ after }}">See Older Posts</a></p>
-            </div>
+            {% if after != None %}
+                <div class="prev">
+                    <p><a href="/reader/{{ page_channel_uid }}?before={{ after }}">See Older Posts</a></p>
+                </div>
+            {% endif %}
             {% if before != None %}
             <div class="next">
                 <p><a href="/reader/{{ page_channel_uid }}?after={{ before }}">See Newer Posts</a></p>
@@ -110,7 +112,7 @@
 </div>
 <section class="content_box modal" style="display: none;" id="subscribe">
     <div class="modal_content">
-        <span class="close" onclick="close_modal()">&times;</span>
+        <span class="close" onclick="trigger_modal('subscribe')">&times;</span>
         <h2>Subscribe to a Feed</h2>
         <p>Use the form below to subscribe to a feed.</p>
         <p>Microformats 2 (mf2) and RSS feeds are currently supported.</p>
@@ -131,7 +133,7 @@
 </section>
 <section class="content_box modal" style="display: none;" id="channel_settings">
     <div class="modal_content">
-        <span class="close" onclick="close_modal()">&times;</span>
+        <span class="close" onclick="trigger_modal('channel_settings')">&times;</span>
         <h2>Channel Settings</h2>
 
         <h3>Rename Channel</h3>
@@ -156,7 +158,7 @@
 </section>
 <section class="content_box modal" style="display: none;" id="search">
     <div class="modal_content">
-        <span class="close" onclick="close_modal()">&times;</span>
+        <span class="close" onclick="trigger_modal('search')">&times;</span>
         <h2>Search for a post</h2>
         <p>Use the form below to find a blog post in your feed.</p>
         <form method="POST" action="/search" role="search">
@@ -195,12 +197,6 @@
         close_modal()
     }
 
-    var close = document.getElementsByClassName("close");
-
-    close.onclick = function() {
-        close_modal()
-    }
-
     function show_channels() {
         var channels = document.getElementsByClassName("main_menu_mobile")[0];
 
@@ -229,8 +225,6 @@
     var search_button = document.getElementById("search_button");
     var subscribe_to_feed = document.getElementById("subscribe_to_feed");
     var channel_settings = document.getElementById("channel_settings");
-
-    console.log(search_button);
     
     search_button.href = "#";
     subscribe_to_feed.href = "#";
@@ -246,6 +240,26 @@
 
     channel_settings.onclick = function() {
         trigger_modal("channel_settings");
+    }
+
+    function show_video(url, id) {
+        var iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.width = "640";
+        iframe.height = "480";
+        iframe.frameborder = "0";
+        iframe.allowfullscreen = "true";
+        iframe.style.display = "block";
+        var to_replace = document.getElementById(id);
+        to_replace.parentNode.replaceChild(iframe, to_replace);
+    }
+
+    // replace urls on all embedded videos
+    var all_videos = document.getElementsByClassName("embedded_video");
+    
+    for (var i = 0; i < all_videos.length; i++) {
+        var id = all_videos[i].id;
+        all_videos[i].href = "#" + id + "-heading";
     }
 </script>
 {% endblock %}
