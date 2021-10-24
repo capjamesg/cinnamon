@@ -35,9 +35,9 @@
         </ul>
         <hr>
         <h3>Manage</h3>
-        <a href="/search" class="button_link" id="search_button" tabindex="0">Search</a>
-        <a href="/feeds" class="button_link" id="subscribe_to_feed" tabindex="0">Subscribe to a new feed</a>
-        <a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings" tabindex="0">Channel Settings</a>
+        <button><a href="/search" class="button_link" id="search_button">Search</a></button>
+        <button><a href="/feeds" class="button_link" id="subscribe_to_feed">Subscribe to a new feed</a></button>
+        <button><a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings">Channel Settings</a></button>
         {% if results | length > 0 %}
             <form method="POST" action="/read">
                 <input type="hidden" name="channel" value="{{ page_channel_uid }}">
@@ -59,12 +59,12 @@
             {% if feeds["items"] | length > 0 %}
             <ul>
                 {% for feed in feeds["items"] %}
-                    <li>{% if feed.get("icon") %}<img src="{{ feed['icon'] }}" alt="{{ feed.title }} feed icon" style="width: 20px; height: 20px;">{% endif %}
+                    <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
                         <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
                 {% endfor %}
             </ul>
             {% else %}
-                <p>There are feeds in this channel yet.</p>
+                <p>There are no feeds in this channel yet.</p>
             {% endif %}
         </details>
     </div>
@@ -119,7 +119,7 @@
         <select name="channel" id="channel">
             {% for channel in channels %}
                 {% if channel.uid != "all" %}
-                    <option value="{{ channel.uid }}">{{ channel.name }}</option>
+                    <option value="{{ channel.uid }}" {% if channel.uid == page_channel_uid %}selected{% endif %}>{{ channel.name }}</option>
                 {% endif %}
             {% endfor %}
         </select><br>

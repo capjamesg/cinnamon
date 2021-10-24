@@ -34,7 +34,9 @@ with connection:
 
     cursor.execute("""CREATE TABLE IF NOT EXISTS websub_subscriptions(
         url text,
-        uid text
+        uid text,
+        channel text,
+        approved integer
     """)
 
     print("microsub.db has been seeded.")
