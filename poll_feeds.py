@@ -42,7 +42,6 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True):
     print(url)
 
     for item in mf2_raw["items"]:
-        print(item.get("type"))
         if item.get("type") and item.get("type")[0] == "h-feed":
             print("entries found: " + str(len(item.get("children"))))
             if item.get("children") == None:
@@ -270,17 +269,18 @@ def process_xml_feed(entry, feed, url):
                 result["audio"] = [{"content_type": link.get("type"), "url": link.get("href")}]
                 break
     
-    if entry.get("media_content"):
+    if entry.get("media_content") and len(entry.get("media_content")) > 0:
         for media in entry.get("media_content"):
-            if media.get("url").startswith("https://www.youtube.com") or media.get("url").startswith("http://www.youtube.com"):
-                media.get("url").replace("watch?v=", "embed/")
+            if media.get("url") != None:
+                if media.get("url").startswith("https://www.youtube.com") or media.get("url").startswith("http://www.youtube.com"):
+                    media.get("url").replace("watch?v=", "embed/")
 
-            if media.get("type") and ("video" in media.get("type") or "x-shockwave-flash" in media.get("type")) and media.get("url"):
-                result["video"] = [{"content_type": media.get("type"), "url": media.get("url")}]
-                break
-            elif media.get("type") and "audio" in link.get("type") and media.get("url"):
-                result["audio"] = [{"content_type": media.get("type"), "url": media.get("url")}]
-                break
+                if media.get("type") and ("video" in media.get("type") or "x-shockwave-flash" in media.get("type")) and media.get("url"):
+                    result["video"] = [{"content_type": media.get("type"), "url": media.get("url")}]
+                    break
+                elif media.get("type") and "audio" in link.get("type") and media.get("url"):
+                    result["audio"] = [{"content_type": media.get("type"), "url": media.get("url")}]
+                    break
 
     published = published.split("T")[0]
 
@@ -365,8 +365,6 @@ def poll_feeds():
         cursor = connection.cursor()
 
         subscriptions = cursor.execute("SELECT url, channel, etag FROM following;").fetchall()
-
-        subscriptions = [["https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A", "indiewebnaw", ""]]
 
         for s in subscriptions:
             url = s[0]

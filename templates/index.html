@@ -3,8 +3,8 @@
 {% if session.get("me") %}
 <section class="green_notification">
   <p>You are logged in as {{ session.get("me").replace("https://", "").replace("http://", "").strip("/") }}.</p>
-  <p class="error"><a href="/reader/all">Click here to go to the Microsub reader.</a></p>
-  <p class="error"><a href="/feeds">Click here to go to the Microsub server dashboard.</a></p>
+  <p class="error"><a href="/reader/all">Go to the feed reader.</a></p>
+  <p class="error"><a href="/feeds">Go to the server dashboard.</a></p>
 </section>
 {% endif %}
 <section class="feed h-app h-x-app main_content_box">

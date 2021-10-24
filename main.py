@@ -13,7 +13,7 @@ def index():
     return render_template("index.html", title="Home | Microsub Endpoint")
 
 @main.route("/endpoint", methods=["GET", "POST"])
-# @requires_indieauth
+@requires_indieauth
 def home():
     if request.form:
         action = request.form.get("action")
