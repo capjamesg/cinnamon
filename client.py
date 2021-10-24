@@ -1,5 +1,6 @@
 from flask import Blueprint, request, session, redirect, flash, render_template
 from .check_token import check_token
+from .indieauth import requires_indieauth
 import requests
 from .actions import *
 from .config import *
@@ -135,10 +136,19 @@ def preview_feed():
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+    channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel_id]
+
+    if not channel_name:
+        flash("The channel to which you tried to add a feed does not exist.")
+        return redirect("/reader/all")
+
     return render_template("client/preview.html",
         title="Preview Feed | Microsub Reader",
         feed=microsub_req.json(),
-        channel=channel_id
+        channel=channel_id,
+        channel_name=channel_name[0]["name"]
     )
 
 @client.route("/search", methods=["GET", "POST"])
@@ -163,6 +173,8 @@ def search_feed():
         "action": "search",
         "query": query,
     }
+
+    print(channel_id)
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 

@@ -6,8 +6,9 @@
         <img src="{{ feed["feed"].get("icon") }}" alt="{{ feed["feed"].get("title") }} feed icon" />
     {% endif %}
     <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
+    <p>Your subscription will be added to the {{ channel_name }} channel.</p>
     <form action="/feeds" method="POST">
-        <input type="hidden" name="channel" id="channel" value="{{ channel_id }}" />
+        <input type="hidden" name="channel" id="channel" value="{{ channel }}" />
         <input type="hidden" name="url" id="url" value="{{ feed["feed"]["url"] }}" />
         <input type="hidden" name="action" id="action" value="follow" />
         <input type="submit" value="Subscribe" />

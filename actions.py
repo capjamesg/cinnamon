@@ -3,8 +3,8 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import feedparser
-from . import poll_feeds
-# import poll_feeds
+from .feeds import hfeed, json_feed, xml_feed
+from .feeds import canonicalize_url as canonicalize_url
 import random
 import string
 import json
@@ -169,11 +169,21 @@ def preview():
         feed = feedparser.parse(url)
 
         for entry in feed.entries:
-            result, _ = poll_feeds.process_xml_feed(entry, feed, url)
+            result, _ = xml_feed.process_xml_feed(entry, feed, url)
+
+            items_to_return.append(result)
+    elif "json" in content_type or url.endswith(".json"):
+        try:
+            feed = requests.get(url, timeout=5).json()
+        except:
+            return jsonify({"error": "invalid url"}), 400
+
+        for entry in feed.get("items", []):
+            result, _ = json_feed.process_json_feed(entry, feed)
 
             items_to_return.append(result)
     else:
-        results = poll_feeds.process_hfeed(url, add_to_db=False)
+        results = hfeed.process_hfeed(url, add_to_db=False)
 
         for result in results:
             items_to_return.append(result)
@@ -196,7 +206,7 @@ def preview():
     favicon = soup.find("link", rel="shortcut icon")
 
     if favicon:
-        feed["icon"] = favicon.get("href")
+        feed["icon"] = canonicalize_url.canonicalize_url(favicon.get("href"), url_domain, favicon.get("href"))
 
     if soup.find("title"):
         feed["title"] = soup.find("title").text
@@ -249,6 +259,7 @@ def create_channel():
             return jsonify({"error": "This channel name has been taken."}), 400
 
         existing_channels = cursor.execute("SELECT position FROM channels ORDER BY position DESC LIMIT 1").fetchone()
+
         if existing_channels and len(existing_channels) > 0:
             last_position = int(existing_channels[0])
         else:
@@ -284,8 +295,6 @@ def delete_channel():
 def get_follow(channel):
     connection = sqlite3.connect("microsub.db")
 
-    print(channel)
-
     if not channel:
         return jsonify({}), 200
 
@@ -296,9 +305,7 @@ def get_follow(channel):
         else:
             results = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
 
-        print(results)
-
-        results = [{"type": "feed", "url": r[1]} for r in results]
+        results = [{"type": "feed", "url": r[1], "photo": r[3], "name": r[4]} for r in results]
 
         final_result = {"items": results}
 
@@ -335,7 +342,13 @@ def create_follow():
         favicon = soup.find("link", rel="shortcut icon")
 
         if favicon:
-            favicon = favicon.get("href")        
+            favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
+
+        if not favicon:
+            favicon = soup.find("link", rel="icon")
+
+            if favicon:
+                favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
 
         # "" empty string is etag which will be populated in poll_feeds.py if available
         cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, ))
@@ -368,7 +381,7 @@ def create_follow():
 
             r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": "https://microsub.jamesg.blog/websub_callback"})
 
-            cursor.execute("INSERT INTO websub_subscriptions VALUES (?, ?);", (url, random_string))
+            cursor.execute("INSERT INTO websub_subscriptions VALUES (?, ?, ?);", (url, random_string, request.form.get("channel"), ))
 
         return {"type": "feed", "url": url}
 

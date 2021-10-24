@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
 from .indieauth import requires_indieauth
 from .check_token import check_token
+import datetime
 import sqlite3
 import requests
 from .actions import *
@@ -13,7 +14,7 @@ def index():
     return render_template("index.html", title="Home | Microsub Endpoint")
 
 @main.route("/endpoint", methods=["GET", "POST"])
-@requires_indieauth
+# @requires_indieauth
 def home():
     if request.form:
         action = request.form.get("action")
@@ -95,12 +96,14 @@ def feed_list():
             "url": request.form.get("url")
         }
 
+        print(req)
+
         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
             flash("You are now following {}".format(request.form.get("url"), ))
         else:
-            flash("Something went wrong. Please try again.")
+            flash(r.json()["error"])
 
         return redirect("/reader/all")
 
@@ -295,12 +298,13 @@ def save_new_post_from_websub(uid):
         cursor = connection.cursor()
         
         # check if subscription exists
-        subscription = cursor.execute("SELECT url FROM websub_subscriptions WHERE uid = ?", (uid,)).fetchone()
+        subscription = cursor.execute("SELECT url FROM websub_subscriptions WHERE uid = ? AND approved = 1", (uid,)).fetchone()
 
         if not subscription:
             return jsonify({"error": "Subscription does not exist."}), 400
 
         url = subscription[0]
+        channel = subscription[2]
 
         # retrieve feed
         try:
@@ -319,13 +323,37 @@ def save_new_post_from_websub(uid):
             feed = feedparser.parse(url)
 
             for entry in feed.entries:
-                result, _ = poll_feeds.process_xml_feed(entry, feed, url)
+                result, published = xml_feed.process_xml_feed(entry, feed, url)
+
+                items_to_return.append(result, published)
+        elif "json" in content_type or url.endswith(".json"):
+            try:
+                feed = requests.get(url, timeout=5).json()
+            except:
+                return jsonify({"error": "invalid url"}), 400
+
+            for entry in feed.get("items", []):
+                result, published = json_feed.process_json_feed(entry, feed)
+
+                items_to_return.append(result, published)
         else:
-            results = poll_feeds.process_hfeed(url, add_to_db=True)
+            results = hfeed.process_hfeed(url, add_to_db=True)
+
+            # this should use actual published dates
+            # for now, we are just using the current time
+            published = datetime.datetime.now().strftime("%Y%m%d")
 
             for result in results:
                 items_to_return.append(result)
 
+        ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+
+        for result in items_to_return:
+            published = result[1]
+            result = result[0]
+
+            cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, ))
+            
         return jsonify({"success": "Entry added to feed."}), 200
 
 @main.route("/websub_callback")
@@ -350,6 +378,8 @@ def verify_websub_subscription():
 
             if not check_subscription:
                 return jsonify({"error": "Subscription does not exist."}), 400
+
+            cursor.execute("UPDATE websub_subscriptions SET approved = ? WHERE url = ?", (1, request.args.get("hub.topic"), ))
 
         return request.args.get("hub.challenge"), 200
     else:
