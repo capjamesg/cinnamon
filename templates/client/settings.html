@@ -7,8 +7,8 @@
         <p>You are signed in as: <a href='{{ session.get("me").split("/")[2] }}'>{{ session.get("me").split("/")[2] }}</a></code>
         <p>Your Microsub server is located at: <a href='{{ session.get("server_url").split("/")[2] }}'>{{ session.get("server_url").split("/")[2] }}</a></p>
         <p>Your access token is:</p>
-        <code><pre>{{ session.get("access_token") }}</pre></code>
-        {% if session.get("scopes").split(" ") | length > 0 %}
+        <code>{{ session.get("access_token") }}</code>
+        {% if session.get("scopes") and session.get("scopes").split(" ") | length > 0 %}
             <p>The following scopes have been approved for your account:</p>
             <ul>
                 {% for scope in session.get("scopes").split(" ") %}
@@ -24,7 +24,7 @@
 
         <p>You can use the following bookmarklet to subscribe to a feed:</p>
 
-        <p><a href="javascript:(function(){window.location='https://microsub.jamesg.blog/feeds?url='+encodeURIComponent(window.location.href);})()">Subscribe</a></p>
+        <p><a href="javascript:(function(){window.location='https://microsub.jamesg.blog/preview?url='+encodeURIComponent(window.location.href);})()">Subscribe</a></p>
     </section>
 </div>
 {% endblock %}

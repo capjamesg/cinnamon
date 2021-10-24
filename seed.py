@@ -10,7 +10,10 @@ with connection:
         url text,
         etag text,
         photo text,
-        name text
+        name text,
+        id integer primary key autoincrement,
+        muted integer,
+        blocked integer
     )
     """)
 
@@ -28,13 +31,16 @@ with connection:
         read_status text,
         url text,
         uid text,
-        hidden integer
+        hidden integer,
+        feed_id integer
     )
     """)
 
     cursor.execute("""CREATE TABLE IF NOT EXISTS websub_subscriptions(
         url text,
-        uid text
+        uid text,
+        channel text,
+        approved integer
     """)
 
     print("microsub.db has been seeded.")

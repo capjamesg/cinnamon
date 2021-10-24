@@ -14,9 +14,10 @@ def reader_redirect():
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token()
-    session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+
     if auth_result == False:
         return redirect("/login")
+
     headers = {
         "Authorization": session["access_token"]
     }
@@ -124,8 +125,8 @@ def preview_feed():
     url = request.args.get("url")
     channel_id = request.args.get("channel")
 
-    if not url or not channel_id:
-        flash("Please specify a feed URL and channel ID when previewing a feed.")
+    if not url:
+        flash("Please specify a feed URL to preview a feed.")
         return redirect("/reader/all")
 
     data = {
@@ -135,10 +136,24 @@ def preview_feed():
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+    if channel_id:
+        channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel_id][0]["name"]
+    else:
+        channel_name = "All"
+        channel_id = "all"
+
+    if not channel_name:
+        flash("The channel to which you tried to add a feed does not exist.")
+        return redirect("/reader/all")
+
     return render_template("client/preview.html",
         title="Preview Feed | Microsub Reader",
         feed=microsub_req.json(),
-        channel=channel_id
+        channel=channel_id,
+        channel_name=channel_name,
+        channels=channel_req.json()["channels"]
     )
 
 @client.route("/search", methods=["GET", "POST"])
@@ -164,14 +179,22 @@ def search_feed():
         "query": query,
     }
 
+    print(channel_id)
+
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
+
+    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel_id), headers=headers).json()
+
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     return render_template("client/reader.html",
         title="Showing results for {} | Microsub Reader".format(query),
-        results=microsub_req.json(),
+        results=microsub_req.json()["items"],
         channel=channel_id,
         is_searching=True,
-        query=query
+        query=query,
+        feeds=feeds,
+        channels=channel_req.json()["channels"]
     )
 
 @client.route("/settings")

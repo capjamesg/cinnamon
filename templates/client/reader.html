@@ -20,58 +20,60 @@
 {% endwith %}
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
 <aside class="flex_left_home">
-    <h2>Your Channels</h2>
-    <ul>
-        {% for channel in channels %}
-        <li>
-            {% if channel.uid == page_channel_uid %}
-            <a href="/reader/{{ channel.uid }}" style="font-weight: 600;">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
-            {% else %}
-            <a href="/reader/{{ channel.uid }}">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    <hr>
-    <h3>Manage</h3>
-    <button onclick="trigger_modal('subscribe')">Subscribe to a new feed</button>
-    <button onclick="trigger_modal('channel_settings')">Channel Settings</button>
-    {% if results | length > 0 %}
-        <form method="POST" action="/read">
-            <input type="hidden" name="channel" value="{{ page_channel_uid }}">
-            <input type="hidden" name="status" value="mark_read">
-            <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
-            <button>Mark All As Read</button>
-        </form>
-        <form method="POST" action="/read">
-            <input type="hidden" name="channel" value="{{ page_channel_uid }}">
-            <input type="hidden" name="status" value="mark_unread">
-            <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
-            <button>Mark All as Unread</button>
-        </form>
-    {% endif %}
-    <hr>
-    <h3>Feeds in this Channel</h3>
-    <details>
-        <summary>See feeds</summary>
-        {% if feeds["items"] | length > 0 %}
+    <div class="main_menu_mobile">
+        <h2>Your Channels</h2>
         <ul>
-            {% for feed in feeds["items"] %}
-                <li>{% if feed.get("icon") %}<img src="{{ feed['icon'] }}" alt="{{ feed.title }} feed icon" style="width: 20px; height: 20px;">{% endif %}
-                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+            {% for channel in channels %}
+            <li>
+                {% if channel.uid == page_channel_uid %}
+                <a href="/reader/{{ channel.uid }}" style="font-weight: 600;">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
+                {% else %}
+                <a href="/reader/{{ channel.uid }}">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
+                {% endif %}
+            </li>
             {% endfor %}
         </ul>
-        {% else %}
-            <p>There are feeds in this channel yet.</p>
+        <hr>
+        <h3>Manage</h3>
+        <button><a href="/search" class="button_link" id="search_button">Search</a></button>
+        <button><a href="/feeds" class="button_link" id="subscribe_to_feed">Subscribe to a new feed</a></button>
+        <button><a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings">Channel Settings</a></button>
+        {% if results | length > 0 %}
+            <form method="POST" action="/read">
+                <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+                <input type="hidden" name="status" value="mark_read">
+                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
+                <button>Mark All As Read</button>
+            </form>
+            <form method="POST" action="/read">
+                <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+                <input type="hidden" name="status" value="mark_unread">
+                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
+                <button>Mark All as Unread</button>
+            </form>
         {% endif %}
-    </details>
+        <hr>
+        <h3>Feeds in this Channel</h3>
+        <details>
+            <summary>See feeds</summary>
+            {% if feeds["items"] | length > 0 %}
+            <ul>
+                {% for feed in feeds["items"] %}
+                    <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
+                        <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <p>There are no feeds in this channel yet.</p>
+            {% endif %}
+        </details>
+    </div>
+    <div class="main_menu_mobile_message">
+        <button onclick="show_channels()">Show channels</button>
+    </div>
 </aside>
 <section class="feed flex_right_home">
     {% if results | length > 0 %}
-    <form method="POST" action="/search" role="search">
-        <input type="hidden" name="channel" value="{{ page_channel_uid }}">
-        <input type="text" name="query" placeholder="Search for a post" aria-label="Search for a post" class="search_bar">
-        <button class="search_button">Search</button>
     <ul>
     {% if is_searching == True %}
         <li>
@@ -92,14 +94,16 @@
     {% else %}
     <p class="content_box">There are no posts in this channel. Check back later to see if any posts are added.</p>
     {% endif %}
-    {% if before_to_show != "" or after_to_show != "" %}
+    {% if after != "" or before != "" %}
         <div class="bottom-navigation">
-            <div class="prev">
-                <p><a href="/reader/{{ page_channel_uid }}?before={{ before_to_show }}">See Older Posts</a></p>
-            </div>
+            {% if after != None %}
+                <div class="prev">
+                    <p><a href="/reader/{{ page_channel_uid }}?before={{ after }}">See Older Posts</a></p>
+                </div>
+            {% endif %}
             {% if before != None %}
             <div class="next">
-                <p><a href="/reader/{{ page_channel_uid }}?after={{ after_to_show }}">See Newer Posts</a></p>
+                <p><a href="/reader/{{ page_channel_uid }}?after={{ before }}">See Newer Posts</a></p>
             </div>
             {% endif %}
         </div>
@@ -108,7 +112,7 @@
 </div>
 <section class="content_box modal" style="display: none;" id="subscribe">
     <div class="modal_content">
-        <span class="close" onclick="close_modal()">&times;</span>
+        <span class="close" onclick="trigger_modal('subscribe')">&times;</span>
         <h2>Subscribe to a Feed</h2>
         <p>Use the form below to subscribe to a feed.</p>
         <p>Microformats 2 (mf2) and RSS feeds are currently supported.</p>
@@ -116,7 +120,9 @@
         <label for="channel">Channel Name:</label><br>
         <select name="channel" id="channel">
             {% for channel in channels %}
-            <option value="{{ channel.uid }}">{{ channel.name }}</option>
+                {% if channel.uid != "all" %}
+                    <option value="{{ channel.uid }}" {% if channel.uid == page_channel_uid %}selected{% endif %}>{{ channel.name }}</option>
+                {% endif %}
             {% endfor %}
         </select><br>
         <label for="url">Feed Address:</label><br>
@@ -127,12 +133,12 @@
 </section>
 <section class="content_box modal" style="display: none;" id="channel_settings">
     <div class="modal_content">
-        <span class="close" onclick="close_modal()">&times;</span>
+        <span class="close" onclick="trigger_modal('channel_settings')">&times;</span>
         <h2>Channel Settings</h2>
 
         <h3>Rename Channel</h3>
         <form action="/channel/{{ page_channel_uid }}" method="POST">
-            <label for="channel">Channel Name:</label><br>
+            <label for="name">Channel Name:</label><br>
             <input type="text" name="name" id="name" value="{{ channel_name }}" placeholder="Channel name"><br>
             <input type="hidden" name="method" id="method" value="delete">
             <input type="hidden" name="action" id="action" value="channels">
@@ -143,14 +149,32 @@
         <p>You can delete this channel using the button below.</p>
         <p>Deleting a channel is irreversible.</p>
         <form action="/delete-channel" method="POST">
-            <input type="hidden" name="channel" id="channel" value="{{ page_channel_uid }}">
+            <input type="hidden" name="channel" id="channel_item" value="{{ page_channel_uid }}">
             <input type="hidden" name="method" id="method" value="delete">
             <input type="hidden" name="action" id="action" value="channels">
             <input type="submit" value="Delete Channel">
         </form>
     </div>
 </section>
+<section class="content_box modal" style="display: none;" id="search">
+    <div class="modal_content">
+        <span class="close" onclick="trigger_modal('search')">&times;</span>
+        <h2>Search for a post</h2>
+        <p>Use the form below to find a blog post in your feed.</p>
+        <form method="POST" action="/search" role="search">
+            <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+            <input type="text" name="query" placeholder="Search for a post" aria-label="Search for a post" class="search_bar" style="width: 75%;">
+            <button class="search_button" style="width: 25%;">Search</button>
+        </form>
+    </div>
+</section>
 <script>
+    var js_req = document.getElementsByClassName("js");
+
+    for (var i = 0; i < js_req.length; i++) {
+        js_req[i].style.display = "inline";
+    }
+    
     function trigger_modal(id) {
         var modal = document.getElementById(id);
         if (modal.style.display == "none") {
@@ -173,12 +197,13 @@
         close_modal()
     }
 
-    var close = document.getElementsByClassName("close");
+    function show_channels() {
+        var channels = document.getElementsByClassName("main_menu_mobile")[0];
 
-    for (var i = 0; i < close.length; i++) {
-        close[i].onclick = function() {
-            var modal = document.getElementsByClassName("modal");
-            modal.style.display = "none";
+        if (channels.style.display == "none") {
+            channels.style.display = "block";
+        } else {
+            channels.style.display = "none";
         }
     }
 
@@ -196,6 +221,45 @@
             item_to_show.style.display = "none";
             show_label.innerHTML = "Show more";
         }
+    }
+    var search_button = document.getElementById("search_button");
+    var subscribe_to_feed = document.getElementById("subscribe_to_feed");
+    var channel_settings = document.getElementById("channel_settings");
+    
+    search_button.href = "#";
+    subscribe_to_feed.href = "#";
+    channel_settings.href = "#";
+
+    search_button.onclick = function() {
+        trigger_modal("search");
+    }
+
+    subscribe_to_feed.onclick = function() {
+        trigger_modal("subscribe");
+    }
+
+    channel_settings.onclick = function() {
+        trigger_modal("channel_settings");
+    }
+
+    function show_video(url, id) {
+        var iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.width = "640";
+        iframe.height = "480";
+        iframe.frameborder = "0";
+        iframe.allowfullscreen = "true";
+        iframe.style.display = "block";
+        var to_replace = document.getElementById(id);
+        to_replace.parentNode.replaceChild(iframe, to_replace);
+    }
+
+    // replace urls on all embedded videos
+    var all_videos = document.getElementsByClassName("embedded_video");
+    
+    for (var i = 0; i < all_videos.length; i++) {
+        var id = all_videos[i].id;
+        all_videos[i].href = "#" + id + "-heading";
     }
 </script>
 {% endblock %}

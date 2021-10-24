@@ -3,8 +3,9 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import feedparser
-from . import poll_feeds
-# import poll_feeds
+from .feeds import hfeed, json_feed, xml_feed
+from .feeds import canonicalize_url as canonicalize_url
+from .config import URL
 import random
 import string
 import json
@@ -27,18 +28,20 @@ def get_timeline():
         cursor = connection.cursor()
 
         channel_arg = "channel = ? AND"
+        second_channel_arg = "channel = ? AND"
         channel_tuple = (channel,)
 
         if channel == "all":
             channel_arg = ""
+            second_channel_arg = ""
             channel_tuple = ()
 
         if not after and not before:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple ).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple ).fetchall()
         elif before and not after:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(before), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) date <= ? ORDER BY date DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple + (int(before), )).fetchall()
         else:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND date < ? ORDER BY date DESC LIMIT 20;".format(channel_arg), channel_tuple + (int(after), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) date <= ? ORDER BY date DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple + (int(after), )).fetchall()
 
     items = [[json.loads(item[1]), item[3], item[5]] for item in item_list]
     
@@ -54,9 +57,12 @@ def get_timeline():
 
     items_for_date = [item for item in item_list]
 
-    if len(item_list) > 0:
+    if len(item_list) > 20:
+        before = item_list[0][2]
+        after = item_list[-1][2]
+    if len(item_list) <= 20 and len(item_list) != 0:
         before = items_for_date[0][2]
-        after = items_for_date[-1][2]
+        after = None
     else:
         before = None
         after = None
@@ -139,7 +145,7 @@ def search_for_content():
     with connection:
         cursor = connection.cursor()
 
-        cursor.execute("SELECT * FROM timeline WHERE channel = ? AND content LIKE ? ORDER BY date DESC;", ("all", "%{}%".format(query), ))
+        cursor.execute("SELECT * FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", ("%{}%".format(query), ))
 
         result = change_to_json(cursor)
 
@@ -169,11 +175,21 @@ def preview():
         feed = feedparser.parse(url)
 
         for entry in feed.entries:
-            result, _ = poll_feeds.process_xml_feed(entry, feed, url)
+            result, _ = xml_feed.process_xml_feed(entry, feed, url)
+
+            items_to_return.append(result)
+    elif "json" in content_type or url.endswith(".json"):
+        try:
+            feed = requests.get(url, timeout=5).json()
+        except:
+            return jsonify({"error": "invalid url"}), 400
+
+        for entry in feed.get("items", []):
+            result, _ = json_feed.process_json_feed(entry, feed)
 
             items_to_return.append(result)
     else:
-        results = poll_feeds.process_hfeed(url, add_to_db=False)
+        results = hfeed.process_hfeed(url, add_to_db=False)
 
         for result in results:
             items_to_return.append(result)
@@ -196,7 +212,7 @@ def preview():
     favicon = soup.find("link", rel="shortcut icon")
 
     if favicon:
-        feed["icon"] = favicon.get("href")
+        feed["icon"] = canonicalize_url.canonicalize_url(favicon.get("href"), url_domain, favicon.get("href"))
 
     if soup.find("title"):
         feed["title"] = soup.find("title").text
@@ -232,7 +248,7 @@ def get_channels():
 
         # add "all" as a special value
         # used to show every post stored in the server
-        final_result.append({"uid": "all", "name": "All", "unread": total_unread})
+        final_result.insert(0, {"uid": "all", "name": "All", "unread": total_unread})
 
         return jsonify({"channels": final_result}), 200
 
@@ -249,6 +265,7 @@ def create_channel():
             return jsonify({"error": "This channel name has been taken."}), 400
 
         existing_channels = cursor.execute("SELECT position FROM channels ORDER BY position DESC LIMIT 1").fetchone()
+
         if existing_channels and len(existing_channels) > 0:
             last_position = int(existing_channels[0])
         else:
@@ -265,9 +282,9 @@ def update_channel():
 
     with connection:
         cursor = connection.cursor()
-        cursor.execute("UPDATE channels SET channel = ? WHERE uid = ?", (request.args.get("name"), request.args.get("channel")))
+        cursor.execute("UPDATE channels SET channel = ? WHERE uid = ?", (request.form.get("name"), request.form.get("channel")))
 
-        get_updated_channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (request.args.get("channel"),)).fetchone()
+        get_updated_channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (request.form.get("channel"),)).fetchone()
 
         return get_updated_channel
 
@@ -277,14 +294,19 @@ def delete_channel():
     with connection:
         cursor = connection.cursor()
 
-        cursor.execute("DELETE FROM channels WHERE uid = ?", (request.form.get("channel"),))
+        print(request.form)
 
-        return jsonify({"message": "channel deleted"}), 200
+        get_channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (request.form.get("channel"),)).fetchone()
+
+        if get_channel:
+            cursor.execute("DELETE FROM channels WHERE uid = ?", (request.form.get("channel"),))
+
+            return jsonify({"channel": get_channel}), 200
+        else:
+            return jsonify({"error": "channel not found"}), 400
 
 def get_follow(channel):
     connection = sqlite3.connect("microsub.db")
-
-    print(channel)
 
     if not channel:
         return jsonify({}), 200
@@ -296,9 +318,7 @@ def get_follow(channel):
         else:
             results = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
 
-        print(results)
-
-        results = [{"type": "feed", "url": r[1]} for r in results]
+        results = [{"type": "feed", "url": r[1], "photo": r[3], "name": r[4]} for r in results]
 
         final_result = {"items": results}
 
@@ -335,10 +355,24 @@ def create_follow():
         favicon = soup.find("link", rel="shortcut icon")
 
         if favicon:
-            favicon = favicon.get("href")        
+            favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
+
+        if not favicon:
+            favicon = soup.find("link", rel="icon")
+
+            if favicon:
+                favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
 
         # "" empty string is etag which will be populated in poll_feeds.py if available
-        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, ))
+        last_id = cursor.execute("SELECT MAX(id) FROM following").fetchone()
+
+        if last_id and last_id [0] != None:
+            print(last_id)
+            last_id = last_id[0] + 1
+        else:
+            last_id = 1
+
+        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, last_id, 0, 0 ))
 
         # discover websub_hub
 
@@ -366,9 +400,9 @@ def create_follow():
         if hub != None:
             random_string = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-            r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": "https://microsub.jamesg.blog/websub_callback"})
+            r = requests.post(hub, data={"hub.mode": "subscribe", "hub.topic": url, "hub.callback": URL.strip("/") + "/websub_callback"})
 
-            cursor.execute("INSERT INTO websub_subscriptions (?, ?);", (url, random_string))
+            cursor.execute("INSERT INTO websub_subscriptions VALUES (?, ?, ?, ?);", (url, random_string, request.form.get("channel"), 1 ))
 
         return {"type": "feed", "url": url}
 
@@ -386,7 +420,7 @@ def get_muted():
 
     with connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM muted_users WHERE muted = 1 AND channel = ?", (request.args.get("channel"),))
+        cursor.execute("SELECT * FROM following WHERE muted = 1 AND channel = ?", (request.args.get("channel"),))
 
         return cursor.fetchall()
 
@@ -395,18 +429,60 @@ def mute():
 
     with connection:
         cursor = connection.cursor()
-        cursor.execute("UPDATE muted_users SET muted = 1 WHERE channel = ?", (request.args.get("channel"),))
 
-        return {"type": "mute"}
+        cursor.execute("UPDATE following SET muted = 1 WHERE url = ?", (request.form.get("url"),))
+
+        get_url = cursor.execute("SELECT url FROM following WHERE url = ?", (request.form.get("url"),)).fetchone()
+
+        if get_url:
+            return jsonify({"url": get_url[0], "type": "mute"}), 200
+        else:
+            return jsonify({"error": "You are not following this feed."}), 400
+
+def block():
+    connection = sqlite3.connect("microsub.db")
+
+    with connection:
+        cursor = connection.cursor()
+
+        cursor.execute("UPDATE following SET blocked = 1 WHERE url = ?", (request.form.get("url"),))
+
+        get_url = cursor.execute("SELECT url FROM following WHERE url = ?", (request.form.get("url"),)).fetchone()
+
+        if get_url:
+            return jsonify({"url": get_url[0], "type": "block"}), 200
+        else:
+            return jsonify({"error": "You are not following this feed."}), 400
+
+def unblock():
+    connection = sqlite3.connect("microsub.db")
+
+    with connection:
+        cursor = connection.cursor()
+
+        cursor.execute("UPDATE following SET blocked = 0 WHERE url = ?", (request.form.get("url"),))
+
+        get_url = cursor.execute("SELECT url FROM following WHERE url = ?", (request.form.get("url"),)).fetchone()
+
+        if get_url:
+            return jsonify({"url": get_url[0], "type": "unblock"}), 200
+        else:
+            return jsonify({"error": "You are not following this feed."}), 400
 
 def unmute():
     connection = sqlite3.connect("microsub.db")
 
     with connection:
         cursor = connection.cursor()
-        cursor.execute("UPDATE muted_users SET muted = 0 WHERE url = ?", (request.args.get("url"),))
 
-        return {"type": "unmute"}
+        cursor.execute("UPDATE following SET muted = 0 WHERE url = ?", (request.form.get("url"),))
+
+        get_url = cursor.execute("SELECT url FROM following WHERE url = ?", (request.form.get("url"),)).fetchone()
+
+        if get_url:
+            return jsonify({"url": get_url[0], "type": "unmute"}), 200
+        else:
+            return jsonify({"error": "You are not following this feed."}), 400
     
 def remove_entry():
     connection = sqlite3.connect("microsub.db")

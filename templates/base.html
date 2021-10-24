@@ -22,7 +22,6 @@
         {% endif %}
         {% if session.get("me") %}
         <ul>
-          <li><a href="/reader/all">Home</a></li>
           <li><a href="/channels">Channels</a></li>
           <li><a href="/feeds">Feeds</a></li>
           <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
@@ -30,6 +29,7 @@
         </ul>
         {% else %}
         <ul>
+          <li><a href="/setup">Setup</a></li>
           <li><a href="/login">Login</a></li>
         </ul>
         {% endif %}
