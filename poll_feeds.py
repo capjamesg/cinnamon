@@ -80,7 +80,14 @@ def poll_feeds():
 
                     ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, feed_id, ))
+                    last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
+
+                    if last_id[0] != None:
+                        last_id = last_id[0] + 1
+                    else:
+                        last_id = 0
+
+                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, feed_id, last_id, ))
             elif "json" in content_type or url.endswith(".json"):
                 feed = requests.get(url)
 
@@ -111,7 +118,14 @@ def poll_feeds():
 
                         ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                        cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, s[3] ))
+                        last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
+
+                        if last_id[0] != None:
+                            last_id = last_id[0] + 1
+                        else:
+                            last_id = 0
+
+                        cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, s[3], last_id, ))
             else:
                 hfeed.process_hfeed(url, cursor, channel_uid, feed_id)
 

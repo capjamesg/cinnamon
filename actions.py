@@ -37,11 +37,11 @@ def get_timeline():
             channel_tuple = ()
 
         if not after and not before:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple ).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC, id DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple ).fetchall()
         elif before and not after:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) date <= ? ORDER BY date DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple + (int(before), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND id < ? AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC, id DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple + (int(before), )).fetchall()
         else:
-            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) date <= ? ORDER BY date DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple + (int(after), )).fetchall()
+            item_list = cursor.execute("SELECT * FROM timeline WHERE {} hidden = 0 AND id > ? AND feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC, id DESC LIMIT 21;".format(channel_arg, second_channel_arg), channel_tuple + (int(after), )).fetchall()
 
     items = [[json.loads(item[1]), item[3], item[5]] for item in item_list]
     
@@ -57,18 +57,16 @@ def get_timeline():
 
     items_for_date = [item for item in item_list]
 
-    if len(item_list) > 20:
-        before = item_list[0][2]
-        after = item_list[-1][2]
-    if len(item_list) <= 20 and len(item_list) != 0:
-        before = items_for_date[0][2]
-        after = None
+    if len(item_list) > 20 and not request.args.get("after") and not request.args.get("before"):
+        # 8 = id
+        before = item_list[-1][8]
+        after = item_list[0][8]
+    elif len(item_list) <= 20 and len(item_list) != 0:
+        before = items_for_date[-1][8]
+        after = ""
     else:
-        before = None
-        after = None
-
-    if not request.args.get("after") and not request.args.get("before"):
-        before = None
+        before = ""
+        after = ""
 
     return jsonify({"items": items, "paging": {"before": before, "after": after}}), 200
 
@@ -140,16 +138,18 @@ def discover_urls():
 def search_for_content():
     connection = sqlite3.connect("microsub.db")
 
-    query = request.args.get("query")
+    query = request.form.get("query")
 
     with connection:
         cursor = connection.cursor()
 
-        cursor.execute("SELECT * FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", ("%{}%".format(query), ))
+        result = cursor.execute("SELECT * FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", ("%{}%".format(query), )).fetchall()
 
-        result = change_to_json(cursor)
+        items = [[json.loads(item[1]), item[3], item[5]] for item in result]
 
-        return jsonify({"items": result}), 200
+        items = [i[0] for i in items]
+
+        return jsonify({"items": items}), 200
 
 def preview():
     url = request.form.get("url")
@@ -294,14 +294,13 @@ def delete_channel():
     with connection:
         cursor = connection.cursor()
 
-        print(request.form)
-
         get_channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (request.form.get("channel"),)).fetchone()
 
         if get_channel:
             cursor.execute("DELETE FROM channels WHERE uid = ?", (request.form.get("channel"),))
 
-            return jsonify({"channel": get_channel}), 200
+            # get_channel[0] is the deleted channel name
+            return jsonify({"channel": get_channel[0]}), 200
         else:
             return jsonify({"error": "channel not found"}), 400
 

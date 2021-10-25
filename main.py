@@ -299,7 +299,7 @@ def modify_channel(id):
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
         if channel:
-            return render_template("server/channel.html", title="Channel | Microsub Dashboard", channel=channel, feeds=feeds)
+            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel), channel=channel, feeds=feeds)
         else:
             flash("The channel you were looking for could not be found.")
             return redirect("/reader/all")
@@ -312,6 +312,10 @@ def mute_view():
         return redirect("/login")
 
     action = request.form.get("action")
+
+    if "mute" not in session["scope"]:
+        flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
+        return redirect("/reader/{}".format(request.form.get("channel")))
 
     if action != "mute" and action != "unmute":
         flash("Invalid action.")
@@ -346,6 +350,10 @@ def block_view():
         return redirect("/login")
 
     action = request.form.get("action")
+
+    if "block" not in session["scope"]:
+        flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
+        return redirect("/reader/{}".format(request.form.get("channel")))
 
     if action != "block" and action != "unblock":
         flash("Invalid action.")

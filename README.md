@@ -24,7 +24,7 @@ This project is in active development. The entire Micropub specification is not 
 
 ### Feed Reader (Client)
 
-![Microsub feed](feed.png)
+![Microsub feed](static/feed.png)
 
 ## Getting Started
 
