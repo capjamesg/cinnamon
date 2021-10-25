@@ -18,9 +18,23 @@
     </section>
     {% endif %}
 {% endwith %}
+<div id="settings" style="display: none;">
+    <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
+    <h2>Settings</h2>
+    <ul>
+      <li><a href="/channels">Channels</a></li>
+      <li><a href="/feeds">Feeds</a></li>
+      {% if session.get("micropub_url") %}
+        <li><a href="{{ session.get('micropub_url') }}">Micropub</a></li>
+      {% endif %}
+      <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </div>
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
-<aside class="flex_left_home">
+<aside class="flex_left_home" id="sidebar">
     <div class="main_menu_mobile">
+        <span class="close mobile_close" onclick="trigger_modal('sidebar')">&times;</span>
         <h2>Your Channels</h2>
         <ul>
             {% for channel in channels %}
@@ -35,9 +49,9 @@
         </ul>
         <hr>
         <h3>Manage</h3>
-        <button><a href="/search" class="button_link" id="search_button">Search</a></button>
-        <button><a href="/feeds" class="button_link" id="subscribe_to_feed">Subscribe to a new feed</a></button>
-        <button><a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings">Channel Settings</a></button>
+        <a href="/search" class="button_link" id="search_button">Search</a>
+        <a href="/feeds" class="button_link" id="subscribe_to_feed">Subscribe to a new feed</a>
+        <a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings_button">Channel Settings</a>
         {% if results | length > 0 %}
             <form method="POST" action="/read">
                 <input type="hidden" name="channel" value="{{ page_channel_uid }}">
@@ -68,9 +82,6 @@
             {% endif %}
         </details>
     </div>
-    <div class="main_menu_mobile_message">
-        <button onclick="show_channels()">Show channels</button>
-    </div>
 </aside>
 <section class="feed flex_right_home">
     {% if results | length > 0 %}
@@ -96,14 +107,14 @@
     {% endif %}
     {% if after != "" or before != "" %}
         <div class="bottom-navigation">
-            {% if after != None %}
+            {% if after != "" %}
                 <div class="prev">
-                    <p><a href="/reader/{{ page_channel_uid }}?before={{ after }}">See Older Posts</a></p>
+                    <p><a href="/reader/{{ page_channel_uid }}?before={{ before }}">See Older Posts</a></p>
                 </div>
             {% endif %}
-            {% if before != None %}
+            {% if before != "" %}
             <div class="next">
-                <p><a href="/reader/{{ page_channel_uid }}?after={{ before }}">See Newer Posts</a></p>
+                <p><a href="/reader/{{ page_channel_uid }}?after={{ after }}">See Newer Posts</a></p>
             </div>
             {% endif %}
         </div>
@@ -161,105 +172,44 @@
         <span class="close" onclick="trigger_modal('search')">&times;</span>
         <h2>Search for a post</h2>
         <p>Use the form below to find a blog post in your feed.</p>
-        <form method="POST" action="/search" role="search">
+        <form method="GET" action="/search" role="search">
             <input type="hidden" name="channel" value="{{ page_channel_uid }}">
             <input type="text" name="query" placeholder="Search for a post" aria-label="Search for a post" class="search_bar" style="width: 75%;">
             <button class="search_button" style="width: 25%;">Search</button>
         </form>
     </div>
 </section>
+<script src="/reader.js"></script>
 <script>
-    var js_req = document.getElementsByClassName("js");
+    function send_reaction(reaction, reaction_name, post_id,) {
+        fetch('/react', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer {{ session.get("access_token") }}"
+            },
+            body: new URLSearchParams({
+                "h": "entry",
+                "reaction": reaction,
+                "url": post_id
+            })
+        }).then(function(response) {
+            // if status code == 200
+            if (response.status == 200) {
+                // update the post
+                var notification = document.createElement("div");
+                notification.className = "user_prompt";
+                notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
+                document.getElementById(post_id).appendChild(notification);
 
-    for (var i = 0; i < js_req.length; i++) {
-        js_req[i].style.display = "inline";
-    }
-    
-    function trigger_modal(id) {
-        var modal = document.getElementById(id);
-        if (modal.style.display == "none") {
-            modal.style.display = "block";
-        } else {
-            modal.style.display = "none";
-        }
-    }
+                // remove the notification after 5 seconds
 
-    function close_modal() {
-        var modal = document.getElementsByClassName("modal");
-        for (var i = 0; i < modal.length; i++) {
-            if (event.target == modal[i]) {
-                modal[i].style.display = "none";
+                setTimeout(function() {
+                    document.getElementById(post_id).removeChild(notification);
+                }, 5000);
             }
         }
     }
-
-    window.onclick = function(event) {
-        close_modal()
-    }
-
-    function show_channels() {
-        var channels = document.getElementsByClassName("main_menu_mobile")[0];
-
-        if (channels.style.display == "none") {
-            channels.style.display = "block";
-        } else {
-            channels.style.display = "none";
-        }
-    }
-
-    function show_all(id) {
-        var item_to_show = document.getElementById(id + "-full");
-        var show_label = document.getElementById(id + "-show");
-        var original_text = document.getElementById(id);
-
-        original_text.innerText = original_text.innerText.replace("...", "");
-
-        if (item_to_show.style.display === "none") {
-            item_to_show.style.display = "inline";
-            show_label.innerHTML = "Show less";
-        } else {
-            item_to_show.style.display = "none";
-            show_label.innerHTML = "Show more";
-        }
-    }
-    var search_button = document.getElementById("search_button");
-    var subscribe_to_feed = document.getElementById("subscribe_to_feed");
-    var channel_settings = document.getElementById("channel_settings");
-    
-    search_button.href = "#";
-    subscribe_to_feed.href = "#";
-    channel_settings.href = "#";
-
-    search_button.onclick = function() {
-        trigger_modal("search");
-    }
-
-    subscribe_to_feed.onclick = function() {
-        trigger_modal("subscribe");
-    }
-
-    channel_settings.onclick = function() {
-        trigger_modal("channel_settings");
-    }
-
-    function show_video(url, id) {
-        var iframe = document.createElement("iframe");
-        iframe.src = url;
-        iframe.width = "640";
-        iframe.height = "480";
-        iframe.frameborder = "0";
-        iframe.allowfullscreen = "true";
-        iframe.style.display = "block";
-        var to_replace = document.getElementById(id);
-        to_replace.parentNode.replaceChild(iframe, to_replace);
-    }
-
-    // replace urls on all embedded videos
-    var all_videos = document.getElementsByClassName("embedded_video");
-    
-    for (var i = 0; i < all_videos.length; i++) {
-        var id = all_videos[i].id;
-        all_videos[i].href = "#" + id + "-heading";
-    }
 </script>
+
 {% endblock %}

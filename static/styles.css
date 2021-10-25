@@ -63,26 +63,25 @@ nav, .button_list {
 	padding: 20px;
 	margin: auto;
 }
-button {
-	background-color: royalblue;
-}
 button, .button_link {
 	border-radius: 10px;
-	padding: 10px;
+	padding: 10px !important;
 	display: inline-block;
-	margin-bottom: 10px;
-	display: block;
+	margin-bottom: 10px !important;
 	color: white;
 	border: none;
 	font-size: 16px;
 	text-align: center;
+	background-color: royalblue;
 }
-.button_link a:hover {
-	color: white;
+button a:hover, .button_link:hover {
+    color: white !important;
 }
 .button_link {
 	margin: 0;
 	padding: 0;
+	width: 100%;
+	box-sizing: border-box;
 }
 nav, footer ul {
 	display: flex;
@@ -204,10 +203,11 @@ input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, t
 	outline: 3px solid royalblue;
 }
 
-button:focus, input[type="submit"]:focus {
+button:focus, input[type="submit"]:focus, .button_link:focus {
 	background-color: yellow;
 	color: black !important;
 	outline: 3px royalblue solid;
+	border-bottom: none;
 }
 button:focus > a {
 	color: black !important;
@@ -281,9 +281,28 @@ input[type="submit"] {
 		font-style: italic;
 	} 
 }
+#mobile_navigation, .mobile_close {
+	display: none;
+}
 @media only screen and (max-width: 850px) {
 	article img, .blogList img {
 		width: 100% !important;
+	}
+	.flex_left_home {
+		flex: none;
+	}
+	aside, #settings {
+		margin-bottom: 0;
+		z-index: 1;
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+		background-color: white;
+		box-sizing: border-box;
+		display: none;
 	}
 	.button_list form {
 		float: right;
@@ -313,16 +332,35 @@ input[type="submit"] {
 	button, input[type="submit"] {
 		text-align: center !important;
 	}
-	.main_menu_mobile {
-		display: none;
-	}
 	.main_menu_mobile_message {
 		display: block !important;
 	}
-	aside, .search_bar {
+	aside, .search_bar, #settings {
 		width: 100% !important;
 		margin-right: 0 !important;
 	}
+	nav {
+		background-color: white;
+		border-radius: 10px;
+		padding: 10px;
+		border: 1px solid lightgray;
+	}
+	#desktop_navigation {
+		display: none;
+	}
+	#mobile_navigation {
+		display: block;
+	}
+	.modal_content {
+		width: 100%;
+	}
+	.mobile_close {
+		display: block
+	}
+}
+.close {
+	cursor: pointer;
+	padding: 10px;
 }
 .main_menu_mobile_message {
 	display: none;
@@ -393,7 +431,7 @@ textarea {
     font-size: 1.0625rem;
 	box-sizing: border-box;
 }
-aside, .feed li {
+aside, .feed li, #settings {
 	padding: 10px;
 	background-color: white;
 	border-radius: 10px;
@@ -403,6 +441,7 @@ aside, .feed li {
 	margin-bottom: 20px;
 	box-sizing: border-box;
 	width: 100%;
+	display: block;
 }
 aside button {
 	width: 100%;
@@ -430,6 +469,7 @@ aside li {
 	height: 100%;
 	overflow: auto;
 	background-color: rgba(0,0,0,0.4);
+	box-sizing: border-box;
 }
 .modal_content {
 	background-color: #fefefe;

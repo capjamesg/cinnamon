@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session, redirect, flash, render_template
+from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
 from .check_token import check_token
 from .indieauth import requires_indieauth
 import requests
@@ -63,6 +63,27 @@ def microsub_reader(channel):
         feeds=feeds,
         channel_name=channel_name
     )
+
+@client.route("/react", methods=["POST"])
+def react_to_post():
+    auth_result = check_token()
+
+    if auth_result == False:
+        return redirect("/login")
+
+    headers = {
+        "Authorization": session["access_token"],
+        "Content-Type": "application/json",
+    }
+
+    request_to_make = {
+        "h": "entry",
+        request.form.get("reaction"): request.form.get("url")
+    }
+
+    r = requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
+
+    return "OK"
 
 @client.route("/read", methods=["POST"])
 def mark_channel_as_read():
@@ -156,7 +177,7 @@ def preview_feed():
         channels=channel_req.json()["channels"]
     )
 
-@client.route("/search", methods=["GET", "POST"])
+@client.route("/search")
 def search_feed():
     auth_result = check_token()
 
@@ -167,8 +188,8 @@ def search_feed():
         "Authorization": session["access_token"]
     }
 
-    query = request.form.get("query")
-    channel_id = request.form.get("channel")
+    query = request.args.get("query")
+    channel_id = request.args.get("channel")
 
     if not query or not channel_id:
         flash("Please specify a query and channel ID when searching for a feed.")
@@ -185,6 +206,8 @@ def search_feed():
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
+    published_dates = [p.get("published") for p in microsub_req.json()["items"]]
+
     return render_template("client/reader.html",
         title="Showing results for {} | Microsub Reader".format(query),
         results=microsub_req.json()["items"],
@@ -192,7 +215,8 @@ def search_feed():
         is_searching=True,
         query=query,
         feeds=feeds,
-        channels=channel_req.json()["channels"]
+        channels=channel_req.json()["channels"],
+        published_dates=published_dates
     )
 
 @client.route("/settings")
@@ -205,3 +229,7 @@ def settings():
     return render_template("client/settings.html",
         title="Settings | Microsub Reader"
     )
+
+@client.route("/reader.js")
+def reader_js_file():
+    return send_from_directory("static", "reader.js")

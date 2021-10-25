@@ -3,6 +3,31 @@
   <head>
     <meta charset="utf-8" />
     <title>{% if title %}{{ title }}{% else %}Microsub Dashboard{% endif %}</title>
+
+    <meta name="description" content="This is a Micropub client and server you can use to keep track of feeds on the web.">
+    <meta name="twitter:description" content="This is a Micropub client and server you can use to keep track of feeds on the web.">
+    <meta name="og:description" content="This is a Micropub client and server you can use to keep track of feeds on the web.">
+  
+    <meta name="og:site_name" content="Microsub Dashboard">
+  
+    <meta property="og:image" content="/static/feed.png">
+    <meta name="twitter:image:src" content="/static/feed.png">
+  
+    <meta name="twitter:card" content="summary">
+
+    <link rel="icon" href="/favicon.ico">
+
+    <link rel="apple-touch-icon-precomposed" href="/favicon.ico">
+
+    <!-- Twitter Card data -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Microsub Dashboard">
+
+    <!-- Open Graph data -->
+    <meta property="og:title" content="Microsub Dashboard">
+    <meta property="og:url" content="{{ config.get('URL') }}">
+    <meta property="og:site_name" content="Microsub Dashboard">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
@@ -15,17 +40,26 @@
     <main>
       <a href="#main" class="accessibility_label">Skip to main content</a>
       <nav>
-        {% if session.get("me") %}
-        <p><a href="/reader/all">Microsub Reader</a></p>
+        {% if session.get("me") and request.path.startswith("/reader/") %}
+        <p><a href="/reader/all">{{ channel_name }}</a></p>
+        {% elif session.get("me") %}
+        <p><a href="/reader/all" id="page_title">Microsub Reader</a></p>
         {% else %}
         <p><a href="/">Microsub Reader</a></p>
         {% endif %}
         {% if session.get("me") %}
-        <ul>
+        <ul id="desktop_navigation">
           <li><a href="/channels">Channels</a></li>
           <li><a href="/feeds">Feeds</a></li>
+          {% if session.get("micropub_url") %}
+            <li><a href="{{ session.get('micropub_url') }}">Micropub</a></li>
+          {% endif %}
           <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">Logout</a></li>
+        </ul>
+        <ul id="mobile_navigation">
+          <li><a onclick="show_channels()">Channels</a></li>
+          <li><a onclick="show_settings()">Settings</a></li>
         </ul>
         {% else %}
         <ul>

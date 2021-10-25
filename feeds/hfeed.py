@@ -103,9 +103,14 @@ def process_hfeed(url, cursor=None, channel_uid=None, add_to_db=True, feed_id=No
                     if not feed_id:
                         continue
 
-                    feed_id = feed_id[0]
+                    last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
+
+                    if last_id[0] != None:
+                        last_id = last_id[0] + 1
+                    else:
+                        last_id = 0
                     
-                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, feed_id, ))
+                    cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (channel_uid, json.dumps(jf2), date, "unread", jf2["url"], ten_random_letters, 0, feed_id, last_id, ))
                 
                 results.append(jf2)
 
