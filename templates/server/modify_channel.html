@@ -21,26 +21,26 @@
                     <input type="hidden" name="url" value="{{ feed[1] }}">
                     <input type="submit" value="Unfollow">
                 </form>
-                {% if feed[6] == 0 %}
+                {% if feed[6] == 0 and "mute" in session.get("scope") %}
                 <form action="/mute" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
                     <input type="hidden" name="url" value="{{ feed[1] }}">
                     <input type="hidden" name="action" value="mute">
                     <input type="submit" value="Mute">
                 </form>
-                {% else %}
+                {% elif feed[6] != 0 and "block" in session.get("scope") %}
                 <form action="/mute" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
                     <input type="hidden" name="url" value="{{ feed[1] }}">
                     <input type="hidden" name="action" value="unmute">
                     <input type="submit" value="Unmute">
                 </form>
                 {% endif %}
-                {% if feed[7] == 0 %}
+                {% if feed[7] == 0 and "block" in session.get("scope") %}
                 <form action="/block" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
                     <input type="hidden" name="url" value="{{ feed[1] }}">
                     <input type="hidden" name="action" value="block">
                     <input type="submit" value="Block">
                 </form>
-                {% else %}
+                {% elif feed[7] != 0 and "block" in session.get("scope") %}
                 <form action="/block" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">
                     <input type="hidden" name="url" value="{{ feed[1] }}">
                     <input type="hidden" name="action" value="unblock">
@@ -57,7 +57,6 @@
 </section>
 <section class="content_box">
     <h2>Rename Channel</h2>
-    {{ channel }}
     <form action="/channel/{{ channel[1] }}" method="POST">
         <label for="channel">Channel Name:</label><br>
         <input type="hidden" name="channel" id="channel" value="{{ channel[1] }}"><br>

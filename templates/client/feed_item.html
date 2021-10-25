@@ -35,16 +35,22 @@
     {% endif %}
     {% if w.get("content") and w["content"].get("text") %}
     {% set content = w["content"]["text"].split(" ")[:75] %}
-    <p id="{{ w['_id'] }}">{{ " ".join(content) }} {% if content | length == 75 %}...{% endif %}<span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
-    {% if content | length == 75 %}<p class="js"><a onclick="show_all('{{ w['_id'] }}');" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
+    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ " ".join(content) }} {% if content | length == 75 %}...{% endif %}</span><span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
+    {% if content | length == 75 %}<p class="js"><a onclick="show_all('{{ w['_id'] }}')" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
     {% else %}
     <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
     {% endif %}
+    {% if "create" in session.get("scope") %}
     <p class="reaction_set">
-        <a href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
-        <a href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
-        <a href="https://micropub.jamesg.blog/post?type=repost&repost-of={{ w['url'] }}" class="reaction">Repost 🔁</a>
-        <a href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
+        <a onclick="send_reaction('like-of', 'like', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
+        <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
+        <a onclick="send_reaction('repost-of', 'repost', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?type=repost&repost-of={{ w['url'] }}" class="reaction">Repost 🔁</a>
+        <a onclick="send_reaction('in-reply-to', 'reply', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
     </p>
+    {% else %}
+    <p class="reaction_set">
+        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
+    </p>
+    {% endif %}
 </li>

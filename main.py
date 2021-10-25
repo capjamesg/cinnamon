@@ -313,6 +313,10 @@ def mute_view():
 
     action = request.form.get("action")
 
+    if "mute" not in session["scope"]:
+        flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
+        return redirect("/reader/{}".format(request.form.get("channel")))
+
     if action != "mute" and action != "unmute":
         flash("Invalid action.")
         return redirect("/reader/{}".format(request.form.get("channel")))
@@ -346,6 +350,10 @@ def block_view():
         return redirect("/login")
 
     action = request.form.get("action")
+
+    if "block" not in session["scope"]:
+        flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
+        return redirect("/reader/{}".format(request.form.get("channel")))
 
     if action != "block" and action != "unblock":
         flash("Invalid action.")

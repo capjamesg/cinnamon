@@ -32,7 +32,8 @@ with connection:
         url text,
         uid text,
         hidden integer,
-        feed_id integer
+        feed_id integer,
+        id integer primary key not null
     )
     """)
 
