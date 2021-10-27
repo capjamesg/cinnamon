@@ -52,14 +52,16 @@
           <li><a href="/channels">Channels</a></li>
           <li><a href="/feeds">Feeds</a></li>
           {% if session.get("micropub_url") %}
-            <li><a href="{{ session.get('micropub_url') }}">Micropub</a></li>
+            <li><a href="https://{{ session.get('micropub_url').split('/')[2] }}">Micropub</a></li>
           {% endif %}
           <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">Logout</a></li>
         </ul>
         <ul id="mobile_navigation">
-          <li><a onclick="show_channels()">Channels</a></li>
-          <li><a onclick="show_settings()">Settings</a></li>
+          {% if request.path.startswith("/reader") or request.path.startswith("/preview") %}
+            <li><a href="#" onclick="trigger_modal('sidebar')">Channels</a></li>
+          {% endif %}
+          <li><a href="#" onclick="trigger_modal('settings')">Settings</a></li>
         </ul>
         {% else %}
         <ul>

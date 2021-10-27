@@ -1,8 +1,9 @@
-html, body, header, figure {
+html, body, header, figure, .create_note_form p {
 	margin: 0;
 }
 a {
 	text-decoration: none;
+	cursor: pointer;
 }
 html {
 	background-color: #FFEFD5;
@@ -23,6 +24,9 @@ select {
 	padding: 10px;
 	border-radius: 5px;
 	margin-bottom: 15px;
+}
+textarea {
+	resize: none;
 }
 .content_box {
     border: 1px solid lightgray;
@@ -228,9 +232,25 @@ button:focus > a {
 	padding: 15px;
 	margin-left: 5px;
 	border-radius: 10px;
-	border: 1px solid lightgrey;
-	text-align: left;
-	background-color: white;
+	display: block;
+}
+.notice p {
+	font-weight: 600;
+}
+.success {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	background-color: #2A7E50 !important;
+}
+textarea {
+	width: 100%;
+}
+.success p {
+	color: white;	
+}
+.red_notice {
+	background-color: #f7f7f7;
+	border: 1px solid red;
 }
 
 a:hover {
@@ -284,6 +304,20 @@ input[type="submit"] {
 #mobile_navigation, .mobile_close {
 	display: none;
 }
+
+aside, .prev, .next, #settings {
+	background-color: white;
+}
+.prev, .next {
+	width: 100% !important;
+	border-radius: 10px;
+	padding: 10px;
+	margin-bottom: 10px;
+	border: 1px solid lightgrey;
+	box-sizing: border-box;
+	text-align: center;
+	float: none !important;
+}
 @media only screen and (max-width: 850px) {
 	article img, .blogList img {
 		width: 100% !important;
@@ -300,24 +334,14 @@ input[type="submit"] {
 		width: 100%;
 		height: 100%;
 		overflow: auto;
-		background-color: white;
 		box-sizing: border-box;
-		display: none;
+	}
+	#subscribe, #channel_settings, #search {
+		background-color: white;
 	}
 	.button_list form {
 		float: right;
 		padding-left: 0;
-	}
-	.prev, .next {
-		width: 100% !important;
-		background-color: white;
-		border-radius: 10px;
-		padding: 10px;
-		margin-bottom: 10px;
-		border: 1px solid lightgrey;
-		box-sizing: border-box;
-		text-align: center;
-		float: none !important;
 	}
 	.prev a {
 		float: none !important;
@@ -357,6 +381,14 @@ input[type="submit"] {
 	.mobile_close {
 		display: block
 	}
+	.modal_content {
+		border: 0 !important;
+		width: auto !important;
+		margin: 0 !important;
+	}
+}
+#settings li {
+	margin-bottom: 10px;
 }
 .close {
 	cursor: pointer;
@@ -405,7 +437,7 @@ ol {
 .active_tab {
   font-weight: 600;
 }
-.reaction {
+.reaction, .delete_reaction, .category {
 	padding: 10px;
 	margin-left: 5px;
 	margin-bottom: 5px;
@@ -431,9 +463,8 @@ textarea {
     font-size: 1.0625rem;
 	box-sizing: border-box;
 }
-aside, .feed li, #settings {
+aside, .feed li, #settings, #subscribe, #channel_settings, #search {
 	padding: 10px;
-	background-color: white;
 	border-radius: 10px;
 	margin-right: 10px;
 	border: 1px solid lightgrey;
@@ -441,7 +472,6 @@ aside, .feed li, #settings {
 	margin-bottom: 20px;
 	box-sizing: border-box;
 	width: 100%;
-	display: block;
 }
 aside button {
 	width: 100%;
@@ -509,7 +539,14 @@ details, summary {
 details {
 	margin-bottom: 20px;
 }
-audio {
+table {
+	text-align: left;
+	width: 100%;
+}
+th, tr, td {
+	padding: 10px;
+}
+audio, video, iframe {
 	width: 100%;
 	margin-top: 15px;
 	border-radius: 10px;
@@ -520,4 +557,7 @@ audio {
 .avatar {
 	width: 50px;
 	height: 50px;
+}
+.feed ul {
+	width: 100%;
 }

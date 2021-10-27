@@ -79,7 +79,10 @@ def discover_auth_endpoint():
     authorization_endpoint_found = False
     token_endpoint_found = False
 
-    parsed_link_headers = requests.utils.parse_header_links(http_link_headers.rstrip('>').replace('>,<', ',<'))
+    if http_link_headers != None:
+        parsed_link_headers = requests.utils.parse_header_links(r.links.rstrip('>').replace('>,<', ',<'))
+    else:
+        parsed_link_headers = []
 
     authorization_endpoint_in_header = [h for h in parsed_link_headers if h['rel'] == 'authorization_endpoint']
 
@@ -90,14 +93,14 @@ def discover_auth_endpoint():
         authorization_endpoint_search = soup.find("link", rel="authorization_endpoint")
 
         if authorization_endpoint_search:
-            authorization_endpoint = domain + authorization_endpoint_search["href"]
+            authorization_endpoint = authorization_endpoint_search["href"]
             authorization_endpoint_found = True
 
     if authorization_endpoint_found == False:
         flash("An IndieAuth authorization endpoint could not be found on your website.")
         return redirect("/login")
 
-    if not authorization_endpoint.get("href").startswith("https://") and not authorization_endpoint.get("href").startswith("http://"):
+    if not authorization_endpoint.startswith("https://") and not authorization_endpoint.startswith("http://"):
         flash("Your IndieAuth authorization endpoint published on your site must be a full HTTP URL.")
         return redirect("/login")
         
@@ -110,14 +113,14 @@ def discover_auth_endpoint():
         token_endpoint_search = soup.find("link", rel="token_endpoint")
 
         if token_endpoint_search:
-            token_endpoint = domain + token_endpoint_search["href"]
+            token_endpoint = token_endpoint_search["href"]
             token_endpoint_found = True
     
     if token_endpoint_found == False:
         flash("An IndieAuth token endpoint could not be found on your website.")
         return redirect("/login")
 
-    if not token_endpoint.get("href").startswith("https://") and not token_endpoint.get("href").startswith("http://"):
+    if not token_endpoint.startswith("https://") and not token_endpoint.startswith("http://"):
         flash("Your IndieAuth token endpoint published on your site must be a full HTTP URL.")
         return redirect("/login")
 
@@ -129,7 +132,7 @@ def discover_auth_endpoint():
         micropub_endpoint = soup.find("link", rel="micropub")
 
         if micropub_endpoint:
-            session["micropub_url"] = domain + micropub_endpoint["href"]
+            session["micropub_url"] =  micropub_endpoint["href"]
 
     microsub_endpoint_in_header = [h for h in parsed_link_headers if h['rel'] == 'microsub']
 
@@ -139,9 +142,10 @@ def discover_auth_endpoint():
         microsub_endpoint = soup.find("link", rel="microsub")
 
         if microsub_endpoint:
-            session["server_url"] = domain + microsub_endpoint["href"]
+            session["server_url"] = microsub_endpoint["href"]
         else:
-            session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+            flash("Your website does not have a microsub server. Please add a microsub server to your site header to use this service.")
+            return redirect("/login")
 
     random_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
@@ -156,5 +160,7 @@ def discover_auth_endpoint():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
 
     session["state"] = state
+
+    print(authorization_endpoint)
 
     return redirect(authorization_endpoint + "?client_id=" + CLIENT_ID + "&redirect_uri=" + CALLBACK_URL + "&scope=read follow mute block channels create&response_type=code&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=" + state)

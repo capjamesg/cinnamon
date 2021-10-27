@@ -56,13 +56,13 @@
             <form method="POST" action="/read">
                 <input type="hidden" name="channel" value="{{ page_channel_uid }}">
                 <input type="hidden" name="status" value="mark_read">
-                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
+                <input type="hidden" name="last_read_entry" value="{{ results[0]['_id'] }}">
                 <button>Mark All As Read</button>
             </form>
             <form method="POST" action="/read">
                 <input type="hidden" name="channel" value="{{ page_channel_uid }}">
                 <input type="hidden" name="status" value="mark_unread">
-                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
+                <input type="hidden" name="last_read_entry" value="{{ results[0]['_id'] }}">
                 <button>Mark All as Unread</button>
             </form>
         {% endif %}
@@ -84,6 +84,16 @@
     </div>
 </aside>
 <section class="feed flex_right_home">
+    <div class="create_note_form">
+        <form method="POST" action="/react">
+            <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+            <input type="hidden" name="reaction" value="note">
+            <textarea name="content" id="content" placeholder="Write your note here..." aria-label="Note contents" rows="4"></textarea><br>
+            <p>Characters used: <span id="character_count">0</span> (240 is maximum for a Tweet)</p>
+            <div id="possible_emojis"></div>
+            <input type="submit" value="Post 📝">
+        </form>
+    </div>
     {% if results | length > 0 %}
     <ul>
     {% if is_searching == True %}
@@ -121,7 +131,7 @@
     {% endif %}
 </section>
 </div>
-<section class="content_box modal" style="display: none;" id="subscribe">
+<section class="content_box modal" style="display: none;" id="subscribe" role="dialog" aria-labelledby="Subscribe to a Feed">
     <div class="modal_content">
         <span class="close" onclick="trigger_modal('subscribe')">&times;</span>
         <h2>Subscribe to a Feed</h2>
@@ -142,7 +152,7 @@
         </form>
     </div>
 </section>
-<section class="content_box modal" style="display: none;" id="channel_settings">
+<section class="content_box modal" style="display: none;" id="channel_settings" role="dialog" aria-labelledby="Channel Settings">
     <div class="modal_content">
         <span class="close" onclick="trigger_modal('channel_settings')">&times;</span>
         <h2>Channel Settings</h2>
@@ -167,10 +177,10 @@
         </form>
     </div>
 </section>
-<section class="content_box modal" style="display: none;" id="search">
+<section class="content_box modal" style="display: none;" id="search" role="dialog" aria-labelledby="Search for a Post">
     <div class="modal_content">
         <span class="close" onclick="trigger_modal('search')">&times;</span>
-        <h2>Search for a post</h2>
+        <h2>Search for a Post</h2>
         <p>Use the form below to find a blog post in your feed.</p>
         <form method="GET" action="/search" role="search">
             <input type="hidden" name="channel" value="{{ page_channel_uid }}">
@@ -181,7 +191,7 @@
 </section>
 <script src="/reader.js"></script>
 <script>
-    function send_reaction(reaction, reaction_name, post_id,) {
+    function send_reaction(reaction, reaction_name, post_url, post_id) {
         fetch('/react', {
             method: 'POST',
             headers: {
@@ -191,25 +201,37 @@
             body: new URLSearchParams({
                 "h": "entry",
                 "reaction": reaction,
-                "url": post_id
+                "url": post_url
             })
-        }).then(function(response) {
+        }).then(res => res.json()).then(function(response) {
             // if status code == 200
-            if (response.status == 200) {
-                // update the post
-                var notification = document.createElement("div");
-                notification.className = "user_prompt";
-                notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
-                document.getElementById(post_id).appendChild(notification);
+            // get response location json object
 
-                // remove the notification after 5 seconds
+            // update the post
+            var notification = document.createElement("div");
+            notification.className = "notice success";
+            notification.innerHTML = "<p>Your " + reaction_name + " has been posted at " + response.location + ".</p>";
+            document.getElementById(post_id).appendChild(notification);
 
-                setTimeout(function() {
-                    document.getElementById(post_id).removeChild(notification);
-                }, 5000);
-            }
-        }
-    }
+            // remove the notification after 5 seconds
+
+            setTimeout(function() {
+                document.getElementById(post_id).removeChild(notification);
+            }, 10000);
+        }).catch(function(error) {
+            // show error message if post failed
+            var notification = document.createElement("div");
+            notification.className = "notice red_notice";
+            notification.innerHTML = "<p>There was an error sending your " + reaction_name + ".</p>";
+            document.getElementById(post_id).appendChild(notification);
+
+            // remove the notification after 5 seconds
+
+            setTimeout(function() {
+                document.getElementById(post_id).removeChild(notification);
+            }, 10000);
+    });
+}
 </script>
-
+<script src="https://micropub.jamesg.blog/emoji_autocomplete.js"></script>
 {% endblock %}

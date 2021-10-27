@@ -14,7 +14,6 @@
     {% if feeds %}
         <ul>
             {% for feed in feeds %}
-            {{ feed }}
             <li>
                 <a href="{{ feed[1] }}">{{ feed[1] }}</a>
                 <form action="/unfollow" method="POST"><input type="hidden" name="channel" value="{{ channel[1] }}">

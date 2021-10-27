@@ -1,4 +1,4 @@
-<li {% if w["_is_read"] == False %}class="unread"{% endif %}>
+<li {% if w["_is_read"] == False %}class="unread"{% endif %} id="feed-item-{{ w["_id"] }}">
     {% if w.get("name") %}
     <h3 id="{{ w['_id'] }}-heading"><a href='{{ w["url"] }}'>{{ w["name"] }}</a></h3>
     {% elif w.get("author") and w.get("author").get("name") %}
@@ -40,17 +40,20 @@
     {% else %}
     <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
     {% endif %}
+    {% if w.get("category") %}
+    <p>{% for c in w["category"].split %}<span class="category">{{ c["name"] }}</span>{% if not loop.last %} {% endif %}{% endfor %}</p>
+    {% endif %}
     {% if "create" in session.get("scope") %}
     <p class="reaction_set">
-        <a onclick="send_reaction('like-of', 'like', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
-        <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
-        <a onclick="send_reaction('repost-of', 'repost', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?type=repost&repost-of={{ w['url'] }}" class="reaction">Repost 🔁</a>
-        <a onclick="send_reaction('in-reply-to', 'reply', '{{ w['url'] }}')" href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
-        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
+        <a onclick="send_reaction('like-of', 'like', '{{ w['_id'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
+        <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
+        <a onclick="send_reaction('repost-of', 'repost', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=repost&repost-of={{ w['url'] }}" class="reaction">Repost 🔁</a>
+        <a href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
+        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="delete_reaction">Delete 🗑️</a>
     </p>
     {% else %}
     <p class="reaction_set">
-        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
+        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="delete_reaction">Delete 🗑️</a>
     </p>
     {% endif %}
 </li>

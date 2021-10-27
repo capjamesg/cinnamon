@@ -1,34 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="main_content_box">
-    <h1>Subscribe to {{ feed["feed"]["title"] }}</h1>
-    {% if feed["feed"].get("icon") %}
-        <img src="{{ feed["feed"].get("icon") }}" alt="{{ feed["feed"].get("title") }} feed icon" />
-    {% endif %}
-    <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
-    <h2>Confirm subscription</h2>
-    <form action="/feeds" method="POST">
-        <label for="channel">Name of the channel to which you want to add your subscription:</label><br>
-        <select name="channel" id="channel">
-            {% for c in channels %}
-                {% if c.uid != "all" %}
-                    <option value="{{ c.uid }}" {% if c.uid == channel %}selected{% endif %}>{{ c.name }}</option>
-                {% endif %}
-            {% endfor %}
-        </select><br>
-        <input type="hidden" name="url" id="url" value="{{ feed["feed"]["url"] }}" />
-        <input type="hidden" name="action" id="action" value="follow" />
-        <input type="submit" value="Subscribe" />
-    </form>
-    <h2>Most recent entries</h2>
-    {% if feed.get("items") | length > 0 %}
-    <ul class="feed">
-      {% for w in feed.get("items") %}
-      {% include "client/feed_item.html" %}
-      {% endfor %}
-    </ul>
+    <h1>Subscribe to {{ feed_title }}</h1>
+    {% if discover == True %}
+        <p>You can subscribe to any of the following feeds on this site:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Feed Type</th>
+                    <th>Subscribe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feed in feeds %}
+                    <tr>
+                        <td>{{ feed.link }}</td>
+                        <td>{{ feed.type }}</td>
+                        <td><a href="/preview?channel={{ channel }}&preview_url={{ feed.get('link') }}">Subscribe</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-        <p>This feed does not currently have any entries.</p>
+        {% if feed["feed"].get("icon") %}
+            <img src="{{ feed["feed"].get("icon") }}" alt="{{ feed["feed"].get("title") }} feed icon" />
+        {% endif %}
+        <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
+        <h2>Confirm subscription</h2>
+        <form action="/feeds" method="POST">
+            <label for="channel">Name of the channel to which you want to add your subscription:</label><br>
+            <select name="channel" id="channel">
+                {% for c in channels %}
+                    {% if c.uid != "all" %}
+                        <option value="{{ c.uid }}" {% if c.uid == channel %}selected{% endif %}>{{ c.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select><br>
+            <input type="hidden" name="url" id="url" value="{{ feed["feed"]["url"] }}" />
+            <input type="hidden" name="action" id="action" value="follow" />
+            <input type="submit" value="Subscribe" />
+        </form>
+        <h2>Most recent entries</h2>
+        {% if feed.get("items") | length > 0 %}
+        <ul class="feed">
+        {% for w in feed.get("items") %}
+        {% include "client/feed_item.html" %}
+        {% endfor %}
+        </ul>
+        {% else %}
+            <p>This feed does not currently have any entries.</p>
+        {% endif %}
     {% endif %}
 </section>
 {% endblock %}

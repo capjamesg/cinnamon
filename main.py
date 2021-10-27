@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
-from .indieauth import requires_indieauth
+from flask import Blueprint, request, jsonify, session, redirect, flash, render_template
+from indieauth import requires_indieauth
 from .check_token import check_token
 import datetime
 import sqlite3
 import requests
+from .discovery import *
 from .actions import *
 from .config import *
 
@@ -213,9 +214,9 @@ def unfollow_view():
         r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
-            return jsonify(r.json()), 200
+            return redirect("/reader/{}".format(request.form.get("channel")))
         else:
-            return jsonify(r.json()), 400
+            return redirect("/reader/all")
     else:
         return redirect("/feeds")
         
@@ -231,29 +232,8 @@ def discover_feed():
 
     if not channel:
         channel = "all"
-
-    if not url.startswith("http://") and not url.startswith("https://"):
-        url = "https://" + url
-    elif url.startswith("//"):
-        url = "https:" + url
-
-    soup = BeautifulSoup(requests.get(url).text, "html.parser")
-
-    # check for presence of mf2 hfeed
-    h_feed = soup.find_all(class_="h-feed")
-
-    feeds = []
-
-    if soup.find("link", rel="alternate", type="application/atom+xml"):
-        feeds.append(soup.find("link", rel="alternate", type="application/atom+xml").get("href"))
-        flash("Atom feed found at {}".format(url + soup.find("link", rel="alternate", type="application/atom+xml")["href"]))
-    if soup.find("link", rel="alternate", type="application/rss+xml"):
-        feeds.append(soup.find("link", rel="alternate", type="application/rss+xml").get("href"))
-        flash("RSS feed found at {}".format(url + soup.find("link", rel="alternate", type="application/rss+xml")["href"]))
-    if soup.find("link", rel="feed", type="text/html"):
-        # used for mircoformats rel=feed discovery
-        feeds.append(soup.find("link", rel="feed", type="text/html").get("href"))
-        flash("h-feed found at {}".format(url + soup.find("link", rel="feed", type="text/html")["href"]))
+    
+    feeds, h_feed = feed_discovery(url)
 
     if h_feed and len(h_feed) > 0:
         feeds.append(url)

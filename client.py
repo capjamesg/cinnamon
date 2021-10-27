@@ -1,7 +1,7 @@
 from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
 from .check_token import check_token
-from .indieauth import requires_indieauth
 import requests
+from .discovery import *
 from .actions import *
 from .config import *
 
@@ -50,11 +50,17 @@ def microsub_reader(channel):
     else:
         channel_name = "All"
 
-    published_dates = [p.get("published") for p in microsub_req.json()["items"]]
+    microsub_req_json = microsub_req.json()
+
+    # mark all entries as read on load
+    if len(microsub_req_json["items"]) > 0:
+        requests.post(session.get("server_url"), data={"action": "timeline", "channel": channel, "method": "mark_read", "last_read_entry": microsub_req_json["items"][0]["_id"]}, headers=headers)
+
+    published_dates = [p.get("published") for p in microsub_req_json["items"]]
 
     return render_template("client/reader.html",
         title="{} | Microsub Reader".format(channel_name),
-        results=microsub_req.json()["items"],
+        results=microsub_req_json["items"],
         channels=channel_req.json()["channels"],
         before=before_to_show,
         after=after_to_show,
@@ -77,13 +83,27 @@ def react_to_post():
     }
 
     request_to_make = {
-        "h": "entry",
+        "type": ["h-entry"],
         request.form.get("reaction"): request.form.get("url")
     }
 
+    if request.form.get("reaction") == "note":
+        request_to_make["properties"] = {
+            "content": [request.form.get("content")],
+            "category": ["Note"],
+            "is_hidden": ["no"]
+        }
+
     r = requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
 
-    return "OK"
+    if r.status_code != 200 and r.status_code != 201 and r.status_code != 202:
+        return jsonify({"error": "There was an error."}), 400
+
+    if request.form.get("reaction") == "note":
+        flash("Your note has been posted to {}.".format(r.headers["Location"]))
+        return redirect("/reader/{}".format(request.form.get("channel")))
+    
+    return jsonify({"location": r.headers["Location"]})
 
 @client.route("/read", methods=["POST"])
 def mark_channel_as_read():
@@ -102,7 +122,7 @@ def mark_channel_as_read():
 
     requests.post(session.get("server_url"), data={"action": "timeline", "channel": channel, "method": status, "last_read_entry": last_read_entry}, headers=headers)
 
-    if last_read_entry == "mark_read":
+    if status == "mark_read":
         flash("Posts in this channel were successfully marked as read.")
     else:
         flash("Posts in this channel were successfully marked as unread.")
@@ -146,17 +166,6 @@ def preview_feed():
     url = request.args.get("url")
     channel_id = request.args.get("channel")
 
-    if not url:
-        flash("Please specify a feed URL to preview a feed.")
-        return redirect("/reader/all")
-
-    data = {
-        "action": "preview",
-        "url": url,
-    }
-
-    microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
-
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     if channel_id:
@@ -169,12 +178,47 @@ def preview_feed():
         flash("The channel to which you tried to add a feed does not exist.")
         return redirect("/reader/all")
 
+    if request.args.get("url"):
+        feeds, _ = feed_discovery(request.args.get("url"))
+
+        if not request.args.get("url"):
+            flash("Please specify a feed URL to preview a feed.")
+            return redirect("/reader/all")
+
+        if not channel_id:
+            flash("The channel to which you tried to add a feed does not exist.")
+            return redirect("/reader/all")
+
+        return render_template("client/preview.html",
+            title="Discover Feed | Microsub Reader",
+            feeds=feeds,
+            channel=channel_id,
+            channel_name=channel_name,
+            channels=channel_req.json()["channels"],
+            discover=True,
+            feed_title="a feed"
+        )
+
+    url = request.args.get("preview_url")
+
+    if not url:
+        flash("Please specify a feed URL to preview a feed.")
+        return redirect("/reader/all")
+
+    data = {
+        "action": "preview",
+        "url": url,
+    }
+
+    microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
+
     return render_template("client/preview.html",
         title="Preview Feed | Microsub Reader",
         feed=microsub_req.json(),
         channel=channel_id,
         channel_name=channel_name,
-        channels=channel_req.json()["channels"]
+        channels=channel_req.json()["channels"],
+        feed_title=microsub_req.json()["feed"]["title"]
     )
 
 @client.route("/search")
@@ -233,3 +277,7 @@ def settings():
 @client.route("/reader.js")
 def reader_js_file():
     return send_from_directory("static", "reader.js")
+
+@client.route("/emojis.json")
+def emoji_dictionary():
+    return send_from_directory("static", "emojis.json")

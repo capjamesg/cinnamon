@@ -8,6 +8,8 @@ function trigger_modal(id) {
     var modal = document.getElementById(id);
     if (modal.style.display == "none") {
         modal.style.display = "block";
+        // set into focus for screenreaders
+        modal.focus();
     } else {
         modal.style.display = "none";
     }
@@ -107,5 +109,8 @@ var all_reaction_links = document.getElementsByClassName("reaction");
 
 for (var i = 0; i < all_reaction_links.length; i++) {
     var id = all_reaction_links[i].id;
-    all_reaction_links[i].href = "#";
+    // get parent section
+    var parent = all_reaction_links[i].parentNode.parentNode;
+    // get the id of the parent section
+    all_reaction_links[i].href = "#" + parent.id;
 }

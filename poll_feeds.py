@@ -19,6 +19,8 @@ def poll_feeds():
         
         subscriptions = cursor.execute("SELECT url, channel, etag, id FROM following WHERE blocked = 0;").fetchall()
 
+        subscriptions = [["https://rhiaro.co.uk", "coffeetsw", "", "s"]]
+
         for s in subscriptions:
             url = s[0]
             feed_id = s[3]
@@ -32,8 +34,12 @@ def poll_feeds():
             session = requests.Session()
             session.max_redirects = 2
 
+            headers = {
+                "Accept": "application/json, application/xml, text/html",
+            }
+
             try:
-                r = session.head(url, allow_redirects=True, timeout=10)
+                r = session.head(url, allow_redirects=True, timeout=10, headers=headers)
             except:
                 continue
 

@@ -23,6 +23,12 @@ def process_xml_feed(entry, feed, url):
             "url": feed.feed.get("link")
         }
 
+    # used for content negotiation
+    # not required but will help catch a feed or two that requires this negotiation
+    headers = {
+        "Accept": "application/json"
+    }
+
     # get home page
     # get content type of url
     session = requests.Session()
@@ -30,7 +36,7 @@ def process_xml_feed(entry, feed, url):
 
     try:
         # follow one redirect
-        r = session.get(url, allow_redirects=True, timeout=10)
+        r = session.get(url, allow_redirects=True, timeout=10, headers=headers)
     except:
         return None, None
 

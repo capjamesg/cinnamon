@@ -299,6 +299,9 @@ def delete_channel():
         if get_channel:
             cursor.execute("DELETE FROM channels WHERE uid = ?", (request.form.get("channel"),))
 
+            # delete timeline posts in channel
+            cursor.execute("DELETE FROM timeline WHERE channel = ?", (request.form.get("channel"),))
+
             # get_channel[0] is the deleted channel name
             return jsonify({"channel": get_channel[0]}), 200
         else:

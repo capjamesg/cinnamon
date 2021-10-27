@@ -13,8 +13,7 @@
 <section class="content_box">
     <h2>Discover a Feed</h2>
     <p>Use the form below to discover a feed URL.</p>
-    <p>Microformats 2 (mf2) and RSS feeds are currently supported.</p>
-    <form action="/discover" method="POST">
+    <form action="/preview" method="GET">
       <label for="discover">Website Address:</label><br>
       <input id="discover" type="url" name="url" placeholder="https://theguardian.com" /><br>
       <input type="submit" value="Discover feed" />
@@ -23,7 +22,7 @@
   <section class="content_box">
       <h2>Subscribe to a Feed</h2>
       <p>Use the form below to subscribe to a feed.</p>
-      <p>Microformats 2 (mf2) and RSS feeds are currently supported.</p>
+      <p>Microformats 2 (mf2), JSON Feed, Atom, and RSS feeds are currently supported.</p>
       <form action="/discover" method="GET">
         <label for="channel">Channel Name:</label><br>
         <select name="channel" id="channel">
