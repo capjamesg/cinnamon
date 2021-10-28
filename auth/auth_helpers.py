@@ -19,13 +19,13 @@ def get_access_token():
 
     return access_token
 
-def verify_user():
+def verify_user(token_endpoint):
     access_token = get_access_token()
     if not access_token:
         return False, []
 
     r = requests.get(
-        session.get("token_endpoint"),
+        token_endpoint,
         headers={'Authorization': 'Bearer ' + access_token}
     )
     if r.status_code == 200:

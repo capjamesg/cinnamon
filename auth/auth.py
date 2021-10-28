@@ -114,6 +114,8 @@ def discover_auth_endpoint():
         if token_endpoint_search:
             token_endpoint = token_endpoint_search["href"]
             token_endpoint_found = True
+        else:
+            token_endpoint = "https://auth.jamesg.blog/token"
     
     if token_endpoint_found == False:
         flash("An IndieAuth token endpoint could not be found on your website.")

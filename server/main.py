@@ -20,7 +20,7 @@ def setup():
 
 @main.route("/endpoint", methods=["GET", "POST"])
 def home():
-    has_valid_token, scopes = verify_user()
+    has_valid_token, scopes = verify_user(session.get("token_endpoint"))
 
     if has_valid_token == False:
         abort(403)

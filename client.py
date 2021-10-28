@@ -25,6 +25,10 @@ def microsub_reader(channel):
     before = None
     after = None
 
+    print(session)
+
+    session["server_url"] = "http://localhost:5000/endpoint"
+
     if request.args.get("before"):
         before = request.args.get("before")
 
@@ -36,7 +40,11 @@ def microsub_reader(channel):
     else:
         microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}".format(channel), headers=headers)
 
-    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel), headers=headers).json()
+    print(session.get("server_url"))
+
+    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel), headers=headers)
+
+    print(feeds.text)
 
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
