@@ -13,7 +13,7 @@ def create_app():
     app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
 
     # blueprint for non-auth parts of app
-    from .main import main as main_blueprint
+    from .server.main import main as main_blueprint
 
     app.register_blueprint(main_blueprint)
 
@@ -21,7 +21,7 @@ def create_app():
 
     app.register_blueprint(client_blueprint)
 
-    from .auth import auth as auth_blueprint
+    from .auth.auth import auth as auth_blueprint
 
     app.register_blueprint(auth_blueprint)
 

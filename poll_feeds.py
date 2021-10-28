@@ -19,7 +19,7 @@ def poll_feeds():
         
         subscriptions = cursor.execute("SELECT url, channel, etag, id FROM following WHERE blocked = 0;").fetchall()
 
-        subscriptions = [["https://rhiaro.co.uk", "coffeetsw", "", "s"]]
+        subscriptions = [["https://aaronparecki.com", "coffeetsw", "", "s"]]
 
         for s in subscriptions:
             url = s[0]

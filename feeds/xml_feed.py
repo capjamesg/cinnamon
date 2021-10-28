@@ -52,21 +52,21 @@ def process_xml_feed(entry, feed, url):
         soup = BeautifulSoup(entry.content[0].value, "html.parser")
 
         content = {
-            "text":soup.get_text(),
+            "text":soup.get_text(separator="\n"),
             "html": entry.content[0].value
         }
     elif entry.get("summary"):
         soup = BeautifulSoup(entry.summary, "html.parser")
 
         content = {
-            "text":soup.get_text(),
+            "text":soup.get_text(separator="\n"),
             "html": entry.summary
         }
     elif entry.get("description"):
         soup = BeautifulSoup(entry.description, "html.parser")
 
         content = {
-            "text":soup.get_text(),
+            "text":soup.get_text(separator="\n"),
             "html": entry.description
         }
     elif entry.get("title") and entry.get("link"):

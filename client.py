@@ -1,8 +1,8 @@
 from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
-from .check_token import check_token
+from .auth.check_token import check_token
 import requests
-from .discovery import *
-from .actions import *
+from .auth.discovery import *
+from .server.actions import *
 from .config import *
 
 client = Blueprint('client', __name__)
