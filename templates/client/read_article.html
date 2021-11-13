@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .feed li {
+        background: white;
+        border-radius: 15px;
+        border: 1px solid lightgrey;
+        margin-bottom: 10px;
+        padding: 10px;
+    }
+</style>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <section class="notification">
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+    </section>
+    {% endif %}
+{% endwith %}
+<script>
+    function send_reaction(reaction, reaction_name, post_id) {
+        fetch('/react', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer {{ session.get("access_token") }}"
+            },
+            body: new URLSearchParams({
+                "h": "entry",
+                "reaction": reaction,
+                "url": post_id
+            })
+        }).then(function(response) {
+            // if status code == 200
+            if (response.status == 200) {
+                // update the post
+                var notification = document.createElement("div");
+                notification.className = "user_prompt";
+                notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
+                document.getElementById(post_id).appendChild(notification);
+
+                // remove the notification after 5 seconds
+
+                setTimeout(function() {
+                    document.getElementById(post_id).removeChild(notification);
+                }, 5000);
+            }
+        })
+    }
+</script>
+<div id="settings" style="display: none;">
+    <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
+    <h2>Settings</h2>
+    <ul>
+      <li><a href="/channels">Channels</a></li>
+      <li><a href="/feeds">Feeds</a></li>
+      {% if session.get("micropub_url") %}
+        <li><a href="{{ session.get('micropub_url') }}">Micropub</a></li>
+      {% endif %}
+      <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </div>
+<div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
+<aside class="flex_left_home" id="sidebar">
+    <div class="main_menu_mobile">
+        <span class="close mobile_close" onclick="trigger_modal('sidebar')">&times;</span>
+        <h2>Your Channels</h2>
+        <ul>
+            {% for channel in channels %}
+            <li>
+                {% if channel.uid == page_channel_uid %}
+                <a href="/reader/{{ channel.uid }}" style="font-weight: 600;">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
+                {% else %}
+                <a href="/reader/{{ channel.uid }}">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        <hr>
+        <h3>Manage</h3>
+        <a href="/search" class="button_link" id="search_button">Search</a>
+        <a href="/feeds" class="button_link" id="subscribe_to_feed">Subscribe to a new feed</a>
+        <a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings_button">Channel Settings</a>
+        {% if results | length > 0 %}
+            <form method="POST" action="/read">
+                <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+                <input type="hidden" name="status" value="mark_read">
+                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
+                <button>Mark All As Read</button>
+            </form>
+            <form method="POST" action="/read">
+                <input type="hidden" name="channel" value="{{ page_channel_uid }}">
+                <input type="hidden" name="status" value="mark_unread">
+                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
+                <button>Mark All as Unread</button>
+            </form>
+        {% endif %}
+        <hr>
+        <h3>Feeds in this Channel</h3>
+        {% if feeds["items"] | length > 0 %}
+        <ul>
+            {% for feed in feeds["items"] %}
+                <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
+                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p>There are no feeds in this channel yet.</p>
+        {% endif %}
+    </div>
+</aside>
+<section class="feed flex_right_home">
+    {% include "client/feed_item.html" %}
+</section>
+{% endblock %}

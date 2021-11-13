@@ -1,6 +1,5 @@
 from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
 from .check_token import check_token
-from .indieauth import requires_indieauth
 import requests
 from .actions import *
 from .config import *
@@ -11,9 +10,49 @@ client = Blueprint('client', __name__)
 def reader_redirect():
     return redirect("/reader/all")
 
+@client.route("/read/<id>")
+def read_article(id):
+    auth_result = check_token(session.get("access_token"))
+
+    if auth_result == False:
+        return redirect("/login")
+
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    article_req = requests.get(session.get("server_url") + "?action=timeline&id=" + id, headers=headers)
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+    if article_req.status_code != 200:
+        return redirect("/reader/all")
+
+    channel = article_req.json()["post"][0]["channel"]
+
+    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel), headers=headers).json()
+
+    channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel]
+
+    if len(channel_name) > 0:
+        channel_name = channel_name[0]["name"]
+    else:
+        channel_name = "All"
+
+    jf2 = json.loads(article_req.json()["post"][0]["jf2"])
+
+    return render_template("client/read_article.html",
+        title="{} | Microsub Reader".format(channel_name),
+        channels=channel_req.json()["channels"],
+        w=jf2,
+        page_channel_uid=channel,
+        feeds=feeds,
+        channel_name=channel_name,
+        show_all_content=True
+    )
+
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -61,12 +100,13 @@ def microsub_reader(channel):
         page_channel_uid=channel,
         published_dates=published_dates,
         feeds=feeds,
-        channel_name=channel_name
+        channel_name=channel_name,
+        show_all_content=False
     )
 
 @client.route("/react", methods=["POST"])
 def react_to_post():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -87,7 +127,7 @@ def react_to_post():
 
 @client.route("/read", methods=["POST"])
 def mark_channel_as_read():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -111,7 +151,7 @@ def mark_channel_as_read():
 
 @client.route("/reader/<channel>/delete/<entry_id>")
 def delete_entry_in_channel(channel, entry_id):
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -134,7 +174,7 @@ def delete_entry_in_channel(channel, entry_id):
 
 @client.route("/preview")
 def preview_feed():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -179,7 +219,7 @@ def preview_feed():
 
 @client.route("/search")
 def search_feed():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -221,7 +261,7 @@ def search_feed():
 
 @client.route("/settings")
 def settings():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")

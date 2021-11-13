@@ -18,6 +18,37 @@
     </section>
     {% endif %}
 {% endwith %}
+<script>
+    function send_reaction(reaction, reaction_name, post_url, post_id) {
+        fetch('/react', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": "Bearer {{ session.get("access_token") }}"
+            },
+            body: new URLSearchParams({
+                "h": "entry",
+                "reaction": reaction,
+                "url": post_url
+            })
+        }).then(function(response) {
+            // if status code == 200
+            if (response.status == 200) {
+                // update the post
+                var notification = document.createElement("div");
+                notification.className = "user_prompt";
+                notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
+                document.getElementById(post_id).appendChild(notification);
+
+                // remove the notification after 5 seconds
+
+                setTimeout(function() {
+                    document.getElementById(post_id).removeChild(notification);
+                }, 5000);
+            }
+        })
+    }
+</script>
 <div id="settings" style="display: none;">
     <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
     <h2>Settings</h2>
@@ -68,19 +99,16 @@
         {% endif %}
         <hr>
         <h3>Feeds in this Channel</h3>
-        <details>
-            <summary>See feeds</summary>
-            {% if feeds["items"] | length > 0 %}
-            <ul>
-                {% for feed in feeds["items"] %}
-                    <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
-                        <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-                <p>There are no feeds in this channel yet.</p>
-            {% endif %}
-        </details>
+        {% if feeds["items"] | length > 0 %}
+        <ul>
+            {% for feed in feeds["items"] %}
+                <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
+                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p>There are no feeds in this channel yet.</p>
+        {% endif %}
     </div>
 </aside>
 <section class="feed flex_right_home">
@@ -119,6 +147,14 @@
             {% endif %}
         </div>
     {% endif %}
+</section>
+<section id="podcast_overlay" class="podcast" style="display: none; border-radius: 10px;">
+    <p id="podcast_info"></p>
+    <audio id="focused_audio"></audio>
+    <div id="podcast_controls">
+        <button id="podcast_play" class="podcast_controls" onclick="play_podcast()">Play</button>
+        <button id="podcast_pause" class="podcast_controls" onclick="pause_podcast()">Pause</button>
+    </div>
 </section>
 </div>
 <section class="content_box modal" style="display: none;" id="subscribe">
@@ -180,36 +216,4 @@
     </div>
 </section>
 <script src="/reader.js"></script>
-<script>
-    function send_reaction(reaction, reaction_name, post_id,) {
-        fetch('/react', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": "Bearer {{ session.get("access_token") }}"
-            },
-            body: new URLSearchParams({
-                "h": "entry",
-                "reaction": reaction,
-                "url": post_id
-            })
-        }).then(function(response) {
-            // if status code == 200
-            if (response.status == 200) {
-                // update the post
-                var notification = document.createElement("div");
-                notification.className = "user_prompt";
-                notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
-                document.getElementById(post_id).appendChild(notification);
-
-                // remove the notification after 5 seconds
-
-                setTimeout(function() {
-                    document.getElementById(post_id).removeChild(notification);
-                }, 5000);
-            }
-        }
-    }
-</script>
-
 {% endblock %}
