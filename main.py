@@ -18,24 +18,28 @@ def setup():
     return render_template("setup.html", title="Setup | Microsub Endpoint")
 
 @main.route("/endpoint", methods=["GET", "POST"])
-@requires_indieauth
+# @requires_indieauth
 def home():
     if request.form:
         action = request.form.get("action")
         method = request.form.get("method")
         channel = request.form.get("channel")
         query = request.form.get("query")
+        id = request.form.get("id")
     else:
         action = request.args.get("action")
         method = request.args.get("method")
         channel = request.args.get("channel")
         query = request.args.get("query")
+        id = request.args.get("id")
 
     if not action:
         return jsonify({"error": "No action specified."}), 400
     
-    if action == "timeline" and request.method == "GET":
+    if action == "timeline" and request.method == "GET" and not id:
         return get_timeline()
+    elif action == "timeline" and request.method == "GET" and id:
+        return get_post()
     elif action == "timeline" and request.method == "POST" and method == "remove":
         return remove_entry()
     elif action == "timeline" and request.method == "POST":

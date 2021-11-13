@@ -70,6 +70,16 @@ def get_timeline():
 
     return jsonify({"items": items, "paging": {"before": before, "after": after}}), 200
 
+def get_post():
+    connection = sqlite3.connect("microsub.db")
+
+    with connection:
+        cursor = connection.cursor()
+        print(request.args.get("id"))
+        cursor.execute("SELECT * FROM timeline WHERE uid = ?", (request.args.get("id"), ))
+
+    return jsonify({"post": change_to_json(cursor)}), 200
+
 def mark_as_read():
     connection = sqlite3.connect("microsub.db")
 

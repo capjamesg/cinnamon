@@ -33,7 +33,8 @@ with connection:
         uid text,
         hidden integer,
         feed_id integer,
-        id integer primary key not null
+        id integer primary key not null,
+        poll_cadence text
     )
     """)
 
