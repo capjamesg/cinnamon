@@ -149,6 +149,9 @@ def process_xml_feed(entry, feed, url):
             elif link.get("type") and "audio" in link.get("type") and link.get("href"):
                 result["audio"] = [{"content_type": link.get("type"), "url": link.get("href")}]
                 break
+
+    if entry.get("link"):
+        result["url"] = entry.link
     
     if entry.get("media_content") and len(entry.get("media_content")) > 0:
         for media in entry.get("media_content"):
