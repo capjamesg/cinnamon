@@ -15,7 +15,8 @@ import concurrent.futures
 poll_cadences = []
 
 # delete feed_items.json file so old records are not added to db again
-os.remove("feed_items.json")
+if os.path.isfile("feed_items.json"):
+    os.remove("feed_items.json")
 
 def extract_feed_items(s, url, channel_uid, feed_id):
     session = requests.Session()
@@ -168,7 +169,7 @@ def poll_feeds():
         subscriptions = cursor.execute("SELECT url, channel, etag, id FROM following WHERE blocked = 0 AND poll_cadence = ?;",
             (cadence, )).fetchall()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             channel_uids = []
             tasks = []
 
@@ -195,6 +196,8 @@ def poll_feeds():
 
 poll_feeds()
 
+print("adding feed items to database")
+
 with open("feed_items.json", "a+") as f:
     connection = sqlite3.connect("microsub.db")
 
@@ -202,7 +205,7 @@ with open("feed_items.json", "a+") as f:
         cursor = connection.cursor()
 
         for p in poll_cadences:
-            cursor.execute("UPDATE feeds SET poll_cadence = ? WHERE url = ?;", (p[0], p[1]))
+            cursor.execute("UPDATE following SET poll_cadence = ? WHERE url = ?;", (p[0], p[1]))
 
         last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
 
@@ -220,17 +223,7 @@ with open("feed_items.json", "a+") as f:
             if len(in_db) > 0:
                 continue
 
-            cursor.execute("""INSERT INTO timeline (
-                channel_uid,
-                result,
-                published,
-                unread,
-                url,
-                uid,
-                hidden,
-                feed_id,
-                last_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
                 (record["channel_uid"],
                     record["result"],
                     record["published"],

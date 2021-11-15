@@ -3,9 +3,9 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import feedparser
-from .feeds import hfeed, json_feed, xml_feed
-from .feeds import canonicalize_url as canonicalize_url
-from .config import URL
+from feeds import hfeed, json_feed, xml_feed
+from feeds import canonicalize_url as canonicalize_url
+from config import URL
 import random
 import string
 import json
@@ -199,7 +199,10 @@ def preview():
 
             items_to_return.append(result)
     else:
-        results = hfeed.process_hfeed(url, add_to_db=False)
+        results = []
+        
+        for item in soup.select(".h-entry"):
+            results = hfeed.process_hfeed(item, None, "", url, "")
 
         for result in results:
             items_to_return.append(result)
@@ -381,7 +384,8 @@ def create_follow():
         else:
             last_id = 1
 
-        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, last_id, 0, 0 ))
+        # set cadence to hourly by default
+        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, last_id, 0, 0, "hourly", ))
 
         # discover websub_hub
 
