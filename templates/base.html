@@ -68,7 +68,7 @@
   <body>
     <main>
       <a href="#main" class="accessibility_label">Skip to main content</a>
-      <nav>
+      <nav id="top_navigation">
         {% if session.get("me") and request.path.startswith("/reader/") %}
         <p><a href="/reader/all">{{ channel_name }}</a></p>
         {% elif session.get("me") %}

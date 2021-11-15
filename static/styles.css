@@ -123,9 +123,21 @@ footer {
 }
 .flex_left_home {
 	flex: 0 20%;
+	max-width: 30%;
+	word-wrap: break-word;
 }
 .flex_right_home {
 	flex: 1 50%;
+}
+.notification_bar {
+	position: fixed;
+	top: 0;
+	text-align: center;
+	background-color: green;
+	color: white;
+	width: 100%;
+	box-shadow: 2px 2px lightgrey;
+	font-weight: 600px;
 }
 img {
 	max-width: 100%;
@@ -290,6 +302,7 @@ input[type="submit"] {
 	}
 	.flex_left_home {
 		flex: none;
+		max-width: 100%;
 	}
 	aside, #settings {
 		margin-bottom: 0;
