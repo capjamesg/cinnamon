@@ -37,8 +37,11 @@
                 // update the post
                 var notification = document.createElement("div");
                 notification.className = "user_prompt";
-                notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
-                document.getElementById(post_id).appendChild(notification);
+                notification.innerHTML = `<p>Your like was successfully created.</p>`;
+
+                var main = document.getElementsByTagName("main")[0];
+
+                main.before(notification);
 
                 // remove the notification after 5 seconds
 

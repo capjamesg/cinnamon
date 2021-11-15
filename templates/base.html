@@ -35,6 +35,35 @@
     <link rel="webmention" href="https://webmention.jamesg.blog/endpoint" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style id="darkmode" media="none">
+      @media (prefers-color-scheme: dark) {
+        html {
+          background-color: #1F2937;
+        }
+        a {
+          color: lightgreen;
+          border-bottom: 2px dotted lightgreen;
+        }
+        a:hover {
+          co
+          lor: lavender;
+        }
+        h1, h2, h3 {
+          color: orange;
+        }
+        .social_interaction, .webmention {
+          background: none;
+        }
+        p, li, dt, dd, .indieweb_footer, input, label {
+          color: white;
+        }
+        input, textarea {
+          background-color: #0c2548;
+          color: white;
+        }
+      }
+    </style>
   </head>
   <body>
     <main>
@@ -68,6 +97,39 @@
         </ul>
         {% endif %}
       </nav>
+      <script>
+        if (localStorage.getItem('darkmode') == "true") {
+          document.getElementById('darkmode').media = "all";
+        } else if (localStorage.getItem('darkmode') == "false") {
+          document.getElementById('darkmode').media = "none";
+        }
+
+        var navigation = document.getElementById("top_navigation");
+        var ul = navigation.getElementsByTagName("ul")[0];
+        // create new li
+        var li = document.createElement("li");
+        var dark_style = document.getElementById("darkmode");
+  
+        if (dark_style.media === "all") {
+          li.innerHTML = "<a onclick='toggleTheme();'>Light Mode</a>";
+        } else {
+          li.innerHTML = "<a onclick='toggleTheme();'>Dark Mode</a>";
+        }
+
+        ul.appendChild(li);
+  
+        function toggleTheme() {
+          if (dark_style.media === "all") {
+            dark_style.media = "none";
+            li.innerHTML = "<a onclick='toggleTheme();'>Dark Mode</a>";
+            localStorage.setItem('darkmode', 'false');
+          } else {
+            dark_style.media = "all";
+            li.innerHTML = "<a onclick='toggleTheme();'>Light Mode</a>";
+            localStorage.setItem('darkmode', 'true');
+          }
+        }
+      </script>
       <div id="main">
         {% block content %}
         {% endblock %}
