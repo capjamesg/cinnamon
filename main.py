@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
-from .indieauth import requires_indieauth
-from .check_token import check_token
+from indieauth import requires_indieauth
+from check_token import check_token
 import datetime
 import sqlite3
 import requests
-from .actions import *
-from .config import *
+from actions import *
+from config import *
 
 main = Blueprint('main', __name__, template_folder='templates')
 
@@ -18,7 +18,7 @@ def setup():
     return render_template("setup.html", title="Setup | Microsub Endpoint")
 
 @main.route("/endpoint", methods=["GET", "POST"])
-# @requires_indieauth
+@requires_indieauth
 def home():
     if request.form:
         action = request.form.get("action")
@@ -80,7 +80,7 @@ def home():
 
 @main.route("/channels")
 def dashboard():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -96,7 +96,7 @@ def dashboard():
 
 @main.route("/feeds", methods=["GET", "POST"])
 def feed_list():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -128,7 +128,7 @@ def feed_list():
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -153,7 +153,7 @@ def reorder_channels_view():
 
 @main.route("/create-channel", methods=["POST"])
 def create_channel_view():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -177,7 +177,7 @@ def create_channel_view():
 
 @main.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -202,7 +202,7 @@ def delete_channel_view():
 
 @main.route("/unfollow", methods=["POST"])
 def unfollow_view():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -225,7 +225,7 @@ def unfollow_view():
         
 @main.route("/discover-feed", methods=["POST"])
 def discover_feed():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -270,7 +270,7 @@ def discover_feed():
 
 @main.route("/channel/<id>", methods=["GET", "POST"])
 def modify_channel(id):
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -310,7 +310,7 @@ def modify_channel(id):
 
 @main.route("/mute", methods=["POST"])
 def mute_view():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -348,7 +348,7 @@ def mute_view():
 
 @main.route("/block", methods=["POST"])
 def block_view():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
@@ -454,7 +454,7 @@ def save_new_post_from_websub(uid):
 
 @main.route("/websub_callback")
 def verify_websub_subscription():
-    auth_result = check_token()
+    auth_result = check_token(session.get("access_token"))
 
     if auth_result == False:
         return redirect("/login")
