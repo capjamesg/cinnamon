@@ -1,15 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Microsub Dashboard</h1>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<section class="notification">
-  {% for message in messages %}
-    <p class="error">{{ message }}</p>
-  {% endfor %}
-</section>
-{% endif %}
-{% endwith %}
+{% include "show_error.html" %}
 <section class="content_box">
     <h2>Discover a Feed</h2>
     <p>Use the form below to discover a feed URL.</p>

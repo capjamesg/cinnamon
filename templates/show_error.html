@@ -1,0 +1,15 @@
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <section class="notification_bar">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </section>
+        <script>
+            setTimeout(function() {
+                document.querySelector('.notification_bar').style.display = 'none';
+            }, 3000);
+        </script>
+    {% endif %}
+{% endwith %}

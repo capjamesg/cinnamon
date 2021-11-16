@@ -9,15 +9,7 @@
         padding: 10px;
     }
 </style>
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <section class="notification">
-    {% for message in messages %}
-        <p>{{ message }}</p>
-    {% endfor %}
-    </section>
-    {% endif %}
-{% endwith %}
+{% includes "show_error.html" %}
 <script>
     function send_reaction(reaction, reaction_name, post_id) {
         fetch('/react', {

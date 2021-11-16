@@ -9,15 +9,7 @@
         padding: 10px;
     }
 </style>
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <section class="notification">
-    {% for message in messages %}
-        <p>{{ message }}</p>
-    {% endfor %}
-    </section>
-    {% endif %}
-{% endwith %}
+{% include "show_error.html" %}
 <script>
     function send_reaction(reaction, reaction_name, post_url, post_id) {
         fetch('/react', {
@@ -35,8 +27,8 @@
             // if status code == 200
             if (response.status == 200) {
                 // update the post
-                var notification = document.createElement("div");
-                notification.className = "user_prompt";
+                var notification = document.createElement("section");
+                notification.className = "notification_bar";
                 notification.innerHTML = "<p>Your " + reaction_name + " has been sent.</p>";
                 document.getElementById(post_id).appendChild(notification);
 

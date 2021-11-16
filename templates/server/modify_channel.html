@@ -1,13 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Modify {{ channel[0] }} Channel</h1>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<section class="notification">
-  <p class="error">{{ messages[0] }}</p>
-</section>
-{% endif %}
-{% endwith %}
+{% include "show_error.html" %}
 <section class="content_box">
     <h2>Feeds In This Channel</h2>
     <p>Below is a list of all the feeds in the {{ channel[0] }} channel.</p>
