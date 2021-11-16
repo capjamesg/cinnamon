@@ -3,6 +3,7 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import feedparser
+import mf2py
 from feeds import hfeed, json_feed, xml_feed
 from feeds import canonicalize_url as canonicalize_url
 from config import URL
@@ -202,7 +203,8 @@ def preview():
         results = []
         
         for item in soup.select(".h-entry"):
-            results = hfeed.process_hfeed(item, None, "", url, "")
+            parsed = mf2py.Parse(item)
+            results = hfeed.process_hfeed(parsed, None, "", url, "")
 
         for result in results:
             items_to_return.append(result)
