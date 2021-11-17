@@ -48,7 +48,7 @@
         <a onclick="send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
         <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
         <a onclick="send_reaction('in-reply-to', 'reply', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
-        <a href="/read/{{ w['_id'] }} class="reaction">View in Reader 📚</a>
+        <a href="/read/{{ w['_id'] }}" class="reaction">View in Reader 📚</a>
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
     </p>
     {% else %}

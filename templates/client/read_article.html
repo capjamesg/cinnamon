@@ -9,7 +9,7 @@
         padding: 10px;
     }
 </style>
-{% includes "show_error.html" %}
+{% include "show_error.html" %}
 <script>
     function send_reaction(reaction, reaction_name, post_id) {
         fetch('/react', {
