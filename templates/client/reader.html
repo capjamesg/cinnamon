@@ -11,15 +11,15 @@
 </style>
 <script>
     function send_notification(notification_text) {
-        // update the post
         var notification = document.createElement("section");
-        var nav = document.getElementById("top_navigation");
+        var body = document.getElementsByTagName("body")[0];
         notification.className = "notification_bar";
         notification.innerHTML = notification_text;
-        nav.after(notification);
+        // add notification to top of body
+        body.insertBefore(notification, body.firstChild);
 
         setTimeout(function() {
-            document.getElementById(post_id).removeChild(notification);
+            body.removeChild(notification);
         }, 5000);
     }
 
