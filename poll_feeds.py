@@ -194,51 +194,53 @@ def poll_feeds():
 
     print("polled all subscriptions")
 
-poll_feeds()
+def add_feed_items_to_database():
+    print("adding feed items to database")
 
-print("adding feed items to database")
+    with open("feed_items.json", "r") as f:
+        connection = sqlite3.connect("microsub.db")
 
-with open("feed_items.json", "a+") as f:
-    connection = sqlite3.connect("microsub.db")
+        with connection:
+            cursor = connection.cursor()
 
-    with connection:
-        cursor = connection.cursor()
+            for p in poll_cadences:
+                cursor.execute("UPDATE following SET poll_cadence = ? WHERE url = ?;", (p[0], p[1]))
 
-        for p in poll_cadences:
-            cursor.execute("UPDATE following SET poll_cadence = ? WHERE url = ?;", (p[0], p[1]))
+            last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
 
-        last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
+            if last_id[0] != None:
+                last_id = last_id[0] + 1
+            else:
+                last_id = 0
 
-        if last_id[0] != None:
-            last_id = last_id[0] + 1
-        else:
-            last_id = 0
+            for line in f:
+                record = json.loads(line)
 
-        for line in f:
-            record = json.loads(line)
-            
-            # check if url in db
-            in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (record["url"],)).fetchall()
+                print(record["url"])
+                
+                # check if url in db
+                in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (record["url"],)).fetchall()
 
-            if len(in_db) > 0:
-                continue
+                if len(in_db) > 0:
+                    continue
 
-            cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
-                (record["channel_uid"],
-                    record["result"],
-                    record["published"],
-                    record["unread"],
-                    record["url"],
-                    record["uid"],
-                    record["hidden"],
-                    record["feed_id"],
-                    last_id
-                ))
+                cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+                    (record["channel_uid"],
+                        record["result"],
+                        record["published"],
+                        record["unread"],
+                        record["url"],
+                        record["uid"],
+                        record["hidden"],
+                        record["feed_id"],
+                        last_id
+                    ))
 
-            last_id += 1
+                last_id += 1
 
-            # update following to add new etag so we can track modifications to a feed
-            cursor.execute("UPDATE following SET etag = ? WHERE url = ?;", (record["etag"], record["feed_url"]))
+                # update following to add new etag so we can track modifications to a feed
+                cursor.execute("UPDATE following SET etag = ? WHERE url = ?;", (record["etag"], record["feed_url"]))
 
 if __name__ == "__main__":
     poll_feeds()
+    add_feed_items_to_database()
