@@ -1,4 +1,3 @@
-import requests
 import random
 import string
 import mf2py
@@ -30,15 +29,25 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
     if child["properties"].get("photo"):
         jf2["photo"] = canonicalize_url(child["properties"].get("photo")[0], url.split("/")[2], child["properties"]["url"][0]) 
 
+    if child["properties"].get("video"):
+        video_url = canonicalize_url(child["properties"].get("video")[0], url.split("/")[2], child["properties"]["url"][0]) 
+        jf2["video"] = [{"content_type": "", "url": video_url}]
+
     if child["properties"].get("category"):
         jf2["category"] = child["properties"].get("category")[0]
 
     if child["properties"].get("name"):
         jf2["name"] = child["properties"].get("name")[0]
+    elif jf2["author"]["name"]:
+        jf2["name"] = "Post by {}".format(jf2["author"]["name"])
+    else:
+        jf2["name"] = "Post by {}".format(url.split("/")[2])
+
+    if child["properties"].get("summary"):
 
     if child["properties"].get("summary"):
         jf2["content"] = {
-            "text": BeautifulSoup(child["properties"].get("summary")[0], "html.parser").get_text(),
+            "text": BeautifulSoup(child["properties"].get("summary")[0], "lxml").get_text(separator="\n"),
             "html": child["properties"].get("summary")[0]
         }
 
@@ -81,3 +90,5 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
 
     with open("feed_items.json", "a+") as file:
         file.write(json.dumps(record) + "\n")
+
+    return jf2

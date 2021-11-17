@@ -34,7 +34,7 @@ def process_xml_feed(entry, feed, url):
     except:
         return None, None
 
-    soup = BeautifulSoup(r.text, "html.parser")
+    soup = BeautifulSoup(r.text, "lxml")
 
     # get favicon
     favicon = soup.find("link", rel="shortcut icon")
@@ -43,24 +43,24 @@ def process_xml_feed(entry, feed, url):
         author["photo"] = canonicalize_url(favicon["href"], url.split("/")[2], favicon["href"])
 
     if entry.get("content"):
-        soup = BeautifulSoup(entry.content[0].value, "html.parser")
+        soup = BeautifulSoup(entry.content[0].value, "lxml")
 
         content = {
-            "text":soup.get_text(),
+            "text": soup.get_text(separator="\n"),
             "html": entry.content[0].value
         }
     elif entry.get("summary"):
-        soup = BeautifulSoup(entry.summary, "html.parser")
+        soup = BeautifulSoup(entry.summary, "lxml")
 
         content = {
-            "text":soup.get_text(),
+            "text":soup.get_text(separator="\n"),
             "html": entry.summary
         }
     elif entry.get("description"):
-        soup = BeautifulSoup(entry.description, "html.parser")
+        soup = BeautifulSoup(entry.description, "lxml")
 
         content = {
-            "text":soup.get_text(),
+            "text":soup.get_text(separator="\n"),
             "html": entry.description
         }
     elif entry.get("title") and entry.get("link"):
@@ -106,7 +106,7 @@ def process_xml_feed(entry, feed, url):
     if entry.get("link"):
         retrieve_post = requests.get(entry.link)
 
-        parse_post = BeautifulSoup(retrieve_post.text, "html.parser")
+        parse_post = BeautifulSoup(retrieve_post.text, "lxml")
 
         # get og_image tag
         og_image = parse_post.find("meta", property="og:image")

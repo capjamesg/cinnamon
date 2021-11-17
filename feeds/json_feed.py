@@ -61,7 +61,7 @@ def process_json_feed(item, feed):
 
     if item.get("content_html"):
         result["content"] = {}
-        result["content"]["text"] = BeautifulSoup(item.get("content_html"), "html.parser").get_text()
+        result["content"]["text"] = BeautifulSoup(item.get("content_html"), "lxml").get_text(separator="\n")
         result["content"]["html"] = item.get("content_html")
 
     if item.get("title"):
