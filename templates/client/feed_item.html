@@ -42,18 +42,23 @@
     {% else %}
     <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ w["content"]["text"] }}</span></p>
     {% endif %}
-    <a href="/read/{{ w['_id'] }}">Read Full Post In Reader</a>
-    {% if "create" in session.get("scope") %}
     <p class="reaction_set">
-        <a onclick="send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
-        <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
-        <a onclick="send_reaction('in-reply-to', 'reply', '{{ w['url'] }}', '{{ w['_id'] }}')" href="https://micropub.jamesg.blog/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
+        {% if "create" in session.get("scope") and session.get('micropub_url') %}
+            <a onclick="send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of={{ w['url'] }}" class="reaction">Like ❤️</a>
+            <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
+            <a onclick="toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
+        {% endif %}
         <a href="/read/{{ w['_id'] }}" class="reaction">View in Reader 📚</a>
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
-    </p>
-    {% else %}
-    <p class="reaction_set">
-        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
-    </p>
-    {% endif %}
+
+        {% if session.get('micropub_url') %}
+        <div id="{{ w['_id'] }}-textbox" style="display: none; margin-top: 10px;">
+            <label for="content">Reply content:</label><br>
+            <textarea name="content" rows="8" id='{{ w["_id"] }}-form'></textarea><br>
+            <input type="hidden" name="h" value="entry">
+            <input type="hidden" name="in-reply-to" value="{{ w["url"] }}">
+            <input type="submit" value="Send Reply 💬" onclick="submit_micropub('{{ w["_id"] }}', '{{ w["url"] }}')" />
+        </div>
+        {% endif %}
+    </li>
 </li>

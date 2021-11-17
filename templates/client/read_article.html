@@ -9,41 +9,6 @@
         padding: 10px;
     }
 </style>
-{% include "show_error.html" %}
-<script>
-    function send_reaction(reaction, reaction_name, post_id) {
-        fetch('/react', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": "Bearer {{ session.get("access_token") }}"
-            },
-            body: new URLSearchParams({
-                "h": "entry",
-                "reaction": reaction,
-                "url": post_id
-            })
-        }).then(function(response) {
-            // if status code == 200
-            if (response.status == 200) {
-                // update the post
-                var notification = document.createElement("div");
-                notification.className = "user_prompt";
-                notification.innerHTML = `<p>Your like was successfully created.</p>`;
-
-                var main = document.getElementsByTagName("main")[0];
-
-                main.before(notification);
-
-                // remove the notification after 5 seconds
-
-                setTimeout(function() {
-                    document.getElementById(post_id).removeChild(notification);
-                }, 5000);
-            }
-        })
-    }
-</script>
 <div id="settings" style="display: none;">
     <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
     <h2>Settings</h2>

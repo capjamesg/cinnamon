@@ -116,12 +116,27 @@ def react_to_post():
         "Content-Type": "application/json",
     }
 
-    request_to_make = {
-        "h": "entry",
-        request.form.get("reaction"): request.form.get("url")
-    }
+    is_reply = request.args.get("is_reply")
 
-    r = requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
+    if is_reply == "true":
+        request_to_make = {
+            "h": "entry",
+            "in-reply-to": [request.form.get("in-reply-to")],
+            "properties": {
+                "content": [
+                    {
+                        "html": request.form.get("content")
+                    }
+                ]
+            }
+        }
+    else:
+        request_to_make = {
+            "h": "entry",
+            request.form.get("reaction"): request.form.get("url")
+        }
+
+    requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
 
     return "OK"
 
