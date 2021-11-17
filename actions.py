@@ -359,23 +359,34 @@ def create_follow():
         title = url
         favicon = ""
 
-        soup = BeautifulSoup(r.text, "html.parser")
+        soup = BeautifulSoup(r.text, "lxml")
 
         if soup.find("title"):
             title = soup.find("title").text
 
         # get favicon
 
-        favicon = soup.find("link", rel="shortcut icon")
+        home_page_request = requests.get(url.split("/")[0] + "//" + url.split("/")[2]).text
+        home_page = BeautifulSoup(home_page_request, "lxml")
+
+        favicon = home_page.find("link", rel="shortcut icon")
 
         if favicon:
             favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
+        else:
+            favicon = ""
 
-        if not favicon:
-            favicon = soup.find("link", rel="icon")
+        if favicon == "":
+            favicon = home_page.find("link", rel="icon")
 
             if favicon:
                 favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
+
+        if favicon:
+            r = requests.get(favicon)
+
+            if r.status_code != 200:
+                favicon = ""
 
         # "" empty string is etag which will be populated in poll_feeds.py if available
         last_id = cursor.execute("SELECT MAX(id) FROM following").fetchone()
