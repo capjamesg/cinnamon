@@ -33,23 +33,31 @@ def extract_feed_items(s, url, channel_uid, feed_id):
     else:
         content_type = ""
 
+    # get etag of url
+    if r.headers.get('etag'):
+        etag = r.headers['etag']
+    else:
+        etag = ""
+
+    if etag != "" and etag == s[2]:
+        print("{} has not changed since last poll, skipping".format(url))
+        return
+
+    # get last modified date of url
+    if r.headers.get('last-modified'):
+        last_modified = r.headers['last-modified']
+    else:
+        last_modified = ""
+
+    if last_modified and datetime.datetime.fromtimestamp(mktime(last_modified)) < datetime.datetime.now() - datetime.timedelta(hours=12):
+        print("{} has not been modified in the last 12 hours, skipping".format(url))
+        return
+
     print("polling " + url)
 
     if "xml" in content_type:
         feed = feedparser.parse(url)
         print("entries found: " + str(len(feed.entries)))
-
-        etag = feed.get("etag", "")
-
-        if etag != "" and etag == s[2]:
-            print("{} has not changed since last poll, skipping".format(url))
-            return
-
-        last_modified = feed.get("modified_parsed", None)
-
-        if last_modified and datetime.datetime.fromtimestamp(mktime(last_modified)) < datetime.datetime.now() - datetime.timedelta(hours=12):
-            print("{} has not been modified in the last 12 hours, skipping".format(url))
-            return
 
         dates = []
 

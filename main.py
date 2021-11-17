@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
-from indieauth import requires_indieauth
-from check_token import check_token
+from .indieauth import requires_indieauth
+from .check_token import check_token
 import datetime
 import sqlite3
 import requests
-from actions import *
-from config import *
+from .actions import *
+from .config import *
 
 main = Blueprint('main', __name__, template_folder='templates')
 
@@ -284,8 +284,6 @@ def modify_channel(id):
             "name": request.form.get("name"),
         }
 
-        print(req)
-
         r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
@@ -303,7 +301,7 @@ def modify_channel(id):
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
         if channel:
-            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel), channel=channel, feeds=feeds)
+            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel), channel=channel[0], feeds=feeds)
         else:
             flash("The channel you were looking for could not be found.")
             return redirect("/reader/all")

@@ -43,9 +43,9 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
     else:
         jf2["name"] = "Post by {}".format(url.split("/")[2])
 
-    if child["properties"].get("summary"):
-
-    if child["properties"].get("summary"):
+    if child["properties"].get("content"):
+        jf2["content"] = child["properties"].get("content")[0]
+    elif child["properties"].get("summary"):
         jf2["content"] = {
             "text": BeautifulSoup(child["properties"].get("summary")[0], "lxml").get_text(separator="\n"),
             "html": child["properties"].get("summary")[0]

@@ -156,6 +156,12 @@ details {
 	display: inline;
 	border: 3px dashed orange;
 }
+textarea {
+	width: 100%;
+}
+input[type="submit"] {
+	text-align: center;
+}
 summary {
 	padding-top: 5px;
 }
