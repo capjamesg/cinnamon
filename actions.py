@@ -4,9 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 import feedparser
 import mf2py
-from .feeds import hfeed, json_feed, xml_feed
-from .feeds import canonicalize_url as canonicalize_url
-from .config import URL
+from feeds import hfeed, json_feed, xml_feed
+from feeds import canonicalize_url as canonicalize_url
+from config import URL
 import random
 import string
 import json
@@ -200,14 +200,19 @@ def preview():
 
             items_to_return.append(result)
     else:
-        results = []
-        
-        for item in soup.select(".h-entry"):
-            parsed = mf2py.Parse(item)
-            results = hfeed.process_hfeed(parsed, None, "", url, "")
+        parsed = mf2py.parse(r.text)
 
-        for result in results:
-            items_to_return.append(result)
+        for item in parsed["items"]:
+            if "type" in item and item["type"][0] == "h-feed":
+                for entry in item["children"]:
+                    if entry["type"][0] == "h-entry":
+                        result = hfeed.process_hfeed(entry, None, "", url, "")
+
+                        items_to_return.append(result)
+            elif "type" in item and item["type"][0] == "h-entry":
+                result = hfeed.process_hfeed(item, None, "", url, "")
+
+                items_to_return.append(result)
 
         content_type = "h-feed"
 
@@ -372,7 +377,7 @@ def create_follow():
         favicon = home_page.find("link", rel="shortcut icon")
 
         if favicon:
-            favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
+            favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], url)
         else:
             favicon = ""
 
@@ -380,7 +385,7 @@ def create_follow():
             favicon = home_page.find("link", rel="icon")
 
             if favicon:
-                favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], favicon.get("href"))
+                favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], url)
 
         if favicon:
             r = requests.get(favicon)

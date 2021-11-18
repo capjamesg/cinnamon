@@ -9,8 +9,16 @@ import json
 import os
 import mf2py
 import feedparser
-from time import mktime
 import concurrent.futures
+import logging
+
+logging.basicConfig(
+	level=logging.DEBUG, 
+	filename="{}/logs/{}.log".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+	datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+print("Printing logs to logs/{}.log".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
 poll_cadences = []
 
@@ -40,7 +48,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         etag = ""
 
     if etag != "" and etag == s[2]:
-        print("{} has not changed since last poll, skipping".format(url))
+        logging.debug("{} has not changed since last poll, skipping".format(url))
         return
 
     # get last modified date of url
@@ -49,15 +57,15 @@ def extract_feed_items(s, url, channel_uid, feed_id):
     else:
         last_modified = ""
 
-    if last_modified and datetime.datetime.fromtimestamp(mktime(last_modified)) < datetime.datetime.now() - datetime.timedelta(hours=12):
-        print("{} has not been modified in the last 12 hours, skipping".format(url))
+    if last_modified != "" and datetime.datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z') < datetime.datetime.now() - datetime.timedelta(hours=12):
+        logging.debug("{} has not been modified in the last 12 hours, skipping".format(url))
         return
 
-    print("polling " + url)
+    logging.debug("polling " + url)
 
     if "xml" in content_type:
         feed = feedparser.parse(url)
-        print("entries found: " + str(len(feed.entries)))
+        logging.debug("entries found: " + str(len(feed.entries)))
 
         dates = []
 
@@ -98,7 +106,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         etag = feed.headers.get("etag", "")
 
         if etag != "" and etag == s[2]:
-            print("{} has not changed since last poll, skipping".format(url))
+            logging.debug("{} has not changed since last poll, skipping".format(url))
             return
 
         feed = feed.json()
@@ -150,7 +158,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
         for item in mf2_raw["items"]:
             if item.get("type") and item.get("type")[0] == "h-feed":
-                print("entries found: " + str(len(item.get("children"))))
+                logging.debug("entries found: " + str(len(item.get("children"))))
                 if item.get("children") == None:
                     return results
 
@@ -189,7 +197,8 @@ def poll_feeds():
                 try:
                     channel_uid = cursor.execute("SELECT uid FROM channels WHERE uid = ?;", (s[1],)).fetchone()[0]
                     channel_uids.append(channel_uid)
-                except:
+                except Exception as e:
+                    logging.debug("Error: " + e)
                     continue
             
                 tasks.append(executor.submit(extract_feed_items, s, url, channel_uid, feed_id))
@@ -199,11 +208,12 @@ def poll_feeds():
                     task.result()
                 except Exception as e:
                     print(e)
+                    logging.debug("Error: " + e)
 
-    print("polled all subscriptions")
+    logging.debug("polled all subscriptions")
 
 def add_feed_items_to_database():
-    print("adding feed items to database")
+    logging.debug("adding feed items to database")
 
     with open("feed_items.json", "r") as f:
         connection = sqlite3.connect("microsub.db")
@@ -224,7 +234,7 @@ def add_feed_items_to_database():
             for line in f:
                 record = json.loads(line)
 
-                print(record["url"])
+                logging.debug("Adding: " + record["url"])
                 
                 # check if url in db
                 in_db = cursor.execute("SELECT * FROM timeline WHERE url = ?", (record["url"],)).fetchall()
