@@ -6,6 +6,7 @@ import json
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
 from .canonicalize_url import canonicalize_url as canonicalize_url
+from .authorship import discover_author as discover_author
 
 def process_hfeed(child, hcard, channel_uid, url, feed_id):
     jf2 = {
@@ -22,6 +23,18 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
         
         if hcard[0]["properties"].get("photo"):
             jf2["photo"] = canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+    elif child["properties"].get("author"):
+        h_card = discover_author(child["properties"].get("author"))
+
+        if h_card != []:
+            jf2["author"] = {
+                "type": "card",
+                "name": h_card[0]["properties"]["name"][0],
+                "url": canonicalize_url(h_card[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+            }
+
+            if h_card[0]["properties"].get("photo"):
+                jf2["photo"] = canonicalize_url(h_card[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
 
     if not child.get("properties"):
         return
@@ -38,7 +51,7 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
 
     if child["properties"].get("name"):
         jf2["name"] = child["properties"].get("name")[0]
-    elif jf2["author"]["name"]:
+    elif jf2.get("author") and jf2["author"]["name"]:
         jf2["name"] = "Post by {}".format(jf2["author"]["name"])
     else:
         jf2["name"] = "Post by {}".format(url.split("/")[2])
