@@ -14,7 +14,7 @@ import logging
 
 logging.basicConfig(
 	level=logging.DEBUG, 
-	filename="{}/logs/{}.log".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+	filename="logs/{}.log".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
 	datefmt='%Y-%m-%d %H:%M:%S'
 )
 
@@ -198,7 +198,8 @@ def poll_feeds():
                     channel_uid = cursor.execute("SELECT uid FROM channels WHERE uid = ?;", (s[1],)).fetchone()[0]
                     channel_uids.append(channel_uid)
                 except Exception as e:
-                    logging.debug("Error: " + e)
+                    print(e)
+                    logging.debug("channel uid not found")
                     continue
             
                 tasks.append(executor.submit(extract_feed_items, s, url, channel_uid, feed_id))
@@ -208,7 +209,6 @@ def poll_feeds():
                     task.result()
                 except Exception as e:
                     print(e)
-                    logging.debug("Error: " + e)
 
     logging.debug("polled all subscriptions")
 

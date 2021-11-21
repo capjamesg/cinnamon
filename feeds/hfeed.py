@@ -24,7 +24,12 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
         if hcard[0]["properties"].get("photo"):
             jf2["photo"] = canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
     elif child["properties"].get("author"):
-        h_card = discover_author(child["properties"].get("author"))
+        if type(child["properties"].get("author")[0]) == str:
+            h_card = discover_author(child["properties"].get("author")[0])
+        elif child["properties"].get("author")[0].get("url"):
+            h_card = discover_author(child["properties"].get("author")[0].get("url"))
+        else:
+            h_card = []
 
         if h_card != []:
             jf2["author"] = {
