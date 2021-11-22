@@ -480,6 +480,9 @@ aside li {
 code {
 	word-wrap: break-word;
 }
+video {
+	width: 100%;
+}
 /* Code adapted from https://www.w3schools.com/howto/howto_css_modals.asp */
 .modal {
 	z-index: 1;
