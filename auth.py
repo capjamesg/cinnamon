@@ -1,5 +1,4 @@
 from flask import Blueprint, request, session, redirect, flash, render_template
-from .indieauth import requires_indieauth
 import requests
 from .actions import *
 from .config import *

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Modify {{ channel[0] }} Channel</h1>
+<h1>Modify {{ channel }} Channel</h1>
 <section class="content_box">
     <h2>Feeds In This Channel</h2>
-    <p>Below is a list of all the feeds in the {{ channel[0] }} channel.</p>
+    <p>Below is a list of all the feeds in the {{ channel }} channel.</p>
     {% if feeds %}
         <ul>
             {% for feed in feeds %}

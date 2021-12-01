@@ -7,12 +7,14 @@ from dateutil.parser import parse
 from bs4 import BeautifulSoup
 from .canonicalize_url import canonicalize_url as canonicalize_url
 from .authorship import discover_author as discover_author
+from .post_type_discovery import post_type_discovery as post_type_discovery
 
 def process_hfeed(child, hcard, channel_uid, url, feed_id):
     jf2 = {
-        "type": "entry",
         "url": canonicalize_url(child["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
     }
+
+    jf2["type"] = post_type_discovery.get_post_type(child)
 
     if hcard:
         jf2["author"] = {

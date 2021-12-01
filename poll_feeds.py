@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 from dates import find_poll_cadence
+from config import PROJECT_DIRECTORY
 from feeds import hfeed, json_feed, xml_feed
 import random
 import string
@@ -23,8 +24,8 @@ print("Printing logs to logs/{}.log".format(datetime.datetime.now().strftime('%Y
 poll_cadences = []
 
 # delete feed_items.json file so old records are not added to db again
-if os.path.isfile("feed_items.json"):
-    os.remove("feed_items.json")
+if os.path.isfile(PROJECT_DIRECTORY.strip("/") + "/feed_items.json"):
+    os.remove(PROJECT_DIRECTORY.strip("/") + "/feed_items.json")
 
 def extract_feed_items(s, url, channel_uid, feed_id):
     session = requests.Session()
@@ -89,7 +90,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
             dates.append(published)
 
-            with open("feed_items.json", "a+") as file:
+            with open(PROJECT_DIRECTORY + "feed_items.json", "a+") as file:
                 file.write(json.dumps(record) + "\n")
 
         poll_cadence = find_poll_cadence(dates)
@@ -134,7 +135,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
                 dates.append(published)
 
-                with open("feed_items.json", "a+") as file:
+                with open(PROJECT_DIRECTORY + "feed_items.json", "a+") as file:
                     file.write(json.dumps(record) + "\n")
 
         poll_cadence = find_poll_cadence(dates)
@@ -166,7 +167,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
                     hfeed.process_hfeed(child, hcard, channel_uid, url, feed_id)
 
 def poll_feeds():
-    connection = sqlite3.connect("microsub.db")
+    connection = sqlite3.connect(PROJECT_DIRECTORY.strip("/") + "/microsub.db")
 
     with connection:
         cursor = connection.cursor()
@@ -215,8 +216,8 @@ def poll_feeds():
 def add_feed_items_to_database():
     logging.debug("adding feed items to database")
 
-    with open("feed_items.json", "r") as f:
-        connection = sqlite3.connect("microsub.db")
+    with open(PROJECT_DIRECTORY.strip("/") + "/feed_items.json", "r") as f:
+        connection = sqlite3.connect(PROJECT_DIRECTORY.strip("/") + "/microsub.db")
 
         with connection:
             cursor = connection.cursor()

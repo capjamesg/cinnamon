@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, current_app
+from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, abort
 from .indieauth import requires_indieauth
 from .check_token import check_token
 import datetime
@@ -301,7 +301,7 @@ def modify_channel(id):
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
         if channel:
-            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel), channel=channel[0], feeds=feeds)
+            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel[0]), channel=channel[0], feeds=feeds)
         else:
             flash("The channel you were looking for could not be found.")
             return redirect("/reader/all")

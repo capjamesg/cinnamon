@@ -2,6 +2,7 @@ import datetime
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
 from .canonicalize_url import canonicalize_url as canonicalize_url
+from .post_type_discovery import post_type_discovery as post_type_discovery
 
 def process_json_feed(item, feed):
     result = {
@@ -71,6 +72,6 @@ def process_json_feed(item, feed):
         result["url"] = item.get("url")
 
     if item.get("post_type"):
-        result["post-type"] = "entry"
+        result["post-type"] = post_type_discovery.get_post_type(item)
 
     return result, date
