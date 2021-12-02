@@ -1,8 +1,10 @@
 import datetime
+
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
-from .canonicalize_url import canonicalize_url as canonicalize_url
-from .post_type_discovery import post_type_discovery as post_type_discovery
+
+from microsub.feeds.canonicalize_url import canonicalize_url as canonicalize_url
+import microsub.feeds.post_type_discovery as post_type_discovery
 
 def process_json_feed(item, feed):
     result = {
