@@ -4,9 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 import feedparser
 import mf2py
-from microsub.feeds import hfeed, json_feed, xml_feed
-from microsub.feeds import canonicalize_url as canonicalize_url
-from microsub.config import URL
+from feeds import hfeed, json_feed, xml_feed
+from feeds import canonicalize_url as canonicalize_url
+from config import URL
 import random
 import string
 import json
