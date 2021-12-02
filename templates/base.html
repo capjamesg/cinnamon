@@ -37,28 +37,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <style id="darkmode" media="none">
-      @media (prefers-color-scheme: dark) {
-        html, .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content {
-          background-color: #1F2937;
-          background: #1F2937 !important;
-        }
-        a {
-          color: lightgreen;
-          border-bottom: 2px dotted lightgreen;
-        }
-        a:hover {
-          color: lavender;
-        }
-        h1, h2, h3 {
-          color: orange;
-        }
-        .social_interaction, .webmention {
-          background: none;
-        }
-        p, li, dt, dd, .indieweb_footer, input, label {
-          color: white;
-        }
-        input, textarea, .code, #top_navigation {
+      html, .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content {
+        background-color: #1F2937;
+        background: #1F2937 !important;
+      }
+      a {
+        color: lightgreen;
+        border-bottom: 2px dotted lightgreen;
+      }
+      a:hover {
+        color: lavender;
+      }
+      h1, h2, h3 {
+        color: orange;
+      }
+      .social_interaction, .webmention {
+        background: none;
+      }
+      p, li, dt, dd, .indieweb_footer, input, label {
+        color: white;
+      }
+      input, textarea, .code {
+        background-color: #0c2548 !important;
+        color: white;
+      }
+      @media screen and (max-width: 850px) {
+        #top_navigation {
           background-color: #0c2548 !important;
           color: white;
         }
