@@ -101,7 +101,7 @@
         <ul>
             {% for feed in feeds["items"] %}
                 <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
-                    <a href="{{ feed['url'] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+                    <a href="https://{{ feed['url'].split('/')[2] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
             {% endfor %}
         </ul>
         {% else %}
