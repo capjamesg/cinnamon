@@ -8,6 +8,11 @@ client = Blueprint('client', __name__)
 
 @client.route("/reader")
 def reader_redirect():
+    session["me"] = "jamesg.blog"
+    session["access_token"] = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZSI6Imh0dHBzOi8vamFtZXNnLmJsb2ciLCJleHBpcmVzIjoxNjM5MDY3ODExLCJjbGllbnRfaWQiOiJodHRwczovL21pY3JvcHViLmphbWVzZy5ibG9nLyIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vbWljcm9wdWIuamFtZXNnLmJsb2cvY2FsbGJhY2siLCJzY29wZSI6ImNyZWF0ZSB1cGRhdGUgZGVsZXRlIG1lZGlhIHVuZGVsZXRlIHByb2ZpbGUgIiwicmVzb3VyY2UiOiJhbGwifQ.ueTLBxrlrTFvtl2ryUhL8s0gt4Owt-nFhVMOy_I0GIA"
+    session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+    session["scope"] = "create update delete media"
+    session["micropub_url"] = "https://micropub.jamesg.blog/endpoint"
     return redirect("/reader/all")
 
 @client.route("/read/<id>")

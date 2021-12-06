@@ -2,7 +2,7 @@ import datetime
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
 from .canonicalize_url import canonicalize_url as canonicalize_url
-import .post_type_discovery as post_type_discovery
+from . import post_type_discovery as post_type_discovery
 
 def process_json_feed(item, feed):
     result = {

@@ -71,7 +71,7 @@ This endpoint does not yet provide support for muting users. This feature is par
 
 ## License
 
-This project is licensed under the MIT license.
+This project is licensed under the [MIT license](LICENSE).
 
 ## Maintainers
 

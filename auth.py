@@ -1,5 +1,5 @@
 from flask import Blueprint, request, session, redirect, flash, render_template
-import requests
+import indieauth_helpers
 from .actions import *
 from .config import *
 import hashlib
@@ -9,48 +9,33 @@ import string
 auth = Blueprint('auth', __name__)
 
 @auth.route("/callback")
-def indieauth_callback():
+def indieauth_callback_handler():
     code = request.args.get("code")
     state = request.args.get("state")
 
-    if state != session.get("state"):
-        flash("Your authentication failed. Please try again.")
+    required_scopes = ["read", "write", "channels", "follow"]
+
+    message, response = indieauth_helpers.indieauth_callback(
+        code,
+        state,
+        session.get("token_endpoint"),
+        session["code_verifier"],
+        session.get("state"),
+        ME,
+        CALLBACK_URL,
+        CLIENT_ID,
+        required_scopes
+    )
+
+    if message != None:
+        flash(message)
         return redirect("/login")
 
-    data = {
-        "code": code,
-        "redirect_uri": CALLBACK_URL,
-        "client_id": CLIENT_ID,
-        "grant_type": "authorization_code",
-        "code_verifier": session["code_verifier"]
-    }
-
-    headers = {
-        "Accept": "application/json"
-    }
-
-    r = requests.post(session.get("token_endpoint"), data=data, headers=headers)
-    
-    if r.status_code != 200:
-        flash("There was an error with your token endpoint server.")
-        return redirect("/login")
-
-    # remove code verifier from session because the authentication flow has finished
     session.pop("code_verifier")
 
-    if r.json().get("me").strip("/") != ME.strip("/"):
-        flash("Your domain is not allowed to access this website.")
-        return redirect("/login")
-
-    granted_scopes = r.json().get("scope").split(" ")
-
-    if r.json().get("scope") == "" or "read" not in granted_scopes or "channels" not in granted_scopes:
-        flash("You need to grant 'read' and 'channels' access to use this tool.")
-        return redirect("/login")
-
-    session["me"] = r.json().get("me")
-    session["access_token"] = r.json().get("access_token")
-    session["scope"] = r.json().get("scope")
+    session["me"] = response.get("me")
+    session["access_token"] = response.get("access_token")
+    session["scope"] = response.get("scope")
 
     return redirect("/")
 
@@ -69,81 +54,28 @@ def login():
 def discover_auth_endpoint():
     domain = request.form.get("me")
 
-    r = requests.get(domain)
+    headers_to_find = [
+        "authorization_endpoint",
+        "token_endpoint",
+        "micropub",
+        "microsub"
+    ]
 
-    soup = BeautifulSoup(r.text, "html.parser")
+    headers = indieauth_helpers.discover_endpoints(domain, headers_to_find)
 
-    http_link_headers = r.headers.get("link")
-
-    authorization_endpoint_found = False
-    token_endpoint_found = False
-
-    if http_link_headers:
-        parsed_link_headers = requests.utils.parse_header_links(http_link_headers.rstrip('>').replace('>,<', ',<'))
-    else:
-        parsed_link_headers = []
-
-    authorization_endpoint_in_header = [h for h in parsed_link_headers if h['rel'] == 'authorization_endpoint']
-
-    if len(authorization_endpoint_in_header) > 0:
-        authorization_endpoint = authorization_endpoint_in_header[0]['url']
-        authorization_endpoint_found = True
-    else:
-        authorization_endpoint_search = soup.find("link", rel="authorization_endpoint")
-
-        if authorization_endpoint_search:
-            authorization_endpoint = authorization_endpoint_search["href"]
-            authorization_endpoint_found = True
-
-    if authorization_endpoint_found == False:
-        flash("An IndieAuth authorization endpoint could not be found on your website.")
+    if not headers.get("authorization_endpoint"):
+        flash("A valid IndieAuth authorization endpoint could not be found on your website.")
         return redirect("/login")
-
-    if not authorization_endpoint.startswith("https://") and not authorization_endpoint.startswith("http://"):
-        flash("Your IndieAuth authorization endpoint published on your site must be a full HTTP URL.")
-        return redirect("/login")
-        
-    token_endpoint_in_header = [h for h in parsed_link_headers if h['rel'] == 'token_endpoint']
-
-    if len(token_endpoint_in_header) > 0:
-        token_endpoint = token_endpoint_in_header[0]['url']
-        token_endpoint_found = True
-    else:
-        token_endpoint_search = soup.find("link", rel="token_endpoint")
-
-        if token_endpoint_search:
-            token_endpoint = token_endpoint_search["href"]
-            token_endpoint_found = True
     
-    if token_endpoint_found == False:
-        flash("An IndieAuth token endpoint could not be found on your website.")
+    if not headers.get("token_endpoint"):
+        flash("A valid IndieAuth token endpoint could not be found on your website.")
         return redirect("/login")
 
-    if not token_endpoint.startswith("https://") and not token_endpoint.startswith("http://"):
-        flash("Your IndieAuth token endpoint published on your site must be a full HTTP URL.")
-        return redirect("/login")
+    authorization_endpoint = headers.get("authorization_endpoint")
+    token_endpoint = headers.get("token_endpoint")
 
-    micropub_endpoint_in_header = [h for h in parsed_link_headers if h['rel'] == 'micropub']
-
-    if len(micropub_endpoint_in_header) > 0:
-        session["micropub_url"] = micropub_endpoint_in_header[0]['url']
-    else:
-        micropub_endpoint = soup.find("link", rel="micropub")
-
-        if micropub_endpoint:
-            session["micropub_url"] = micropub_endpoint["href"]
-
-    microsub_endpoint_in_header = [h for h in parsed_link_headers if h['rel'] == 'microsub']
-
-    if len(microsub_endpoint_in_header) > 0:
-        session["server_url"] = microsub_endpoint_in_header[0]['url']
-    else:
-        microsub_endpoint = soup.find("link", rel="microsub")
-
-        if microsub_endpoint:
-            session["server_url"] = microsub_endpoint["href"]
-        else:
-            session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+    session["micropub_url"] = headers.get("micropub")
+    session["server_url"] = headers.get("microsub")
 
     random_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
@@ -159,4 +91,9 @@ def discover_auth_endpoint():
 
     session["state"] = state
 
-    return redirect(authorization_endpoint + "?client_id=" + CLIENT_ID + "&redirect_uri=" + CALLBACK_URL + "&scope=read follow mute block channels create&response_type=code&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=" + state)
+    return redirect(
+        authorization_endpoint + "?client_id=" +
+        CLIENT_ID + "&redirect_uri=" +
+        CALLBACK_URL + "&scope=read follow mute block channels create&response_type=code&code_challenge=" +
+        code_challenge + "&code_challenge_method=S256&state=" + state
+    )

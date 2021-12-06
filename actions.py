@@ -4,9 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 import feedparser
 import mf2py
-from feeds import hfeed, json_feed, xml_feed
-from feeds import canonicalize_url as canonicalize_url
-from config import URL
+from .feeds import hfeed, json_feed, xml_feed
+from .feeds import canonicalize_url as canonicalize_url
+from .config import URL
 import random
 import string
 import json
@@ -393,17 +393,30 @@ def create_follow():
             if r.status_code != 200:
                 favicon = ""
 
+        if not favicon or favicon == "":
+            favicon = "/static/gradient.png"
+
         # "" empty string is etag which will be populated in poll_feeds.py if available
         last_id = cursor.execute("SELECT MAX(id) FROM following").fetchone()
 
         if last_id and last_id [0] != None:
-            print(last_id)
             last_id = last_id[0] + 1
         else:
             last_id = 1
 
         # set cadence to hourly by default
-        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", (request.form.get("channel"), url, "", favicon, title, last_id, 0, 0, "hourly", ))
+        cursor.execute("INSERT INTO following VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+                request.form.get("channel"),
+                url,
+                "",
+                favicon,
+                title,
+                last_id,
+                0,
+                0,
+                "hourly",
+            )
+        )
 
         # discover websub_hub
 

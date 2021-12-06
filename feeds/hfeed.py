@@ -1,13 +1,12 @@
 import random
 import string
-import mf2py
 import datetime
 import json
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
 from .canonicalize_url import canonicalize_url as canonicalize_url
 from .authorship import discover_author as discover_author
-import .post_type_discovery as post_type_discovery
+from . import post_type_discovery as post_type_discovery
 
 def process_hfeed(child, hcard, channel_uid, url, feed_id):
     jf2 = {
