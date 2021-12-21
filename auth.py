@@ -13,9 +13,10 @@ def indieauth_callback_handler():
     code = request.args.get("code")
     state = request.args.get("state")
 
-    required_scopes = ["read", "write", "channels", "follow"]
+    # these are the scopes necessary for the application to run
+    required_scopes = ["read", "channels"]
 
-    message, response = indieauth_helpers.indieauth_callback(
+    message, response = indieauth_helpers.indieauth_callback_handler(
         code,
         state,
         session.get("token_endpoint"),

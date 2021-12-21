@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, abort
-from .indieauth import requires_indieauth
-from .check_token import check_token
+from .check_token import verify as check_token
 import datetime
 import sqlite3
 import requests
@@ -18,7 +17,6 @@ def setup():
     return render_template("setup.html", title="Setup | Microsub Endpoint")
 
 @main.route("/endpoint", methods=["GET", "POST"])
-@requires_indieauth
 def home():
     if request.form:
         action = request.form.get("action")
@@ -32,6 +30,11 @@ def home():
         channel = request.args.get("channel")
         query = request.args.get("query")
         id = request.args.get("id")
+
+    is_authenticated = check_token(request.headers, session)
+
+    if not is_authenticated:
+        return abort(403)
 
     if not action:
         return jsonify({"error": "No action specified."}), 400

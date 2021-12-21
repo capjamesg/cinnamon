@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import feedparser
 import mf2py
 from .feeds import hfeed, json_feed, xml_feed
-from .feeds import canonicalize_url as canonicalize_url
+import indieweb_utils
 from .config import URL
 import random
 import string
@@ -165,15 +165,13 @@ def search_for_content():
 def preview():
     url = request.form.get("url")
 
-    r = requests.get(url)
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
     # get content type of url
     try:
         r = requests.head(url)
     except:
         return jsonify({"error": "invalid url"}), 400
+
+    soup = BeautifulSoup(r.text, "html.parser")
 
     if r.headers.get('content-type'):
         content_type = r.headers['content-type']
@@ -232,7 +230,7 @@ def preview():
     favicon = soup.find("link", rel="shortcut icon")
 
     if favicon:
-        feed["icon"] = canonicalize_url.canonicalize_url(favicon.get("href"), url_domain, favicon.get("href"))
+        feed["icon"] = indieweb_utils.canonicalize_url(favicon.get("href"), url_domain, favicon.get("href"))
 
     if soup.find("title"):
         feed["title"] = soup.find("title").text
@@ -377,7 +375,7 @@ def create_follow():
         favicon = home_page.find("link", rel="shortcut icon")
 
         if favicon:
-            favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], url)
+            favicon = indieweb_utils.canonicalize_url(favicon.get("href"), url.split("/")[2], url)
         else:
             favicon = ""
 
@@ -385,12 +383,15 @@ def create_follow():
             favicon = home_page.find("link", rel="icon")
 
             if favicon:
-                favicon = canonicalize_url.canonicalize_url(favicon.get("href"), url.split("/")[2], url)
+                favicon = indieweb_utils.canonicalize_url(favicon.get("href"), url.split("/")[2], url)
 
         if favicon:
-            r = requests.get(favicon)
+            try:
+                r = requests.get(favicon)
 
-            if r.status_code != 200:
+                if r.status_code != 200:
+                    favicon = ""
+            except:
                 favicon = ""
 
         if not favicon or favicon == "":

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
-from .check_token import check_token
+from .check_token import verify as check_token
 import requests
 from .actions import *
 from .config import *
@@ -8,16 +8,11 @@ client = Blueprint('client', __name__)
 
 @client.route("/reader")
 def reader_redirect():
-    session["me"] = "jamesg.blog"
-    session["access_token"] = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZSI6Imh0dHBzOi8vamFtZXNnLmJsb2ciLCJleHBpcmVzIjoxNjM5MDY3ODExLCJjbGllbnRfaWQiOiJodHRwczovL21pY3JvcHViLmphbWVzZy5ibG9nLyIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vbWljcm9wdWIuamFtZXNnLmJsb2cvY2FsbGJhY2siLCJzY29wZSI6ImNyZWF0ZSB1cGRhdGUgZGVsZXRlIG1lZGlhIHVuZGVsZXRlIHByb2ZpbGUgIiwicmVzb3VyY2UiOiJhbGwifQ.ueTLBxrlrTFvtl2ryUhL8s0gt4Owt-nFhVMOy_I0GIA"
-    session["server_url"] = "https://microsub.jamesg.blog/endpoint"
-    session["scope"] = "create update delete media"
-    session["micropub_url"] = "https://micropub.jamesg.blog/endpoint"
     return redirect("/reader/all")
 
 @client.route("/read/<id>")
 def read_article(id):
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -57,7 +52,7 @@ def read_article(id):
 
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -72,15 +67,27 @@ def microsub_reader(channel):
     if request.args.get("before"):
         before = request.args.get("before")
 
-        microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}&before={}".format(channel, before), headers=headers)
+        microsub_req = requests.get(
+            "{}?action=timeline&channel={}&before={}".format(session.get("server_url"), channel, before),
+            headers=headers
+        )
     elif request.args.get("after"):
         after = request.args.get("after")
 
-        microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}&after={}".format(channel, after), headers=headers)
+        microsub_req = requests.get(
+            "{}?action=timeline&channel={}&after={}".format(channel, after),
+            headers=headers
+        )
     else:
-        microsub_req = requests.get(session.get("server_url") + "?action=timeline&channel={}".format(channel), headers=headers)
+        microsub_req = requests.get(
+            "{}?action=timeline&channel={}".format(channel),
+            headers=headers
+        )
 
-    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel), headers=headers).json()
+    feeds = requests.get(
+        "{}?action=follow&channel={}".format(channel),
+        headers=headers
+    ).json()
 
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
@@ -111,7 +118,7 @@ def microsub_reader(channel):
 
 @client.route("/react", methods=["POST"])
 def react_to_post():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -147,7 +154,7 @@ def react_to_post():
 
 @client.route("/read", methods=["POST"])
 def mark_channel_as_read():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -160,7 +167,16 @@ def mark_channel_as_read():
     status = request.form.get("status")
     last_read_entry = request.form.get("last_read_entry")
 
-    requests.post(session.get("server_url"), data={"action": "timeline", "channel": channel, "method": status, "last_read_entry": last_read_entry}, headers=headers)
+    requests.post(
+        session.get("server_url"),
+        data={
+            "action": "timeline",
+            "channel": channel,
+            "method": status,
+            "last_read_entry": last_read_entry
+        },
+        headers=headers
+    )
 
     if last_read_entry == "mark_read":
         flash("Posts in this channel were successfully marked as read.")
@@ -171,7 +187,7 @@ def mark_channel_as_read():
 
 @client.route("/reader/<channel>/delete/<entry_id>")
 def delete_entry_in_channel(channel, entry_id):
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -194,7 +210,7 @@ def delete_entry_in_channel(channel, entry_id):
 
 @client.route("/preview")
 def preview_feed():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -215,7 +231,30 @@ def preview_feed():
         "url": url,
     }
 
-    microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
+    feed_data = {
+        "feed": {
+            "title": url,
+            "url": url,
+        },
+        "items": []
+    }
+
+    try:
+        microsub_req = requests.post(
+            session.get("server_url"),
+            data=data,
+            headers=headers,
+            timeout=5
+        )
+
+        feed_data = microsub_req.json()
+
+        if microsub_req.status_code != 200:
+            flash("The feed could not be previewed.")
+            return redirect("/reader/all")
+
+    except requests.exceptions.Timeout:
+        flash("The feed preview request timed out.")
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
@@ -231,7 +270,7 @@ def preview_feed():
 
     return render_template("client/preview.html",
         title="Preview Feed | Microsub Reader",
-        feed=microsub_req.json(),
+        feed=feed_data,
         channel=channel_id,
         channel_name=channel_name,
         channels=channel_req.json()["channels"]
@@ -239,7 +278,7 @@ def preview_feed():
 
 @client.route("/search")
 def search_feed():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -281,7 +320,7 @@ def search_feed():
 
 @client.route("/settings")
 def settings():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
