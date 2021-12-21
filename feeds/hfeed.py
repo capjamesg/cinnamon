@@ -4,66 +4,67 @@ import datetime
 import json
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
-from .canonicalize_url import canonicalize_url as canonicalize_url
-from .authorship import discover_author as discover_author
-from . import post_type_discovery as post_type_discovery
+import indieweb_utils
 
 def process_hfeed(child, hcard, channel_uid, url, feed_id):
     jf2 = {
-        "url": canonicalize_url(child["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+        "url": indieweb_utils.canonicalize_url(child["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
     }
 
-    jf2["type"] = post_type_discovery.get_post_type(child)
+    jf2["type"] = indieweb_utils.get_post_type(child)
 
     if hcard:
         jf2["author"] = {
             "type": "card",
             "name": hcard[0]["properties"]["name"][0],
-            "url": canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+            "url": indieweb_utils.canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
         }
         
         if hcard[0]["properties"].get("photo"):
-            jf2["photo"] = canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+            jf2["photo"] = indieweb_utils.canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
     elif child["properties"].get("author"):
-        if type(child["properties"].get("author")[0]) == str:
-            h_card = discover_author(child["properties"].get("author")[0])
-        elif child["properties"].get("author")[0].get("url"):
-            h_card = discover_author(child["properties"].get("author")[0].get("url"))
+        if type(child["properties"].get("author")[0]["properties"]) == str:
+            h_card = [{"properties": {"name": child["properties"].get("author")[0]}}]
+        elif child["properties"].get("author")[0]["properties"].get("url"):
+            h_card = indieweb_utils.discover_author(child["properties"].get("author")[0]["properties"].get("url")[0])
         else:
             h_card = []
 
-        if h_card != []:
+        if h_card != [] and h_card != None:
             jf2["author"] = {
                 "type": "card",
                 "name": h_card[0]["properties"]["name"][0],
-                "url": canonicalize_url(h_card[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+                "url": indieweb_utils.canonicalize_url(h_card[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
             }
 
             if h_card[0]["properties"].get("photo"):
-                jf2["photo"] = canonicalize_url(h_card[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+                jf2["photo"] = indieweb_utils.canonicalize_url(h_card[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
 
     if not child.get("properties"):
         return
 
     if child["properties"].get("photo"):
-        jf2["photo"] = canonicalize_url(child["properties"].get("photo")[0], url.split("/")[2], child["properties"]["url"][0]) 
+        jf2["photo"] = indieweb_utils.canonicalize_url(child["properties"].get("photo")[0], url.split("/")[2], child["properties"]["url"][0]) 
 
     if child["properties"].get("video"):
-        video_url = canonicalize_url(child["properties"].get("video")[0], url.split("/")[2], child["properties"]["url"][0]) 
+        video_url = indieweb_utils.canonicalize_url(child["properties"].get("video")[0], url.split("/")[2], child["properties"]["url"][0]) 
         jf2["video"] = [{"content_type": "", "url": video_url}]
 
     if child["properties"].get("category"):
         jf2["category"] = child["properties"].get("category")[0]
 
     if child["properties"].get("name"):
-        jf2["name"] = child["properties"].get("name")[0]
+        jf2["title"] = child["properties"].get("name")[0]
     elif jf2.get("author") and jf2["author"]["name"]:
-        jf2["name"] = "Post by {}".format(jf2["author"]["name"])
+        jf2["title"] = "Post by {}".format(jf2["author"]["name"])
     else:
-        jf2["name"] = "Post by {}".format(url.split("/")[2])
+        jf2["title"] = "Post by {}".format(url.split("/")[2])
 
     if child["properties"].get("content"):
-        jf2["content"] = child["properties"].get("content")[0]
+        jf2["content"] = {
+            "html": child["properties"].get("content")[0]["html"],
+            "text": BeautifulSoup(child["properties"].get("content")[0]["value"], "lxml").get_text(separator="\n")
+        }
     elif child["properties"].get("summary"):
         jf2["content"] = {
             "text": BeautifulSoup(child["properties"].get("summary")[0], "lxml").get_text(separator="\n"),

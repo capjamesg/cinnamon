@@ -1,8 +1,7 @@
 import datetime
 from dateutil.parser import parse
 from bs4 import BeautifulSoup
-from .canonicalize_url import canonicalize_url as canonicalize_url
-from . import post_type_discovery as post_type_discovery
+import indieweb_utils
 
 def process_json_feed(item, feed):
     result = {
@@ -17,14 +16,26 @@ def process_json_feed(item, feed):
             "name": feed.get("author").get("name")
         }
         if feed.get("home_page_url"):
-            result["author"]["url"] = canonicalize_url(feed.get("home_page_url"), item.get("url").split("/")[2], feed.get("home_page_url"))
+            result["author"]["url"] = indieweb_utils.canonicalize_url(
+                feed.get("home_page_url"), 
+                item.get("url").split("/")[2],
+                feed.get("home_page_url")
+            )
         else:
-            result["author"]["url"] = canonicalize_url(feed.get("feed_url"), item.get("url").split("/")[2], feed.get("feed_url"))
+            result["author"]["url"] = indieweb_utils.canonicalize_url(
+                feed.get("feed_url"),
+                item.get("url").split("/")[2],
+                feed.get("feed_url")
+            )
     elif item.get("author") != None:
         result["author"] = {
             "type": "card",
             "name": item.get("author").get("name"),
-            "url": canonicalize_url(item["author"].get("url"), item["author"].get("url").split("/")[2], item["author"].get("url"))
+            "url": indieweb_utils.canonicalize_url(
+                item["author"].get("url"),
+                item["author"].get("url").split("/")[2],
+                item["author"].get("url")
+            )
         }
 
         if item["author"].get("avatar"):
@@ -66,12 +77,14 @@ def process_json_feed(item, feed):
         result["content"]["html"] = item.get("content_html")
 
     if item.get("title"):
-        result["name"] = item.get("title")
+        result["title"] = item.get("title")
+    else:
+        result["title"] = "Post by {}".format(result["author"].get("name", item.get("url").split("/"))[2])
 
     if item.get("url"):
         result["url"] = item.get("url")
 
     if item.get("post_type"):
-        result["post-type"] = post_type_discovery.get_post_type(item)
+        result["post-type"] = indieweb_utils.get_post_type(item)
 
     return result, date

@@ -1,7 +1,7 @@
 import requests
 import datetime
+import indieweb_utils
 from bs4 import BeautifulSoup
-from .canonicalize_url import canonicalize_url as canonicalize_url
 
 def process_xml_feed(entry, feed, url):
     if entry.get("author"):
@@ -40,7 +40,7 @@ def process_xml_feed(entry, feed, url):
     favicon = soup.find("link", rel="shortcut icon")
 
     if favicon:
-        author["photo"] = canonicalize_url(favicon["href"], url.split("/")[2], favicon["href"])
+        author["photo"] = indieweb_utils.canonicalize_url(favicon["href"], url.split("/")[2], favicon["href"])
 
     if entry.get("content"):
         soup = BeautifulSoup(entry.content[0].value, "lxml")
@@ -66,14 +66,14 @@ def process_xml_feed(entry, feed, url):
     elif entry.get("title") and entry.get("link"):
         # get feed author
         content = {
-            "text": entry.title,
-            "html": "<a href='" + entry.link + "'>" + entry.title + "</a>"
+            "text": entry.get("title"),
+            "html": "<a href='" + entry.link + "'>" + entry.get("title") + "</a>"
         }
     elif entry.get("title") and not entry.get("link"):
         # get feed author
         content = {
-            "text": entry.title,
-            "html": entry.title,
+            "text": entry.get("title"),
+            "html": entry.get("title"),
         }
     else:
         content = {}
@@ -100,8 +100,12 @@ def process_xml_feed(entry, feed, url):
         "published": published,
         "content": content,
         "post-type": "entry",
-        "name": entry.title,
     }
+
+    if entry.get("title"):
+        result["title"] = entry.title
+    else:
+        result["title"] = url
 
     if entry.get("link"):
         retrieve_post = requests.get(entry.link)
@@ -112,7 +116,7 @@ def process_xml_feed(entry, feed, url):
         og_image = parse_post.find("meta", property="og:image")
 
         if og_image:
-            result["photo"] = canonicalize_url(og_image["content"], url.split("/")[2], og_image["content"])
+            result["photo"] = indieweb_utils.canonicalize_url(og_image["content"], url.split("/")[2], og_image["content"])
 
         if not result.get("photo"):
             # we will remove header and nav tags so that we are more likely to find a "featured image" for the post
@@ -128,7 +132,7 @@ def process_xml_feed(entry, feed, url):
             all_images = parse_post.find_all("img")
             
             if all_images and len(all_images) > 0 and all_images[0].get("src"):
-                result["photo"] = canonicalize_url(all_images[0]["src"], url.split("/")[2], all_images[0]["src"])
+                result["photo"] = indieweb_utils.canonicalize_url(all_images[0]["src"], url.split("/")[2], all_images[0]["src"])
 
     if content == {} and soup.find("meta", property="description"):
         result["content"] = {
@@ -152,10 +156,16 @@ def process_xml_feed(entry, feed, url):
 
     if entry.get("link"):
         result["url"] = entry.link
+
+    # title
+    if entry.get("title"):
+        result["title"] = entry.title
+    else:
+        result["title"] = "Post by {}".format(author.get("name", url.split("/"))[2])
     
     if entry.get("media_content") and len(entry.get("media_content")) > 0:
         for media in entry.get("media_content"):
-            if media.get("url") != None:
+            if media.get("url"):
                 if media.get("url").startswith("https://www.youtube.com") or media.get("url").startswith("http://www.youtube.com"):
                     new_url = media["url"].replace("/v/", "/embed/")
                     media["url"] = new_url
