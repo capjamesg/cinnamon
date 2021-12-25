@@ -74,12 +74,10 @@
     <main>
       <a href="#main" class="accessibility_label">Skip to main content</a>
       <nav id="top_navigation">
-        {% if session.get("me") and request.path.startswith("/reader/") %}
-        <p><a href="/reader/all">{{ channel_name }}</a></p>
-        {% elif session.get("me") %}
-        <p><a href="/reader/all" id="page_title">Microsub Reader</a></p>
+        {% if session.get("me") %}
+        <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
         {% else %}
-        <p><a href="/">Microsub Reader</a></p>
+        <p><a href="/">Cinnamon</a></p>
         {% endif %}
         {% if session.get("me") %}
         <ul id="desktop_navigation">

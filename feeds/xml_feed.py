@@ -132,6 +132,8 @@ def process_xml_feed(entry, feed, url):
             all_images = parse_post.find_all("img")
             
             if all_images and len(all_images) > 0 and all_images[0].get("src"):
+                all_images = [i for i in all_images if "u-photo" not in i.get("class", [])]
+
                 result["photo"] = indieweb_utils.canonicalize_url(all_images[0]["src"], url.split("/")[2], all_images[0]["src"])
 
     if content == {} and soup.find("meta", property="description"):
@@ -161,7 +163,7 @@ def process_xml_feed(entry, feed, url):
     if entry.get("title"):
         result["title"] = entry.title
     else:
-        result["title"] = "Post by {}".format(author.get("name", url.split("/"))[2])
+        result["title"] = "Post by {}".format(author.get("name", url.split("/")[2]))
     
     if entry.get("media_content") and len(entry.get("media_content")) > 0:
         for media in entry.get("media_content"):

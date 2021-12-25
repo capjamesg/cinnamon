@@ -1,14 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<style>
-    .feed li {
-        background: white;
-        border-radius: 15px;
-        border: 1px solid lightgrey;
-        margin-bottom: 10px;
-        padding: 10px;
-    }
-</style>
 <script>
     function send_notification(notification_text) {
         var notification = document.createElement("section");
@@ -100,8 +91,10 @@
         {% if feeds["items"] | length > 0 %}
         <ul>
             {% for feed in feeds["items"] %}
+                {% if feed.get("url") %}
                 <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
                     <a href="https://{{ feed['url'].split('/')[2] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
+                {% endif %}
             {% endfor %}
         </ul>
         {% else %}

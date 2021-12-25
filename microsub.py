@@ -76,7 +76,7 @@ def home():
 
 @app.route("/channels")
 def dashboard():
-    auth_result = check_token()
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -92,7 +92,7 @@ def dashboard():
 
 @app.route("/feeds", methods=["GET", "POST"])
 def feed_list():
-    auth_result = check_token()
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -131,7 +131,7 @@ def feed_list():
 
 @app.route("/reorder", methods=["POST"])
 def reorder_channels_view():
-    auth_result = check_token()
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -156,7 +156,7 @@ def reorder_channels_view():
 
 @app.route("/create-channel", methods=["POST"])
 def create_channel_view():
-    auth_result = check_token()
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -180,7 +180,7 @@ def create_channel_view():
 
 @app.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
-    auth_result = check_token()
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -205,7 +205,7 @@ def delete_channel_view():
 
 @app.route("/unfollow", methods=["POST"])
 def unfollow_view():
-    auth_result = check_token()
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")

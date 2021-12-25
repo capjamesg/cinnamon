@@ -45,7 +45,7 @@ def read_article(id):
     jf2 = json.loads(article_req.json()["post"][0]["jf2"])
 
     return render_template("client/read_article.html",
-        title="{} | Microsub Reader".format(channel_name),
+        title="{} | Cinnamon".format(channel_name),
         channels=channel_req.json()["channels"],
         w=jf2,
         page_channel_uid=channel,
@@ -108,7 +108,7 @@ def microsub_reader(channel):
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
     return render_template("client/reader.html",
-        title="{} | Microsub Reader".format(channel_name),
+        title="{} | Cinnamon".format(channel_name),
         results=microsub_req.json()["items"],
         channels=channel_req.json()["channels"],
         before=before_to_show,
@@ -273,7 +273,7 @@ def preview_feed():
         return redirect("/reader/all")
 
     return render_template("client/preview.html",
-        title="Preview Feed | Microsub Reader",
+        title="Preview Feed | Cinnamon",
         feed=feed_data,
         channel=channel_id,
         channel_name=channel_name,
@@ -312,7 +312,7 @@ def search_feed():
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
     return render_template("client/reader.html",
-        title="Showing results for {} | Microsub Reader".format(query),
+        title="Showing results for {} | Cinnamon".format(query),
         results=microsub_req.json()["items"],
         channel=channel_id,
         is_searching=True,
@@ -330,7 +330,7 @@ def settings():
         return redirect("/login")
 
     return render_template("client/settings.html",
-        title="Settings | Microsub Reader"
+        title="Settings | Cinnamon"
     )
 
 @client.route("/reader.js")

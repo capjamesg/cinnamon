@@ -138,7 +138,10 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         poll_cadences.append((poll_cadence, url))
 
     elif "application/json" in content_type:
-        feed = requests.get(url)
+        try:
+            feed = requests.get(url)
+        except:
+            return
 
         if feed.status_code != 200:
             return

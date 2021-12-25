@@ -89,7 +89,7 @@ def process_json_feed(item, feed):
     if item.get("title"):
         result["title"] = item.get("title")
     else:
-        result["title"] = "Post by {}".format(result["author"].get("name", item.get("url").split("/"))[2])
+        result["title"] = "Post by {}".format(result["author"].get("name", item.get("url").split("/")[2]))
 
     if item.get("url"):
         result["url"] = item.get("url")

@@ -83,7 +83,7 @@ def home():
 
 @main.route("/channels")
 def dashboard():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -99,7 +99,7 @@ def dashboard():
 
 @main.route("/feeds", methods=["GET", "POST"])
 def feed_list():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -131,7 +131,7 @@ def feed_list():
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -156,7 +156,7 @@ def reorder_channels_view():
 
 @main.route("/create-channel", methods=["POST"])
 def create_channel_view():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -180,7 +180,7 @@ def create_channel_view():
 
 @main.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -205,7 +205,7 @@ def delete_channel_view():
 
 @main.route("/unfollow", methods=["POST"])
 def unfollow_view():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
@@ -273,7 +273,7 @@ def discover_feed():
 
 @main.route("/channel/<id>", methods=["GET", "POST"])
 def modify_channel(id):
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")

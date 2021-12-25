@@ -24,10 +24,6 @@ select {
 	margin-bottom: 15px;
 }
 .content_box {
-    border: 1px solid lightgray;
-    border-radius: 10px;
-    background: white;
-    padding: 30px;
 	margin-bottom: 15px !important;
 }
 .notification, .green_notification {
@@ -51,16 +47,6 @@ nav, .button_list {
 	justify-content: space-between;
 	align-items: center;
 	margin: 10px 0;
-}
-.main_content_box {
-	max-width: 35em;
-}
-.content_box, .main_content_box {
-	background-color: white;
-	border-radius: 10px;
-	border: 1px solid lightgray;
-	padding: 20px;
-	margin: auto;
 }
 button, .button_link {
 	border-radius: 10px;
@@ -86,6 +72,11 @@ nav, footer ul {
 	display: flex;
 	border-top: 5px #FFA500 dashed;
 	border-bottom: 5px #FFA500 dashed;
+	background: white;
+	border: 2px solid hotpink;
+	box-shadow: 2px 2px hotpink;
+	padding-left: 25px;
+	padding-right: 25px;
 }
 nav ul li {
 	display: inline-block;
@@ -453,13 +444,12 @@ textarea {
     font-size: 1.0625rem;
 	box-sizing: border-box;
 }
-aside, .feed li, #settings {
+aside, .feed li, #settings, .bottom-navigation, .content_box, .main_content_box {
 	padding: 10px;
 	background-color: white;
-	border-radius: 10px;
+	box-shadow: 2px 2px lightblue;
 	margin-right: 10px;
 	border: 1px solid lightgrey;
-    height: 100%;
 	margin-bottom: 20px;
 	box-sizing: border-box;
 	width: 100%;
