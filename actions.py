@@ -4,9 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 import feedparser
 import mf2py
-from .feeds import hfeed, json_feed, xml_feed
+from feeds import hfeed, json_feed, xml_feed
 import indieweb_utils
-from .config import URL
+from config import URL
 import random
 import string
 import json

@@ -39,6 +39,12 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
 
             if h_card[0]["properties"].get("photo"):
                 jf2["photo"] = indieweb_utils.canonicalize_url(h_card[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+    else:
+        jf2["author"] = {
+            "type": "card",
+            "name": channel_uid,
+            "url": indieweb_utils.canonicalize_url(url, url.split("/")[2], child["properties"]["url"][0])
+        }
 
     if not child.get("properties"):
         return

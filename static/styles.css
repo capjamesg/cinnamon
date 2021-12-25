@@ -9,8 +9,7 @@ html {
 	font-family: "Helvetica Neue", Helvetica, sans-serif;
 }
 main {
-	max-width: 100vh;
-	width: 85%;
+	max-width: 50em;
 	margin: auto;
 	margin-top: 10px;
 }
@@ -148,6 +147,10 @@ input {
 }
 h2, h1, h3 {
 	color: royalblue;
+}
+.author img {
+	float: left;
+	margin-right: 10px; 
 }
 details {
 	background-color: white;

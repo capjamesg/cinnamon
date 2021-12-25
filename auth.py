@@ -1,7 +1,7 @@
 from flask import Blueprint, request, session, redirect, flash, render_template
-import indieauth_helpers
-from .actions import *
-from .config import *
+import indieweb_utils
+from actions import *
+from config import *
 import hashlib
 import base64
 import string
@@ -9,14 +9,14 @@ import string
 auth = Blueprint('auth', __name__)
 
 @auth.route("/callback")
-def indieauth_callback_handler():
+def indieauth_callback_handler_view():
     code = request.args.get("code")
     state = request.args.get("state")
 
     # these are the scopes necessary for the application to run
     required_scopes = ["read", "channels"]
 
-    message, response = indieauth_helpers.indieauth_callback_handler(
+    message, response = indieweb_utils.indieauth_callback_handler(
         code,
         state,
         session.get("token_endpoint"),
@@ -62,7 +62,7 @@ def discover_auth_endpoint():
         "microsub"
     ]
 
-    headers = indieauth_helpers.discover_endpoints(domain, headers_to_find)
+    headers = indieweb_utils.discover_endpoints(domain, headers_to_find)
 
     if not headers.get("authorization_endpoint"):
         flash("A valid IndieAuth authorization endpoint could not be found on your website.")

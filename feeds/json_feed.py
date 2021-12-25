@@ -40,6 +40,16 @@ def process_json_feed(item, feed):
 
         if item["author"].get("avatar"):
             result["author"]["photo"] = item["author"].get("avatar")
+    else:
+        result["author"] = {
+            "type": "card",
+            "name": feed.get("title"),
+            "url": indieweb_utils.canonicalize_url(
+                item["author"].get("url"),
+                item["author"].get("url").split("/")[2],
+                item["author"].get("url")
+            )
+        }
 
     if item.get("image"):
         result["photo"] = item.get("image")

@@ -105,7 +105,7 @@ def process_xml_feed(entry, feed, url):
     if entry.get("title"):
         result["title"] = entry.title
     else:
-        result["title"] = url
+        result["title"] = ""
 
     if entry.get("link"):
         retrieve_post = requests.get(entry.link)

@@ -1,13 +1,17 @@
 from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
-from .check_token import verify as check_token
+from check_token import verify as check_token
 import requests
-from .actions import *
-from .config import *
+from actions import *
+from config import *
 
 client = Blueprint('client', __name__)
 
 @client.route("/reader")
 def reader_redirect():
+    session["access_token"] = "s"
+    session["me"] = "s"
+    session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+    session["scope"] = "create"
     return redirect("/reader/all")
 
 @client.route("/read/<id>")
@@ -75,17 +79,17 @@ def microsub_reader(channel):
         after = request.args.get("after")
 
         microsub_req = requests.get(
-            "{}?action=timeline&channel={}&after={}".format(channel, after),
+            "{}?action=timeline&channel={}&after={}".format(session.get("server_url"), channel, after),
             headers=headers
         )
     else:
         microsub_req = requests.get(
-            "{}?action=timeline&channel={}".format(channel),
+            "{}?action=timeline&channel={}".format(session.get("server_url"), channel),
             headers=headers
         )
 
     feeds = requests.get(
-        "{}?action=follow&channel={}".format(channel),
+        "{}?action=follow&channel={}".format(session.get("server_url"), channel),
         headers=headers
     ).json()
 

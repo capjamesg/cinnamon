@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, abort
-from .check_token import verify as check_token
+from check_token import verify as check_token
 import datetime
 import sqlite3
 import requests
-from .actions import *
-from .config import *
+from actions import *
+from config import *
 
 main = Blueprint('main', __name__, template_folder='templates')
 

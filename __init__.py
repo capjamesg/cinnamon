@@ -1,6 +1,6 @@
 from flask import Flask, render_template, send_from_directory
 from dateutil import parser
-from .config import SENTRY_DSN, SENTRY_SERVER_NAME
+from config import SENTRY_DSN, SENTRY_SERVER_NAME
 import os
 
 # set up sentry for error handling
@@ -26,15 +26,15 @@ def create_app():
     app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
 
     # blueprint for non-auth parts of app
-    from .main import main as main_blueprint
+    from main import main as main_blueprint
 
     app.register_blueprint(main_blueprint)
 
-    from .client import client as client_blueprint
+    from client import client as client_blueprint
 
     app.register_blueprint(client_blueprint)
 
-    from .auth import auth as auth_blueprint
+    from auth import auth as auth_blueprint
 
     app.register_blueprint(auth_blueprint)
 

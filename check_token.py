@@ -1,4 +1,4 @@
-from .config import TOKEN_ENDPOINT, ME
+from config import TOKEN_ENDPOINT, ME
 import requests
 
 def verify(headers, session):
