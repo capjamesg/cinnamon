@@ -13,6 +13,6 @@ feed = lp.parse(opml)
 for i in feed.feeds:
     print(i.url)
     channel = input("Channel name: ")
-    r = requests.post("http://localhost:5000?action=follow&url={}&channel={}".format(i.url, channel))
+    r = requests.post(f"http://localhost:5000?action=follow&url={i.url}&channel={channel}")
 
     print(r.status_code)

@@ -58,10 +58,13 @@ def get_timeline():
 
     items_for_date = [item for item in item_list]
 
-    if len(item_list) > 20 and not request.args.get("after") and not request.args.get("before"):
+    max_id = cursor.execute(f"SELECT MAX(id) FROM timeline WHERE {channel_arg} feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC, id DESC;", channel_tuple).fetchone()[0]
+
+    if len(item_list) > 20 and not request.args.get("after") and not request.args.get("before") \
+        and item_list[0][8] != max_id:
         # 8 = id
-        before = item_list[-1][8]
-        after = item_list[0][8]
+        before = item_list[0][8]
+        after = item_list[-1][8]
     elif len(item_list) <= 20 and len(item_list) != 0:
         before = items_for_date[-1][8]
         after = ""
@@ -154,7 +157,7 @@ def search_for_content():
     with connection:
         cursor = connection.cursor()
 
-        result = cursor.execute("SELECT * FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", ("%{}%".format(query), )).fetchall()
+        result = cursor.execute("SELECT * FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", (f"%{query}%", )).fetchall()
 
         items = [[json.loads(item[1]), item[3], item[5]] for item in result]
 
@@ -200,15 +203,21 @@ def preview():
     else:
         parsed = mf2py.parse(r.text)
 
+        h_card = None
+
+        for item in parsed["items"]:
+            if "type" in item and item["type"] == "h-card":
+                h_card = item
+
         for item in parsed["items"]:
             if "type" in item and item["type"][0] == "h-feed":
                 for entry in item["children"]:
                     if entry["type"][0] == "h-entry":
-                        result = hfeed.process_hfeed(entry, None, "", url, "")
+                        result = hfeed.process_hfeed(entry, h_card, "", url, "")
 
                         items_to_return.append(result)
             elif "type" in item and item["type"][0] == "h-entry":
-                result = hfeed.process_hfeed(item, None, "", url, "")
+                result = hfeed.process_hfeed(item, h_card, "", url, "")
 
                 items_to_return.append(result)
 
@@ -353,7 +362,7 @@ def create_follow():
         cursor.execute("SELECT * FROM following WHERE channel = ? AND url = ?", (request.form.get("channel"), url))
 
         if cursor.fetchone():
-            return jsonify({"error": "You are already following this feed in the {} channel.".format(request.form.get("channel"))}), 400
+            return jsonify({"error": f"You are already following this feed in the {request.form.get('channel')} channel."}), 400
 
         # get information from feed web page
 

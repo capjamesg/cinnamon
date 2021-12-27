@@ -4,8 +4,8 @@
     <h1>Your user settings ⚙️</h1>
     <section>
         <h2>User information 📝</h2>
-        <p>You are signed in as: <a href='{{ session.get("me").split("/")[2] }}'>{{ session.get("me").split("/")[2] }}</a></code>
-        <p>Your Microsub server is located at: <a href='{{ session.get("server_url").split("/")[2] }}'>{{ session.get("server_url").split("/")[2] }}</a></p>
+        <p>You are signed in as: <a href='{{ session.get("me") }}'>{{ session.get("me") }}</a></code>
+        <p>Your Microsub server is located at: <a href='{{ session.get("server_url") }}'>{{ session.get("server_url") }}</a></p>
         <p>Your access token is:</p>
         <code>{{ session.get("access_token") }}</code>
         {% if session.get("scopes") and session.get("scopes").split(" ") | length > 0 %}

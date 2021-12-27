@@ -82,17 +82,17 @@ def process_xml_feed(entry, feed, url):
         month_with_padded_zero = str(entry.published_parsed.tm_mon).zfill(2)
         day_with_padded_zero = str(entry.published_parsed.tm_mday).zfill(2)
         hour_minute_second = str(entry.published_parsed.tm_hour).zfill(2) + ":" + str(entry.published_parsed.tm_min).zfill(2) + ":" + str(entry.published_parsed.tm_sec).zfill(2)
-        published = "{}{}{}T{}".format(entry.published_parsed.tm_year, month_with_padded_zero, day_with_padded_zero, hour_minute_second)
+        published = f"{entry.published_parsed.tm_year}{month_with_padded_zero}{day_with_padded_zero}T{hour_minute_second}"
     elif entry.get("updated"):
         month_with_padded_zero = str(entry.updated_parsed.tm_mon).zfill(2)
         day_with_padded_zero = str(entry.updated_parsed.tm_mday).zfill(2)
         hour_minute_second = str(entry.updated_parsed.tm_hour).zfill(2) + ":" + str(entry.updated_parsed.tm_min).zfill(2) + ":" + str(entry.updated_parsed.tm_sec).zfill(2)
-        published = "{}{}{}T{}".format(entry.updated_parsed.tm_year, month_with_padded_zero, day_with_padded_zero, hour_minute_second)
+        published = f"{entry.updated_parsed.tm_year}{month_with_padded_zero}{day_with_padded_zero}T{hour_minute_second}"
     else:
         month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
         day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
         hour_minute_second = str(datetime.datetime.now().hour).zfill(2) + ":" + str(datetime.datetime.now().minute).zfill(2) + ":" + str(datetime.datetime.now().second).zfill(2)
-        published = "{}{}{}T{}".format(datetime.datetime.now().year, month_with_padded_zero, day_with_padded_zero, hour_minute_second)
+        published = f"{datetime.datetime.now().year}{month_with_padded_zero}{day_with_padded_zero}T{hour_minute_second}"
 
     result = {
         "type": "entry",
@@ -134,6 +134,7 @@ def process_xml_feed(entry, feed, url):
             if all_images and len(all_images) > 0 and all_images[0].get("src"):
                 all_images = [i for i in all_images if "u-photo" not in i.get("class", [])]
 
+            if len(all_images) > 0:
                 result["photo"] = indieweb_utils.canonicalize_url(all_images[0]["src"], url.split("/")[2], all_images[0]["src"])
 
     if content == {} and soup.find("meta", property="description"):
@@ -163,7 +164,7 @@ def process_xml_feed(entry, feed, url):
     if entry.get("title"):
         result["title"] = entry.title
     else:
-        result["title"] = "Post by {}".format(author.get("name", url.split("/")[2]))
+        result["title"] = f"Post by {author.get('name', url.split('/')[2])}"
     
     if entry.get("media_content") and len(entry.get("media_content")) > 0:
         for media in entry.get("media_content"):

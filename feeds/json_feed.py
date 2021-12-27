@@ -71,11 +71,11 @@ def process_json_feed(item, feed):
         if parse_date:
             month_with_padded_zero = str(parse_date.month).zfill(2)
             day_with_padded_zero = str(parse_date.day).zfill(2)
-            date = "{}{}{}".format(parse_date.year, month_with_padded_zero, day_with_padded_zero)
+            date = f"{parse_date.year}{month_with_padded_zero}{day_with_padded_zero}"
         else:
             month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
             day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
-            date = "{}{}{}".format(datetime.datetime.now().year, month_with_padded_zero, day_with_padded_zero)
+            date = f"{datetime.datetime.now().year}{month_with_padded_zero}{day_with_padded_zero}"
     else:
         date = datetime.datetime.now().strftime("%Y%m%d")
 
@@ -89,7 +89,7 @@ def process_json_feed(item, feed):
     if item.get("title"):
         result["title"] = item.get("title")
     else:
-        result["title"] = "Post by {}".format(result["author"].get("name", item.get("url").split("/")[2]))
+        result["title"] = f"Post by {result['author'].get('name', item.get('url').split('/')[2])}"
 
     if item.get("url"):
         result["url"] = item.get("url")

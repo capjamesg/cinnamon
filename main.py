@@ -114,7 +114,7 @@ def feed_list():
         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
-            flash("You are now following {}".format(request.form.get("url"), ))
+            flash(f"You are now following {request.form.get('url')}")
         else:
             flash(r.json()["error"])
 
@@ -170,7 +170,7 @@ def create_channel_view():
         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
-            flash("You have created a new channel called {}.".format(request.form.get("name")))
+            flash(f"You have created a new channel called {request.form.get('name')}.")
         else:
             flash(r.json()["error"])
 
@@ -195,7 +195,7 @@ def delete_channel_view():
         r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session["access_token"]})
 
         if r.status_code == 200:
-            flash("You have deleted the {} channel.".format(r.json()["channel"]))
+            flash(f"You have deleted the {r.json()['channel']} channel.")
         else:
             flash(r.json()["error"])
 
@@ -253,23 +253,23 @@ def discover_feed():
 
     if soup.find("link", rel="alternate", type="application/atom+xml"):
         feeds.append(soup.find("link", rel="alternate", type="application/atom+xml").get("href"))
-        flash("Atom feed found at {}".format(url + soup.find("link", rel="alternate", type="application/atom+xml")["href"]))
+        flash(f"Atom feed found at {url + soup.find('link', rel='alternate', type='application/atom+xml')['href']}")
     if soup.find("link", rel="alternate", type="application/rss+xml"):
         feeds.append(soup.find("link", rel="alternate", type="application/rss+xml").get("href"))
-        flash("RSS feed found at {}".format(url + soup.find("link", rel="alternate", type="application/rss+xml")["href"]))
+        flash(f"RSS feed found at {url + soup.find('link', rel='alternate', type='application/rss+xml')['href']}")
     if soup.find("link", rel="feed", type="text/html"):
         # used for mircoformats rel=feed discovery
         feeds.append(soup.find("link", rel="feed", type="text/html").get("href"))
-        flash("h-feed found at {}".format(url + soup.find("link", rel="feed", type="text/html")["href"]))
+        flash(f"h-feed found at {url + soup.find('link', rel='feed', type='text/html')['href']}")
 
     if h_feed and len(h_feed) > 0:
         feeds.append(url)
-        flash("h-feed found at {}".format(url))
+        flash(f"h-feed found at {url}")
 
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
     
-    return redirect("/reader/{}".format(channel))
+    return redirect(f"/reader/{channel}")
 
 @main.route("/channel/<id>", methods=["GET", "POST"])
 def modify_channel(id):
@@ -290,11 +290,11 @@ def modify_channel(id):
         r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
-            flash("The channel was successfully renamed to {}".format(request.form.get("name")))
+            flash(f"The channel was successfully renamed to {request.form.get('name')}")
         else:
             flash("Something went wrong. Please try again.")
 
-        return redirect("/reader/{}".format(id))
+        return redirect(f"/reader/{id}")
 
     with connection:
         cursor = connection.cursor()
@@ -304,7 +304,7 @@ def modify_channel(id):
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
         if channel:
-            return render_template("server/modify_channel.html", title="Modify {} Channel | Microsub Dashboard".format(channel[0]), channel=channel[0], feeds=feeds)
+            return render_template("server/modify_channel.html", title=f"Modify {channel[0]} Channel | Microsub Dashboard", channel=channel[0], feeds=feeds)
         else:
             flash("The channel you were looking for could not be found.")
             return redirect("/reader/all")
@@ -320,11 +320,11 @@ def mute_view():
 
     if "mute" not in session["scope"]:
         flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
-        return redirect("/reader/{}".format(request.form.get("channel")))
+        return redirect(f"/reader/{request.form.get('channel')}")
 
     if action != "mute" and action != "unmute":
         flash("Invalid action.")
-        return redirect("/reader/{}".format(request.form.get("channel")))
+        return redirect(f"/reader/{request.form.get('channel')}")
 
     if request.form.get("channel"):
         req = {
@@ -337,15 +337,15 @@ def mute_view():
 
         if r.status_code == 200:
             if action == "mute":
-                flash("You have muted {}.".format(r.json()["url"]))
+                flash(f"You have muted {r.json()['url']}.")
             elif action == "unmute":
-                flash("You have unmuted {}.".format(r.json()["url"]))
+                flash(f"You have unmuted {r.json()['url']}.")
         else:
             flash(r.json()["error"])
 
-        return redirect("/channel/{}".format(request.form.get("channel")))
+        return redirect(f"/channel/{request.form.get('channel')}")
     else:
-        return redirect("/channel/{}".format(request.form.get("channel")))
+        return redirect(f"/channel/{request.form.get('channel')}")
 
 @main.route("/block", methods=["POST"])
 def block_view():
@@ -358,11 +358,11 @@ def block_view():
 
     if "block" not in session["scope"]:
         flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
-        return redirect("/reader/{}".format(request.form.get("channel")))
+        return redirect(f"/reader/{request.form.get('channel')}")
 
     if action != "block" and action != "unblock":
         flash("Invalid action.")
-        return redirect("/reader/{}".format(request.form.get("channel")))
+        return redirect(f"/reader/{request.form.get('channel')}")
 
     if request.form.get("channel"):
         req = {
@@ -377,15 +377,15 @@ def block_view():
 
         if r.status_code == 200:
             if action == "block":
-                flash("You have blocked {}.".format(r.json()["url"]))
+                flash(f"You have blocked {r.json()['url']}.")
             elif action == "unblock":
-                flash("You have unblocked {}.".format(r.json()["url"]))
+                flash(f"You have unblocked {r.json()['url']}.")
         else:
             flash(r.json()["error"])
 
-        return redirect("/channel/{}".format(request.form.get("channel")))
+        return redirect(f"/channel/{request.form.get('channel')}")
     else:
-        return redirect("/channel/{}".format(request.form.get("channel")))
+        return redirect(f"/channel/{request.form.get('channel')}")
 
 @main.route("/websub/<uid>", methods=["POST"])
 def save_new_post_from_websub(uid):

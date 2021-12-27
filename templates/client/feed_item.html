@@ -33,14 +33,16 @@
             <source src='{{ w["audio"][0]["url"] }}' type='audio/mpeg'>
         </audio>
     {% endif %}
-    {% if w.get("content") and w["content"].get("text") and show_all_content == False %}
-    {% set content = w["content"]["text"].split(" ")[:75] %}
-    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ " ".join(content) }} {% if content | length == 75 %}...{% endif %}</span><span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
+    {% if w.get("content") and w["content"].get("text") and show_all_content != True %}
+    {% set content = w["content"]["text"].split("\n")[:3] %}
+    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ "<br>".join(content) | safe }} {% if content | length == 75 %}...{% endif %}</span><span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
     {% if content | length == 75 %}<p class="js"><a onclick="show_all('{{ w['_id'] }}')" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
     {% elif show_all_content == False %}
     <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
     {% else %}
-    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ w["content"]["text"] }}</span></p>
+    <hr>
+    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ w["content"]["html"] | safe }}</span></p>
+    <hr>
     {% endif %}
     <p class="reaction_set">
         {% if "create" in session.get("scope") and session.get('micropub_url') %}
@@ -48,7 +50,9 @@
             <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">Bookmark 🔖</a>
             <a onclick="toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
         {% endif %}
-        <a href="/read/{{ w['_id'] }}" class="reaction">View in Reader 📚</a>
+        {% if show_all_content != True %}
+            <a href="/read/{{ w['_id'] }}" class="reaction-no-link">View in Reader 📚</a>
+        {% endif %}
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
 
         {% if session.get('micropub_url') %}

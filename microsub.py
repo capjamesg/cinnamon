@@ -114,7 +114,7 @@ def feed_list():
 
                 get_channel_by_id = cursor.execute("SELECT channel FROM channels WHERE uid = ?", (req["channel"], )).fetchone()
 
-                flash("You are now following {} in the {} channel.".format(request.form.get("url"), get_channel_by_id[0]))
+                flash(f"You are now following {request.form.get('url')} in the {get_channel_by_id[0]} channel.")
         else:
             flash("Something went wrong. Please try again.")
 
@@ -170,7 +170,7 @@ def create_channel_view():
         r = requests.post(URL, data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
         if r.status_code == 200:
-            flash("You have created a new channel called {}.".format(request.form.get("name")))
+            flash(f"You have created a new channel called {request.form.get('name')}.")
         else:
             flash(r.json()["error"])
 
@@ -195,7 +195,7 @@ def delete_channel_view():
         r = requests.post(URL, data=req, headers={"Authorization": session["access_token"]})
 
         if r.status_code == 200:
-            flash("You have deleted the {} channel.".format(r.json()["channel"]))
+            flash(f"You have deleted the {r.json()['channel']} channel.")
         else:
             flash(r.json()["error"])
 
@@ -350,18 +350,18 @@ def discover_feed():
 
     if soup.find("link", rel="alternate", type="application/atom+xml"):
         feeds.append(soup.find("link", rel="alternate", type="application/atom+xml").get("href"))
-        flash("Atom feed found at {}".format(url + soup.find("link", rel="alternate", type="application/atom+xml")["href"]))
+        flash(f"Atom feed found at {url + soup.find('link', rel='alternate', type='application/atom+xml')['href']}")
     if soup.find("link", rel="alternate", type="application/rss+xml"):
         feeds.append(soup.find("link", rel="alternate", type="application/rss+xml").get("href"))
-        flash("RSS feed found at {}".format(url + soup.find("link", rel="alternate", type="application/rss+xml")["href"]))
+        flash(f"RSS feed found at {url + soup.find('link', rel='alternate', type='application/rss+xml')['href']}")
     if soup.find("link", rel="feed", type="text/html"):
         # used for mircoformats rel=feed discovery
         feeds.append(soup.find("link", rel="feed", type="text/html").get("href"))
-        flash("h-feed found at {}".format(url + soup.find("link", rel="feed", type="text/html")["href"]))
+        flash(f"h-feed found at {url + soup.find('link', rel='feed', type='text/html')['href']}")
 
     if h_feed and len(h_feed) > 0:
         feeds.append(url)
-        flash("h-feed found at {}".format(url))
+        flash(f"h-feed found at {url}")
 
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
@@ -387,7 +387,7 @@ def modify_channel(id):
         r = requests.post(URL, data=req, headers={"Authorization": session.get("access_token")})
 
         if r.status_code == 200:
-            flash("The channel was successfully renamed to {}".format(request.form.get("name")))
+            flash(f"The channel was successfully renamed to {request.form.get('name')}")
         else:
             flash("Something went wrong. Please try again.")
 
@@ -396,7 +396,7 @@ def modify_channel(id):
         channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (id,)).fetchone()
         feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
 
-        return render_template("modify_channel.html", title="Modify {} Channel".format(channel[0]), channel=channel, feeds=feeds)
+        return render_template("modify_channel.html", title=f"Modify {channel[0]} Channel", channel=channel, feeds=feeds)
 
 @app.route("/assets/<path:path>")
 def assets(path):

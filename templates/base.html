@@ -37,7 +37,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <style id="darkmode" media="none">
-      html, .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content {
+      html, .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content, #top_navigation, .bottom-navigation {
         background-color: #1F2937;
         background: #1F2937 !important;
       }
@@ -83,9 +83,6 @@
         <ul id="desktop_navigation">
           <li><a href="/channels">Channels</a></li>
           <li><a href="/feeds">Feeds</a></li>
-          {% if session.get("micropub_url") %}
-            <li><a href="{{ session.get('micropub_url') }}">Micropub</a></li>
-          {% endif %}
           <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">Logout</a></li>
         </ul>

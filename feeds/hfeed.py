@@ -6,7 +6,7 @@ from dateutil.parser import parse
 from bs4 import BeautifulSoup
 import indieweb_utils
 
-def process_hfeed(child, hcard, channel_uid, url, feed_id):
+def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed_icon=None):
     jf2 = {
         "url": indieweb_utils.canonicalize_url(child["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
     }
@@ -20,8 +20,8 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
             "url": indieweb_utils.canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
         }
         
-        if hcard[0]["properties"].get("photo"):
-            jf2["photo"] = indieweb_utils.canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+        # if hcard[0]["properties"].get("photo"):
+        #     jf2["photo"] = indieweb_utils.canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
     elif child["properties"].get("author"):
         if type(child["properties"].get("author")[0]["properties"]) == str:
             h_card = [{"properties": {"name": child["properties"].get("author")[0]}}]
@@ -39,12 +39,15 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
 
             if h_card[0]["properties"].get("photo"):
                 jf2["photo"] = indieweb_utils.canonicalize_url(h_card[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
-    else:
+    elif feed_title != None:
         jf2["author"] = {
             "type": "card",
-            "name": channel_uid,
+            "name": feed_title,
             "url": indieweb_utils.canonicalize_url(url, url.split("/")[2], child["properties"]["url"][0])
         }
+
+        if feed_icon != None:
+            jf2["author"]["photo"] = feed_icon
 
     if not child.get("properties"):
         return
@@ -62,9 +65,9 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
     if child["properties"].get("name"):
         jf2["title"] = child["properties"].get("name")[0]
     elif jf2.get("author") and jf2["author"]["name"]:
-        jf2["title"] = "Post by {}".format(jf2["author"]["name"])
+        jf2["title"] = f"Post by {jf2['author']['name']}"
     else:
-        jf2["title"] = "Post by {}".format(url.split("/")[2])
+        jf2["title"] = f"Post by {url.split('/')[2]}"
 
     if child["properties"].get("content"):
         jf2["content"] = {
@@ -89,11 +92,11 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id):
         if parse_date:
             month_with_padded_zero = str(parse_date.month).zfill(2)
             day_with_padded_zero = str(parse_date.day).zfill(2)
-            date = "{}{}{}".format(parse_date.year, month_with_padded_zero, day_with_padded_zero)
+            date = f"{parse_date.year}{month_with_padded_zero}{day_with_padded_zero}"
         else:
             month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
             day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
-            date = "{}{}{}".format(datetime.datetime.now().year, month_with_padded_zero, day_with_padded_zero)
+            date = f"{datetime.datetime.now().year}{month_with_padded_zero}{day_with_padded_zero}"
     else:
         date = datetime.datetime.now().strftime("%Y%m%d")
 

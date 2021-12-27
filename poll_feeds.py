@@ -15,11 +15,11 @@ import logging
 
 logging.basicConfig(
 	level=logging.DEBUG, 
-	filename="logs/{}.log".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+	filename=f"logs/{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.log",
 	datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-print("Printing logs to logs/{}.log".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+print(f"Printing logs to logs/{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.log")
 
 poll_cadences = []
 
@@ -36,8 +36,8 @@ def validate_entry_count(entries, feed_url, feed_id):
         jf2 = {
             "type": "entry",
             "content": {
-                "text": "{} feed does not have any posts. Please check that the feed URL is working correctly.".format(feed_url),
-                "html": "{} feed does not have any posts. Please check that the feed URL is working correctly.".format(feed_url),
+                "text": f"{feed_url} feed does not have any posts. Please check that the feed URL is working correctly.",
+                "html": f"{feed_url} feed does not have any posts. Please check that the feed URL is working correctly.",
             },
             "published": published,
             "url": "https://webmention.jamesg.blog",
@@ -86,7 +86,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         etag = ""
 
     if etag != "" and etag == s[2]:
-        logging.debug("{} has not changed since last poll, skipping".format(url))
+        logging.debug(f"{url} has not changed since last poll, skipping")
         return None
 
     # get last modified date of url
@@ -96,7 +96,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         last_modified = ""
 
     if last_modified != "" and datetime.datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z') < datetime.datetime.now() - datetime.timedelta(hours=12):
-        logging.debug("{} has not been modified in the last 12 hours, skipping".format(url))
+        logging.debug(f"{url} has not been modified in the last 12 hours, skipping")
         return None
 
     logging.debug("polling " + url)
@@ -150,7 +150,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         etag = feed.headers.get("etag", "")
 
         if etag != "" and etag == s[2]:
-            logging.debug("{} has not changed since last poll, skipping".format(url))
+            logging.debug(f"{url} has not changed since last poll, skipping")
             return
 
         feed = feed.json()
@@ -205,8 +205,20 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
         h_feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] == 'h-feed']
 
+        feed_title = None
+        feed_icon = None
+
         if len(h_feed) > 0:
             feed = h_feed[0]["children"]
+            feed_title = h_feed[0]["properties"]["name"][0]
+
+            if feed_title:
+                feed_title = feed_title[0]
+
+            feed_icon = h_feed[0]["properties"]["icon"]
+
+            if feed_icon:
+                feed_icon = feed_icon[0]
         else:
             # get all non h-card items
             # this will let the program parse non h-entry feeds such as h-event feeds
@@ -220,7 +232,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         validate_entry_count(feed, url, feed_id)
 
         for child in feed[:5]:
-            result = hfeed.process_hfeed(child, hcard, channel_uid, url, feed_id)
+            result = hfeed.process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title)
 
             ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 

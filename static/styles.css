@@ -418,7 +418,7 @@ ol {
 .active_tab {
   font-weight: 600;
 }
-.reaction {
+.reaction, .reaction-no-link {
 	padding: 10px;
 	margin-left: 5px;
 	margin-bottom: 5px;

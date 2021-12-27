@@ -11,6 +11,7 @@ def reader_redirect():
     session["access_token"] = "s"
     session["me"] = "s"
     session["server_url"] = "https://microsub.jamesg.blog/endpoint"
+    session["micropub_url"] = "https://microsub.jamesg.blog/endpoint"
     session["scope"] = "create"
     return redirect("/reader/all")
 
@@ -33,7 +34,7 @@ def read_article(id):
 
     channel = article_req.json()["post"][0]["channel"]
 
-    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel), headers=headers).json()
+    feeds = requests.get(session.get("server_url") + f"?action=follow&channel={channel}", headers=headers).json()
 
     channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel]
 
@@ -45,7 +46,7 @@ def read_article(id):
     jf2 = json.loads(article_req.json()["post"][0]["jf2"])
 
     return render_template("client/read_article.html",
-        title="{} | Cinnamon".format(channel_name),
+        title=f"{channel_name} | Cinnamon",
         channels=channel_req.json()["channels"],
         w=jf2,
         page_channel_uid=channel,
@@ -72,29 +73,31 @@ def microsub_reader(channel):
         before = request.args.get("before")
 
         microsub_req = requests.get(
-            "{}?action=timeline&channel={}&before={}".format(session.get("server_url"), channel, before),
+            f"{session.get('server_url')}?action=timeline&channel={channel}&before={before}",
             headers=headers
         )
     elif request.args.get("after"):
         after = request.args.get("after")
 
         microsub_req = requests.get(
-            "{}?action=timeline&channel={}&after={}".format(session.get("server_url"), channel, after),
+            f"{session.get('server_url')}?action=timeline&channel={channel}&after={after}",
             headers=headers
         )
     else:
         microsub_req = requests.get(
-            "{}?action=timeline&channel={}".format(session.get("server_url"), channel),
+            f"{session.get('server_url')}?action=timeline&channel={channel}",
             headers=headers
         )
 
     feeds = requests.get(
-        "{}?action=follow&channel={}".format(session.get("server_url"), channel),
+        f"{session.get('server_url')}?action=follow&channel={channel}",
         headers=headers
     ).json()
 
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
+
+    print(microsub_req.json()["paging"])
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
@@ -108,7 +111,7 @@ def microsub_reader(channel):
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
     return render_template("client/reader.html",
-        title="{} | Cinnamon".format(channel_name),
+        title=f"{channel_name} | Cinnamon",
         results=microsub_req.json()["items"],
         channels=channel_req.json()["channels"],
         before=before_to_show,
@@ -187,7 +190,7 @@ def mark_channel_as_read():
     else:
         flash("Posts in this channel were successfully marked as unread.")
 
-    return redirect("/reader/{}".format(channel))
+    return redirect(f"/reader/{channel}")
 
 @client.route("/reader/<channel>/delete/<entry_id>")
 def delete_entry_in_channel(channel, entry_id):
@@ -210,7 +213,7 @@ def delete_entry_in_channel(channel, entry_id):
     r = requests.post(session.get("server_url"), data=data, headers=headers)
 
     flash("The entry was successfully deleted.")
-    return redirect("/reader/{}".format(channel))
+    return redirect(f"/reader/{channel}")
 
 @client.route("/preview")
 def preview_feed():
@@ -305,14 +308,14 @@ def search_feed():
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
-    feeds = requests.get(session.get("server_url") + "?action=follow&channel={}".format(channel_id), headers=headers).json()
+    feeds = requests.get(session.get("server_url") + f"?action=follow&channel={channel_id}", headers=headers).json()
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
     return render_template("client/reader.html",
-        title="Showing results for {} | Cinnamon".format(query),
+        title=f"Showing results for {query} | Cinnamon",
         results=microsub_req.json()["items"],
         channel=channel_id,
         is_searching=True,

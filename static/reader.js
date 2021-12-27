@@ -23,6 +23,7 @@ function close_modal() {
 }
 
 window.onclick = function(event) {
+    event.preventDefault();
     close_modal()
 }
 
@@ -71,15 +72,18 @@ search_button.href = "#";
 subscribe_to_feed.href = "#";
 channel_settings_button.href = "#";
 
-search_button.onclick = function() {
+search_button.onclick = function(event) {
+    event.preventDefault();
     trigger_modal("search");
 }
 
-subscribe_to_feed.onclick = function() {
+subscribe_to_feed.onclick = function(event) {
+    event.preventDefault();
     trigger_modal("subscribe");
 }
 
-channel_settings_button.onclick = function() {
+channel_settings_button.onclick = function(event) {
+    event.preventDefault();
     trigger_modal("channel_settings");
 }
 
