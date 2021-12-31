@@ -105,16 +105,19 @@
 <section class="feed flex_right_home">
     {% if results | length > 0 %}
     <ul>
-    {% if is_searching == True %}
         <li>
-            <p>Searching for: <b>{{ query }}</b></p>
+            <form method="POST" action="/note" style="text-align: right;">
+                <textarea rows="8" id="post" placeholder="Express yourself..." aria-labelledby="Post content"></textarea>
+                <input type="submit" value="Post" id="post_button" style="width: 100px; text-align: center;">
+            </form>
         </li>
-    {% endif %}
     {% set count = namespace(value=0) %}
       {% for w in results %}
       {% if (count.value > 0 and published_dates[count.value-1] and published_dates[count.value-1][:8] != published_dates[count.value][:8]) or count.value == 0 %}
         {% if w.get("published") %}
-        <h2>{{ w["published"] | strftime }}</h2>
+        <li>
+            <h2>{{ w["published"] | strftime }}</h2>
+        </li>
         {% endif %}
         {% endif %}
         {% include "client/feed_item.html" %}
@@ -126,12 +129,12 @@
     {% endif %}
     {% if after != "" or before != "" %}
         <div class="bottom-navigation">
-            {% if after != "" %}
+            {% if before != "" %}
                 <div class="prev">
                     <p><a href="/reader/{{ page_channel_uid }}?before={{ before }}">See Older Posts</a></p>
                 </div>
             {% endif %}
-            {% if before != "" %}
+            {% if after != "" %}
             <div class="next">
                 <p><a href="/reader/{{ page_channel_uid }}?after={{ after }}">See Newer Posts</a></p>
             </div>
@@ -223,6 +226,7 @@
             } else {
                 send_notification("<p>There was an error sending your reply.</p>");
             }
+            toggle_textbox(id);
         });
     }
 </script>

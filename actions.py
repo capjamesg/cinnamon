@@ -18,6 +18,38 @@ def change_to_json(database_result):
 
     return result
 
+def search_for_content():
+    channel = request.form.get("channel")
+    query = request.form.get("query")
+
+    connection = sqlite3.connect("microsub.db")
+
+    with connection:
+        cursor = connection.cursor()
+
+        if channel == "all":
+            result = cursor.execute("SELECT jf2 FROM timeline WHERE jf2 LIKE ?  ORDER BY date DESC;", (f"%{query}%", )).fetchall()
+        else:
+            result = cursor.execute("SELECT jf2 FROM timeline WHERE jf2 LIKE ? AND channel = ? ORDER BY date DESC;", (f"%{query}%", channel)).fetchall()
+
+    items = [[json.loads(item[1]), item[3], item[5]] for item in result]
+
+    return jsonify({"items": items})
+
+def search_for_feeds():
+    query = request.form.get("query").strip()
+
+    search_url = "https://indieweb-search.jamesg.blog/results?query=discover {}&format=jf2".format(query)
+
+    r = requests.get(search_url)
+
+    print(r.status_code)
+
+    if r.status_code == 200:
+        return jsonify({"items": r.json()})
+    else:
+        return jsonify({"items": []})
+
 def get_timeline():
     channel = request.args.get("channel")
     after = request.args.get("after")
@@ -55,19 +87,14 @@ def get_timeline():
         i[0]["_id"] = i[2]
 
     items = [i[0] for i in items]
-
-    items_for_date = [item for item in item_list]
-
-    max_id = cursor.execute(f"SELECT MAX(id) FROM timeline WHERE {channel_arg} feed_id IN (SELECT id FROM following WHERE muted = 0 AND blocked = 0) ORDER BY date DESC, id DESC;", channel_tuple).fetchone()[0]
-
-    if len(item_list) > 20 and not request.args.get("after") and not request.args.get("before") \
-        and item_list[0][8] != max_id:
+    
+    if len(item_list) > 20 and not request.args.get("after") and not request.args.get("before"):
         # 8 = id
+        before = item_list[-1][8]
+        after = ""
+    elif len(item_list) <= 20 and len(item_list) != 0:
         before = item_list[0][8]
         after = item_list[-1][8]
-    elif len(item_list) <= 20 and len(item_list) != 0:
-        before = items_for_date[-1][8]
-        after = ""
     else:
         before = ""
         after = ""

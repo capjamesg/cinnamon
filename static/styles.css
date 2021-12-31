@@ -5,16 +5,23 @@ a {
 	text-decoration: none;
 }
 html {
-	background-color: #FFEFD5;
+	background: url("/static/wood.avif");
 	font-family: "Helvetica Neue", Helvetica, sans-serif;
 }
-main {
+#main {
 	max-width: 50em;
 	margin: auto;
 	margin-top: 10px;
 }
 p, code, li {
 	font-size: 1.0625rem;
+}
+#results {
+	text-align: left !important;
+}
+.search_box {
+	text-align: center;
+	min-height: 15em;
 }
 select {
 	font-size: 1.0625rem;
@@ -46,6 +53,8 @@ nav, .button_list {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+}
+.button_list {
 	margin: 10px 0;
 }
 button, .button_link {
@@ -70,11 +79,8 @@ button a:hover, .button_link:hover {
 }
 nav, footer ul {
 	display: flex;
-	border-top: 5px #FFA500 dashed;
-	border-bottom: 5px #FFA500 dashed;
 	background: white;
-	border: 2px solid hotpink;
-	box-shadow: 2px 2px hotpink;
+	box-shadow: 0px 4px lightgrey;
 	padding-left: 25px;
 	padding-right: 25px;
 }
@@ -267,6 +273,16 @@ input[type="submit"] {
     min-width: 0 !important;
     appearance: none;
     font-size: 1.1875rem;
+}
+/* skip link hiding code from https://www.a11ymatters.com/pattern/skip-link/ */
+.accessibility_label_top {
+    position: fixed;
+    top: -200px;
+}
+.accessibility_label_top:focus {
+	top: 0;
+	left: 50%;
+	padding: 10px;
 }
 
 @media print {

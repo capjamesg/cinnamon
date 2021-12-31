@@ -51,7 +51,7 @@
             <a onclick="toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">Reply 💬</a>
         {% endif %}
         {% if show_all_content != True %}
-            <a href="/read/{{ w['_id'] }}" class="reaction-no-link">View in Reader 📚</a>
+            <a href="/read/{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
         {% endif %}
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">Delete 🗑️</a>
 
@@ -61,7 +61,9 @@
             <textarea name="content" rows="8" id='{{ w["_id"] }}-form'></textarea><br>
             <input type="hidden" name="h" value="entry">
             <input type="hidden" name="in-reply-to" value="{{ w["url"] }}">
-            <input type="submit" value="Send Reply 💬" onclick="submit_micropub('{{ w["_id"] }}', '{{ w["url"] }}')" />
+            <div style="text-align: right;">
+                <input type="submit" value="Send Reply 💬" onclick="submit_micropub('{{ w["_id"] }}', '{{ w["url"] }}')" />
+            </div>
         </div>
         {% endif %}
     </li>

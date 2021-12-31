@@ -8,11 +8,6 @@ client = Blueprint('client', __name__)
 
 @client.route("/reader")
 def reader_redirect():
-    session["access_token"] = "s"
-    session["me"] = "s"
-    session["server_url"] = "https://microsub.jamesg.blog/endpoint"
-    session["micropub_url"] = "https://microsub.jamesg.blog/endpoint"
-    session["scope"] = "create"
     return redirect("/reader/all")
 
 @client.route("/read/<id>")
@@ -295,35 +290,46 @@ def search_feed():
     }
 
     query = request.args.get("query")
-    channel_id = request.args.get("channel")
 
-    if not query or not channel_id:
-        flash("Please specify a query and channel ID when searching for a feed.")
-        return redirect("/reader/all")
+    if not query:
+        return render_template("client/search.html", title="Search | Cinnamon")
 
     data = {
         "action": "search",
         "query": query,
+        "channel": "all"
     }
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
-    feeds = requests.get(session.get("server_url") + f"?action=follow&channel={channel_id}", headers=headers).json()
+    return jsonify(microsub_req.json())
 
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+@client.route("/explore")
+def explore_new_feeds():
+    auth_result = check_token(request.headers, session)
 
-    published_dates = [p.get("published") for p in microsub_req.json()["items"]]
+    if auth_result == False:
+        return redirect("/login")
 
-    return render_template("client/reader.html",
-        title=f"Showing results for {query} | Cinnamon",
-        results=microsub_req.json()["items"],
-        channel=channel_id,
-        is_searching=True,
-        query=query,
-        feeds=feeds,
-        channels=channel_req.json()["channels"],
-        published_dates=published_dates
-    )
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    query = request.args.get("query")
+
+    if not query:
+        return render_template("client/discover.html", title="Explore | Cinnamon")
+
+    data = {
+        "action": "search",
+        "query": query
+    }
+
+    print(data)
+
+    microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
+
+    return jsonify(microsub_req.json()["items"])
 
 @client.route("/settings")
 def settings():

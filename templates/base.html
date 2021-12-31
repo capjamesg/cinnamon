@@ -71,8 +71,8 @@
   </head>
   <body>
     {% include "show_error.html" %}
+    <a href="#main" class="accessibility_label_top">Skip to main content</a>
     <main>
-      <a href="#main" class="accessibility_label">Skip to main content</a>
       <nav id="top_navigation">
         {% if session.get("me") %}
         <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
@@ -81,8 +81,9 @@
         {% endif %}
         {% if session.get("me") %}
         <ul id="desktop_navigation">
-          <li><a href="/channels">Channels</a></li>
-          <li><a href="/feeds">Feeds</a></li>
+          <li><a href="/feeds">Following</a></li>
+          <li><a href="/search">Search</a></li>
+          <li><a href="/explore">Explore</a></li>
           <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">Logout</a></li>
         </ul>

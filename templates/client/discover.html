@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="search_box main_content_box">
+    <h1>Discover</h1>
+    <p>Find new feeds to follow by topic.</p>
+    <form action="/explore" method="get">
+        <input type="text" name="q" id="search" placeholder="Apple" value="{{ q }}">
+        <input type="submit" value="Search">
+    </form>
+    <ul id="results" class="feed">
+    </ul>
+</section>
+<script>
+    var search = document.getElementById('search');
+    search.addEventListener('keyup', function(e) {
+        // run query if space key is pressed
+        if (e.keyCode === 32) {
+            var term = search.value;
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/explore?query=' + term);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var results = document.getElementById('results');
+                    as_json = JSON.parse(xhr.responseText);
+
+                    var all_results = "";
+
+                    for (var i = 0; i < as_json["items"].length; i++) {
+                        result_item = `<li>
+                            <h3><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["title"]}</a></h3>
+                            <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
+                        </li>`;
+
+                        all_results += result_item;
+                    }
+
+                    results.innerHTML = all_results;
+                }
+            }
+            xhr.send();
+        }
+    });
+</script>
+{% endblock %}

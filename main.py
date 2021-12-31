@@ -22,13 +22,11 @@ def home():
         action = request.form.get("action")
         method = request.form.get("method")
         channel = request.form.get("channel")
-        query = request.form.get("query")
         id = request.form.get("id")
     else:
         action = request.args.get("action")
         method = request.args.get("method")
         channel = request.args.get("channel")
-        query = request.args.get("query")
         id = request.args.get("id")
 
     is_authenticated = check_token(request.headers, session)
@@ -49,7 +47,9 @@ def home():
         return mark_as_read()
     elif action == "preview" and request.method == "POST":
         return preview()
-    elif action == "search" and query and request.method == "POST":
+    elif action == "search" and not channel:
+        return search_for_feeds()
+    elif action == "search" and channel:
         return search_for_content()
     elif action == "follow" and request.method == "GET":
         return get_follow(channel)
@@ -97,37 +97,37 @@ def dashboard():
 
         return render_template("server/dashboard.html", title="Microsub Dashboard", channels=all_channels)
 
-@main.route("/feeds", methods=["GET", "POST"])
-def feed_list():
-    auth_result = check_token(request.headers, session)
+# @main.route("/feeds", methods=["GET", "POST"])
+# def feed_list():
+#     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
-        return redirect("/login")
+#     if auth_result == False:
+#         return redirect("/login")
 
-    if request.method == "POST":
-        req = {
-            "action": "follow",
-            "channel": request.form.get("channel"),
-            "url": request.form.get("url")
-        }
+#     if request.method == "POST":
+#         req = {
+#             "action": "follow",
+#             "channel": request.form.get("channel"),
+#             "url": request.form.get("url")
+#         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
+#         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
 
-        if r.status_code == 200:
-            flash(f"You are now following {request.form.get('url')}")
-        else:
-            flash(r.json()["error"])
+#         if r.status_code == 200:
+#             flash(f"You are now following {request.form.get('url')}")
+#         else:
+#             flash(r.json()["error"])
 
-        return redirect("/reader/all")
+#         return redirect("/reader/all")
 
-    connection = sqlite3.connect("microsub.db")
+#     connection = sqlite3.connect("microsub.db")
 
-    with connection:
-        cursor = connection.cursor()
+#     with connection:
+#         cursor = connection.cursor()
 
-        all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
+#         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
 
-        return render_template("server/feed_management.html", title="Feed Management | Microsub Dashboard", channels=all_channels)
+#         return render_template("server/feed_management.html", title="Feed Management | Microsub Dashboard", channels=all_channels)
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
@@ -271,8 +271,8 @@ def discover_feed():
     
     return redirect(f"/reader/{channel}")
 
-@main.route("/channel/<id>", methods=["GET", "POST"])
-def modify_channel(id):
+@main.route("/feeds", methods=["GET", "POST"])
+def get_all_feeds():
     auth_result = check_token(request.headers, session)
 
     if auth_result == False:
@@ -280,10 +280,12 @@ def modify_channel(id):
 
     connection = sqlite3.connect("microsub.db")
 
+    channel = request.args.get("channel")
+
     if request.method == "POST":
         req = {
             "action": "channels",
-            "channel": request.form.get("channel"),
+            "channel": "all",
             "name": request.form.get("name"),
         }
 
@@ -299,15 +301,18 @@ def modify_channel(id):
     with connection:
         cursor = connection.cursor()
 
-        channel = cursor.execute("SELECT * FROM channels WHERE uid = ?", (id,)).fetchone()
-
-        feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (id,)).fetchall()
-
         if channel:
-            return render_template("server/modify_channel.html", title=f"Modify {channel[0]} Channel | Microsub Dashboard", channel=channel[0], feeds=feeds)
+            feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
         else:
-            flash("The channel you were looking for could not be found.")
-            return redirect("/reader/all")
+            feeds = cursor.execute("SELECT * FROM following").fetchall()
+
+        count = len(feeds)
+
+        return render_template("server/modify_channel.html",
+            title=f"People You Follow | Cinnamon",
+            feeds=feeds,
+            count=count
+        )
 
 @main.route("/mute", methods=["POST"])
 def mute_view():
