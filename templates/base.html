@@ -1,14 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script src="/reader.js"></script>
     <meta charset="utf-8" />
-    <title>{% if title %}{{ title }}{% else %}Microsub Dashboard{% endif %}</title>
+    <title>{% if title %}{{ title }}{% else %}Cinnamon{% endif %}</title>
 
     <meta name="description" content="This is a Micropub client and server you can use to keep track of feeds on the web.">
     <meta name="twitter:description" content="This is a Micropub client and server you can use to keep track of feeds on the web.">
     <meta name="og:description" content="This is a Micropub client and server you can use to keep track of feeds on the web.">
   
-    <meta name="og:site_name" content="Microsub Dashboard">
+    <meta name="og:site_name" content="Cinnamon">
   
     <meta property="og:image" content="/static/feed.png">
     <meta name="twitter:image:src" content="/static/feed.png">
@@ -21,12 +22,12 @@
 
     <!-- Twitter Card data -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Microsub Dashboard">
+    <meta name="twitter:title" content="Cinnamon">
 
     <!-- Open Graph data -->
-    <meta property="og:title" content="Microsub Dashboard">
+    <meta property="og:title" content="Cinnamon">
     <meta property="og:url" content="{{ config.get('URL') }}">
-    <meta property="og:site_name" content="Microsub Dashboard">
+    <meta property="og:site_name" content="Cinnamon">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 
@@ -37,7 +38,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <style id="darkmode" media="none">
-      html, .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content, #top_navigation, .bottom-navigation {
+      .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content, #top_navigation, .bottom-navigation {
         background-color: #1F2937;
         background: #1F2937 !important;
       }
@@ -135,7 +136,7 @@
         {% block content %}
         {% endblock %}
       </div>
-      <p class="accessibility_label"><a href="#main">Go Back to the Top</a></p>
+      <a href="#main" class="accessibility_label">Go Back to the Top</a>
     </main>
   </body>
 </html>

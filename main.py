@@ -10,11 +10,11 @@ main = Blueprint('main', __name__, template_folder='templates')
 
 @main.route("/")
 def index():
-    return render_template("index.html", title="Home | Microsub Endpoint")
+    return render_template("index.html", title="Home | Cinnamon")
 
 @main.route("/setup")
 def setup():
-    return render_template("setup.html", title="Setup | Microsub Endpoint")
+    return render_template("setup.html", title="Setup | Cinnamon")
 
 @main.route("/endpoint", methods=["GET", "POST"])
 def home():
@@ -95,7 +95,7 @@ def dashboard():
 
         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
 
-        return render_template("server/dashboard.html", title="Microsub Dashboard", channels=all_channels)
+        return render_template("server/dashboard.html", title="Cinnamon", channels=all_channels)
 
 # @main.route("/feeds", methods=["GET", "POST"])
 # def feed_list():
@@ -127,7 +127,7 @@ def dashboard():
 
 #         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
 
-#         return render_template("server/feed_management.html", title="Feed Management | Microsub Dashboard", channels=all_channels)
+#         return render_template("server/feed_management.html", title="Feed Management | Cinnamon", channels=all_channels)
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():

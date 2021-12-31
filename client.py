@@ -106,7 +106,7 @@ def microsub_reader(channel):
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
     return render_template("client/reader.html",
-        title=f"{channel_name} | Cinnamon",
+        title=f"Your {channel_name} Feed | Cinnamon",
         results=microsub_req.json()["items"],
         channels=channel_req.json()["channels"],
         before=before_to_show,

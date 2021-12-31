@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<section>
-    <p><a href="/reader/all">Go back to reader</a></p>
+<section class="main_content_box">
+    <p><a href="/reader/all">Go back to feed</a></p>
 </section>
-<section class="feed flex_right_home">
+<section class="feed">
     {% include "client/feed_item.html" %}
 </section>
 {% endblock %}

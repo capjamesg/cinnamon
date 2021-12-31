@@ -284,6 +284,20 @@ input[type="submit"] {
 	left: 50%;
 	padding: 10px;
 }
+.accessibility_label {
+	position: fixed;
+	bottom: -200px;
+}
+.accessibility_label:focus {
+	bottom: 0 !important;
+	left: 50%;
+	padding: 10px;
+	z-index: 1;
+}
+
+.following_item form {
+	display: inline;
+}
 
 @media print {
 	html {

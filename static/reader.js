@@ -4,6 +4,15 @@ for (var i = 0; i < js_req.length; i++) {
     js_req[i].style.display = "inline";
 }
 
+function toggle_textbox(id) {
+    var textbox = document.getElementById(id + "-textbox");
+    if (textbox.style.display == "none") {
+        textbox.style.display = "block";
+    } else {
+        textbox.style.display = "none";
+    }
+}
+
 function trigger_modal(id) {
     var modal = document.getElementById(id);
     if (modal.style.display == "none") {
@@ -13,18 +22,13 @@ function trigger_modal(id) {
     }
 }
 
-function close_modal() {
+function close_modal(event) {
     var modal = document.getElementsByClassName("modal");
     for (var i = 0; i < modal.length; i++) {
         if (event.target == modal[i]) {
             modal[i].style.display = "none";
         }
     }
-}
-
-window.onclick = function(event) {
-    event.preventDefault();
-    close_modal()
 }
 
 function show_channels() {
@@ -64,28 +68,6 @@ function show_all(id) {
         original_text.innerHTML = original_text.innerHTML + " ...";
     }
 }
-var search_button = document.getElementById("search_button");
-var subscribe_to_feed = document.getElementById("subscribe_to_feed");
-var channel_settings_button = document.getElementById("channel_settings_button");
-
-search_button.href = "#";
-subscribe_to_feed.href = "#";
-channel_settings_button.href = "#";
-
-search_button.onclick = function(event) {
-    event.preventDefault();
-    trigger_modal("search");
-}
-
-subscribe_to_feed.onclick = function(event) {
-    event.preventDefault();
-    trigger_modal("subscribe");
-}
-
-channel_settings_button.onclick = function(event) {
-    event.preventDefault();
-    trigger_modal("channel_settings");
-}
 
 function show_video(url, id) {
     var iframe = document.createElement("iframe");
@@ -112,4 +94,66 @@ var all_reaction_links = document.getElementsByClassName("reaction");
 for (var i = 0; i < all_reaction_links.length; i++) {
     var id = all_reaction_links[i].id;
     all_reaction_links[i].href = "#";
+}
+
+function submit_micropub(id, url) {
+    var form = document.getElementById(id + "-form");
+    fetch('/react?is_reply=true', {
+        method: 'POST',
+        body: new URLSearchParams({
+            "h": "entry",
+            "in-reply-to": url,
+            "content": form.value
+        })
+    }).then(function(response) {
+        if (response.ok) {
+            send_notification("<p>Your reply has been sent.</p>");
+        } else {
+            send_notification("<p>There was an error sending your reply.</p>");
+        }
+        toggle_textbox(id);
+    });
+}
+function send_notification(notification_text) {
+    var notification = document.createElement("section");
+    var body = document.getElementsByTagName("body")[0];
+    notification.className = "notification_bar";
+    notification.innerHTML = notification_text;
+    // add notification to top of body
+    body.insertBefore(notification, body.firstChild);
+
+    setTimeout(function() {
+        body.removeChild(notification);
+    }, 5000);
+}
+
+function send_reaction(reaction, reaction_name, post_url, post_id) {
+    fetch('/react', {
+        method: 'POST',
+        body: new URLSearchParams({
+            "h": "entry",
+            "reaction": reaction,
+            "url": post_url
+        })
+    }).then(function(response) {
+        // if status code == 200
+        if (response.status == 200) {
+            send_notification("<p>Your " + reaction_name + " has been sent.</p>");
+        }
+    })
+}
+
+function send_unfollow(url, id) {
+    fetch('/unfollow', {
+        method: 'POST',
+        body: new URLSearchParams({
+            "channel": id,
+            "url": url
+        })
+    }).then(function(response) {
+        // if status code == 200
+        if (response.status == 200) {
+            send_notification("<p>You have unfollowed the feed.</p>");
+        }
+    })
 }
