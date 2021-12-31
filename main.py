@@ -226,18 +226,14 @@ def unfollow_view():
     else:
         return redirect("/feeds")
         
-@main.route("/discover-feed", methods=["POST"])
+@main.route("/discover-feed")
 def discover_feed():
-    auth_result = check_token(session.get("access_token"))
+    auth_result = check_token(request.headers, session)
 
     if auth_result == False:
         return redirect("/login")
 
-    url = request.form.get("url")
-    channel = request.form.get("channel")
-
-    if not channel:
-        channel = "all"
+    url = request.args.get("url")
 
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
@@ -253,23 +249,31 @@ def discover_feed():
 
     if soup.find("link", rel="alternate", type="application/atom+xml"):
         feeds.append(soup.find("link", rel="alternate", type="application/atom+xml").get("href"))
-        flash(f"Atom feed found at {url + soup.find('link', rel='alternate', type='application/atom+xml')['href']}")
     if soup.find("link", rel="alternate", type="application/rss+xml"):
         feeds.append(soup.find("link", rel="alternate", type="application/rss+xml").get("href"))
-        flash(f"RSS feed found at {url + soup.find('link', rel='alternate', type='application/rss+xml')['href']}")
     if soup.find("link", rel="feed", type="text/html"):
         # used for mircoformats rel=feed discovery
         feeds.append(soup.find("link", rel="feed", type="text/html").get("href"))
-        flash(f"h-feed found at {url + soup.find('link', rel='feed', type='text/html')['href']}")
-
-    if h_feed and len(h_feed) > 0:
+    if h_feed:
         feeds.append(url)
-        flash(f"h-feed found at {url}")
+
+    for feed in range(len(feeds)):
+        f = feeds[feed]
+
+        if f.startswith("/"):
+            feeds[feed] = url.strip("/") + f
+        elif f.startswith("http://") or f.startswith("https://"):
+            pass
+        elif f.startswith("//"):
+            feeds[feed] = "https:" + f
+
+    print(feeds)
 
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
+        return redirect("/feeds")
     
-    return redirect(f"/reader/{channel}")
+    return redirect("/preview?url={}".format(feeds[0]))
 
 @main.route("/feeds", methods=["GET", "POST"])
 def get_all_feeds():
