@@ -1,5 +1,6 @@
 from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
 from check_token import verify as check_token
+from feeds import read_later
 import requests
 from actions import *
 from config import *
@@ -50,6 +51,25 @@ def read_article(id):
         show_all_content=True
     )
 
+@client.route("/read-later")
+def read_later_view():
+    auth_result = check_token(request.headers, session)
+
+    if auth_result == False:
+        return redirect("/login")
+
+    url = request.args.get("url")
+
+    if not url:
+        return 400
+
+    status = read_later.read_later(url)
+
+    if status == None:
+        flash("The requested article could not be retrieved.")
+
+    return redirect("/reader/read-later")
+
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token(request.headers, session)
@@ -91,8 +111,6 @@ def microsub_reader(channel):
 
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
-
-    print(microsub_req.json()["paging"])
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
@@ -324,8 +342,6 @@ def explore_new_feeds():
         "action": "search",
         "query": query
     }
-
-    print(data)
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 

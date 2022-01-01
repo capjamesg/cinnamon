@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Cinnamon</h1>
 <section class="content_box">
     <h2>Channels</h2>
     {% if channels %}
@@ -8,7 +7,7 @@
       <ul>
       {% for i in range(0, channels | length) %}
       <li class="button_list">
-        <a href="/channel/{{ channels[i][1] }}">{{ channels[i][0] }}</a>
+        <a href="/reader/{{ channels[i][1] }}">{{ channels[i][0] }}</a>
         <div style="float: right; position: relative;">
         {% if i != 0 %}
         <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i-1][1] }}"><input type="submit" value="Move Up"></form>
@@ -34,4 +33,30 @@
       <input type="hidden" name="action" id="action" value="channels" />
     </form>
 </section>
+<section class="content_box">
+  <h2>Discover a Feed</h2>
+  <p>Use the form below to discover a feed URL.</p>
+  <p>You can subscribe to RSS, Microformats 2, and JSON Feed feeds.</p>
+  <form action="/discover" method="POST">
+    <label for="discover">Website Address:</label><br>
+    <input id="discover" type="url" name="url" placeholder="https://theguardian.com" /><br>
+    <input type="submit" value="Discover feed" />
+  </form>
+</section>
+<section class="content_box">
+    <h2>Subscribe to a Feed</h2>
+    <p>Use the form below to subscribe to a feed.</p>
+    <p>You can subscribe to RSS, Microformats 2, and JSON Feed feeds.</p>
+    <form action="/discover" method="GET">
+      <label for="channel">Channel Name:</label><br>
+      <select name="channel" id="channel">
+        {% for channel in channels %}
+          <option value="{{ channel[1] }}">{{ channel[0] }}</option>
+        {% endfor %}
+      </select><br>
+      <label for="url">Feed Address:</label><br>
+      <input id="url" type="url" name="url" placeholder="https://jamesg.blog/feed.xml" /><br>
+      <input type="submit" value="Preview Subscription" />
+    </form>
+  </section>
 {% endblock %}

@@ -43,8 +43,6 @@ def search_for_feeds():
 
     r = requests.get(search_url)
 
-    print(r.status_code)
-
     if r.status_code == 200:
         return jsonify({"items": r.json()})
     else:
@@ -106,7 +104,7 @@ def get_post():
 
     with connection:
         cursor = connection.cursor()
-        print(request.args.get("id"))
+
         cursor.execute("SELECT * FROM timeline WHERE uid = ?", (request.args.get("id"), ))
 
     return jsonify({"post": change_to_json(cursor)}), 200

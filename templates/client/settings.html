@@ -22,9 +22,11 @@
     <section>
         <h2>Bookmarklet 🔖</h2>
 
-        <p>You can use the following bookmarklet to subscribe to a feed:</p>
+        <p>You can use the following bookmarklets to subscribe to a feed or save an article for later reading:</p>
 
-        <p><a href="javascript:(function(){window.location='https://microsub.jamesg.blog/discover-feed?url='+encodeURIComponent(window.location.href);})()">Subscribe 📝</a></p>
+        <p><a href="javascript:(function(){window.location='https://microsub.jamesg.blog/discover-feed?subscribe-to='+encodeURIComponent(window.location.href);})()">Subscribe 📝</a></p>
+
+        <p><a href="javascript:(function(){window.location='https://microsub.jamesg.blog/read-later?url='+encodeURIComponent(window.location.href);})()">Read Later 📚</a></p>
     </section>
 </div>
 {% endblock %}

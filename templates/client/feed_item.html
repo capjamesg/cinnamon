@@ -51,8 +51,10 @@
             <a onclick="toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">💬</a>
         {% endif %}
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">🗑️</a>
-        {% if show_all_content != True %}
+        {% if show_all_content != True and not w['_id'].startswith("http") %}
             <a href="/read/{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
+        {% elif show_all_content != True and w['_id'].startswith("http") %}
+            <a href="{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
         {% endif %}
 
         {% if session.get('micropub_url') %}

@@ -10,6 +10,11 @@ main = Blueprint('main', __name__, template_folder='templates')
 
 @main.route("/")
 def index():
+    is_authenticated = check_token(request.headers, session)
+
+    if is_authenticated:
+        return redirect("/reader/all")
+
     return render_template("index.html", title="Home | Cinnamon")
 
 @main.route("/setup")
@@ -233,7 +238,7 @@ def discover_feed():
     if auth_result == False:
         return redirect("/login")
 
-    url = request.args.get("url")
+    url = request.args.get("subscribe-to")
 
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
@@ -387,8 +392,6 @@ def block_view():
         }
 
         r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
-
-        print(r.json())
 
         if r.status_code == 200:
             if action == "block":

@@ -28,9 +28,10 @@
                     for (var i = 0; i < as_json["items"].length; i++) {
                         result_item = `<li>
                             <h3><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["title"]}</a></h3>
+                            <p>${as_json["items"][i]["author"] ? "Published by " + as_json["items"][i]["author"]["name"] + " on " : ""} ${as_json["items"][i]["published"].split("T").slice(0, 0)}</p>
                             <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
                             <p class="reaction_set">
-                                <a href="${as_json["items"][i]["id"]}" class="reaction-no-link">Read Full Post 📚</a>
+                                <a href="${as_json["items"][i]["url"]}" class="reaction-no-link">Read Full Post 📚</a>
                             </p>
                         </li>`;
 
