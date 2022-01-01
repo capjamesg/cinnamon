@@ -308,19 +308,32 @@ def search_feed():
     }
 
     query = request.args.get("query")
+    channel = request.args.get("channel")
+    format = request.args.get("format")
 
     if not query:
-        return render_template("client/search.html", title="Search | Cinnamon")
+        channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+        return render_template("client/search.html", title="Search | Cinnamon", channels=channel_req.json()["channels"])
+
+    if not channel:
+        channel = "all"
 
     data = {
         "action": "search",
         "query": query,
-        "channel": "all"
+        "channel": channel
     }
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
-    return jsonify(microsub_req.json())
+    if format == "json":
+        return jsonify(microsub_req.json())
+    else:
+        channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+        return render_template("client/search.html", title="Search | Cinnamon", channels=channel_req.json()["channels"], results=microsub_req.json()["items"])
+
 
 @client.route("/explore")
 def explore_new_feeds():

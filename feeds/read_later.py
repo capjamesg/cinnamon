@@ -17,11 +17,11 @@ def read_later(url):
     soup = BeautifulSoup(r.text, "lxml")
 
     if soup.find(".h-entry"):
-        content = soup.find(".h-entry").text
+        content = soup.find(".h-entry").get_text()
     elif soup.find("article"):
-        content = soup.find("article").text
+        content = soup.find("article").get_text()
     else:
-        content = soup.find("body").text
+        content = soup.find("body").get_text()
 
     month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
     day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
@@ -34,7 +34,7 @@ def read_later(url):
             "type": "summary",
             "content": {
                 "text": content,
-                "html": content
+                "html": r.text
             },
             "title": soup.title.text,
             "published": published_date,
