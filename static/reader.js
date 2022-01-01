@@ -127,6 +127,21 @@ function send_notification(notification_text) {
     }, 5000);
 }
 
+function post() {
+    // send form-encoded response to micropub endpoint
+    var form = document.getElementById("post");
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form)
+    }).then(function(response) {
+        var location = response.headers.get('Location');
+        send_notification("Your post has been created at" + location + ".");
+    }).catch(function(response) {
+        send_notification("There was an error creating your post.");
+    });
+}
+
 function send_reaction(reaction, reaction_name, post_url, post_id) {
     fetch('/react', {
         method: 'POST',

@@ -9,9 +9,13 @@
             <li style="display: flex;">
                 <div style="flex: 0 75%;">
                     {% if feed[3] and feed[3] != "" %}
-                        <img src="{{ feed[3] }}" style="width: 50px; height: 50px; border-radius: 50%; float: left;">
+                        <img src="{{ feed[3] }}" style="width: 50px; height: 50px; border-radius: 50%; float: left; margin-right: 10px;">
                     {% endif %}
-                    <p><a href="{{ feed[4] }}">{{ feed[4] }}</a> (#{{ feed[0] }})</p>
+                    {% if feed[4] != None %}
+                        <p><a href="{{ feed[1] }}">{{ feed[4] }}</a> (#{{ feed[0] }})</p>
+                    {% else %}
+                        <p><a href="{{ feed[1] }}">{{ feed[1] }}</a></p>
+                    {% endif %}
                 </div>
                 <div style="flex: 1; text-align: right;" class="following_item">
                     <a onclick="send_unfollow('{{ feed[1] }}', '{{ feed[0] }}')" class="reaction">Unfollow ❌</a>

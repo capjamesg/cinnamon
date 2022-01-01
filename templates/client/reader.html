@@ -14,79 +14,31 @@
     </ul>
   </div>
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
-<aside class="flex_left_home" id="sidebar" style="display: none;">
-    <div class="main_menu_mobile">
-        <span class="close mobile_close" onclick="trigger_modal('sidebar')">&times;</span>
-        <h2>Your Channels</h2>
-        <ul>
-            {% for channel in channels %}
-            <li>
-                {% if channel.uid == page_channel_uid %}
-                <a href="/reader/{{ channel.uid }}" style="font-weight: 600;">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
-                {% else %}
-                <a href="/reader/{{ channel.uid }}">{{ channel.name }} {% if channel.unread > 0 %}({{ channel.unread }}){% endif %}</a>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-        <hr>
-        <h3>Manage</h3>
-        <a href="/search" class="button_link" id="search_button">Search</a>
-        <a href="/feeds" class="button_link" id="subscribe_to_feed">Subscribe to a new feed</a>
-        <a href="/channel/{{ page_channel_uid }}/replace" class="button_link" id="channel_settings_button">Channel Settings</a>
-        {% if results | length > 0 %}
-            <form method="POST" action="/read">
-                <input type="hidden" name="channel" value="{{ page_channel_uid }}">
-                <input type="hidden" name="status" value="mark_read">
-                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
-                <button>Mark All As Read</button>
-            </form>
-            <form method="POST" action="/read">
-                <input type="hidden" name="channel" value="{{ page_channel_uid }}">
-                <input type="hidden" name="status" value="mark_unread">
-                <input type="hidden" name="last_read_entry" value="{{ results[-1]['_id'] }}">
-                <button>Mark All as Unread</button>
-            </form>
-        {% endif %}
-        <hr>
-        <h3>Feeds in this Channel</h3>
-        {% if feeds["items"] | length > 0 %}
-        <ul>
-            {% for feed in feeds["items"] %}
-                {% if feed.get("url") %}
-                <li>{% if feed.get("photo") %}<img src="{{ feed['photo'] }}" alt="{{ feed['name'] }} feed icon" style="width: 20px; height: 20px; display: inline; margin-right: 5px;">{% endif %}
-                    <a href="https://{{ feed['url'].split('/')[2] }}">{% if feed.get("name") %}{{ feed['name'] }}{% else %}{{ feed['url'] }}{% endif %}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-        {% else %}
-            <p>There are no feeds in this channel yet.</p>
-        {% endif %}
-    </div>
-</aside>
 <section class="feed flex_right_home">
-    {% if results | length > 0 %}
     <ul>
         <li>
-            <form method="POST" action="/note" style="text-align: right;">
-                <textarea rows="8" id="post" placeholder="Express yourself..." aria-labelledby="Post content"></textarea>
-                <input type="submit" value="Post" id="post_button" style="width: 100px; text-align: center;">
+            <form method="POST" action="{{ session.get('micropub_url') }}" style="text-align: right;" id="post">
+                <textarea rows="8" id="post" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
+                <input id="h" name="h" value="entry" type="hidden">
+                <input type="submit" value="Post" id="post_button" style="width: 100px; text-align: center;" onclick="post()">
             </form>
         </li>
+    {% if results | length > 0 %}
     {% set count = namespace(value=0) %}
       {% for w in results %}
-      {% if (count.value > 0 and published_dates[count.value-1] and published_dates[count.value-1][:8] != published_dates[count.value][:8]) or count.value == 0 %}
-        {% if w.get("published") %}
-        <li>
-            <h2>{{ w["published"] | strftime }}</h2>
-        </li>
-        {% endif %}
-        {% endif %}
-        {% include "client/feed_item.html" %}
-      {% set count.value = count.value + 1 %}
-      {% endfor %}
-    </ul>
+        {% if (count.value > 0 and published_dates[count.value-1] and published_dates[count.value-1][:8] != published_dates[count.value][:8]) or count.value == 0 %}
+            {% if w.get("published") %}
+            <li>
+                <h2>{{ w["published"] | strftime }}</h2>
+            </li>
+            {% endif %}
+            {% endif %}
+            {% include "client/feed_item.html" %}
+        {% set count.value = count.value + 1 %}
+        {% endfor %}
+        </ul>
     {% else %}
+    </ul>
     <p class="content_box">There are no posts in this channel. Check back later to see if any posts are added.</p>
     {% endif %}
     {% if after != "" or before != "" %}

@@ -240,7 +240,15 @@ def discover_feed():
     elif url.startswith("//"):
         url = "https:" + url
 
-    soup = BeautifulSoup(requests.get(url).text, "html.parser")
+    try:
+        web_page = requests.get(url, timeout=10, allow_redirects=True)
+
+        web_page = web_page.text
+    except:
+        flash("No feed could be found attached to the web page you submitted.")
+        return redirect("/feeds")
+
+    soup = BeautifulSoup(web_page, "lxml")
 
     # check for presence of mf2 hfeed
     h_feed = soup.find_all(class_="h-feed")
@@ -266,8 +274,6 @@ def discover_feed():
             pass
         elif f.startswith("//"):
             feeds[feed] = "https:" + f
-
-    print(feeds)
 
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")

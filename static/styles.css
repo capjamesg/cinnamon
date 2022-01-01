@@ -6,6 +6,8 @@ a {
 }
 html {
 	background: url("/static/wood.avif");
+	background-attachment: fixed;
+	background-size: cover;
 	font-family: "Helvetica Neue", Helvetica, sans-serif;
 }
 #main {
@@ -45,8 +47,6 @@ select {
 }
 .green_notification {
 	border: 1px solid lightgreen;
-	max-width: 35em;
-	margin: auto;
 	margin-bottom: 15px;
 }
 nav, .button_list {
