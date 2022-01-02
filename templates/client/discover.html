@@ -30,8 +30,8 @@
 
                     var all_results = "";
 
-                    if (as_json.length == 0) {
-                        all_results += "<p>No results were found for your query.</p>";
+                    if (as_json["items"].length == 0) {
+                        all_results += "<p style='text-align: center;'>No results were found for your query.</p>";
                     }
 
                     for (var i = 0; i < as_json["items"].length; i++) {
