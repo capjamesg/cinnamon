@@ -155,8 +155,6 @@ def react_to_post():
         "Content-Type": "application/json",
     }
 
-    session["micropub_url"] = "https://micropub.jamesg.blog/micropub"
-
     is_reply = request.args.get("is_reply")
 
     if is_reply == "true":
@@ -170,13 +168,17 @@ def react_to_post():
     elif is_reply == "note":
         # get all hashtags from content
 
-        hashtags = re.findall(r"#(\w+)", request.form.get("content"))
-        hashtags.append("Note")
+        content = request.form.get("content")
 
+        content += '<a href="https://brid.gy/publish/twitter"></a>'
+
+        hashtags = re.findall(r"#(\w+)", content)
+        hashtags.append("Note")
+        
         request_to_make = {
             "type": ["h-entry"],
             "properties": {
-                "content": [request.form.get("content")],
+                "content": [content],
                 "category": hashtags
             }
         }

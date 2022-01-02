@@ -142,6 +142,7 @@ function post_note() {
     }).then(function(response) {
         if (response.ok) {
             send_notification("<p>You post has been created.</p>");
+            form.value = "";
         } else {
             send_notification("<p>There was an error sending your reply.</p>");
         }

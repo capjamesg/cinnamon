@@ -18,6 +18,7 @@
     <ul id="feed_list">
         <li style="text-align: right;">
             <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
+            <p>(<span id="character_count">0</span>)</p>
             <p id="data_message"></p>
             <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
         </li>
@@ -123,6 +124,12 @@
 </section>
 <script>
     var form = document.getElementById("content");
+
+    var character_count_element = document.getElementById("character_count");
+
+    form.onkeydown = function(e) {
+        character_count_element.innerHTML = input.value.length;
+    }
 
     // draggable code derived from https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
     ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
