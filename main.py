@@ -413,17 +413,19 @@ def save_new_post_from_websub(uid):
         cursor = connection.cursor()
         
         # check if subscription exists
-        subscription = cursor.execute("SELECT url FROM websub_subscriptions WHERE uid = ? AND approved = 1", (uid,)).fetchone()
+        subscription = cursor.execute("SELECT url, channel FROM websub_subscriptions WHERE uid = ? AND approved = 1", (uid,)).fetchone()
 
         if not subscription:
             return jsonify({"error": "Subscription does not exist."}), 400
 
         url = subscription[0]
-        channel = subscription[2]
+        channel = subscription[1]
+
+        feed_id = cursor.execute("SELECT id FROM following WHERE url = ?", (url,)).fetchone()[0]
 
         # retrieve feed
         try:
-            r = requests.head(url, timeout=5)
+            r = requests.get(url, timeout=5, allow_redirects=True)
         except:
             return jsonify({"error": "invalid url"}), 400
 
@@ -437,7 +439,7 @@ def save_new_post_from_websub(uid):
         if "xml" in content_type or ".xml" in url:
             feed = feedparser.parse(url)
 
-            for entry in feed.entries:
+            for entry in feed.entries[:10]:
                 result, published = xml_feed.process_xml_feed(entry, feed, url)
 
                 items_to_return.append(result, published)
@@ -452,24 +454,64 @@ def save_new_post_from_websub(uid):
 
                 items_to_return.append(result, published)
         else:
-            results = hfeed.process_hfeed(url, add_to_db=True)
+            mf2_raw = mf2py.parse(r.text)
+
+            hcard = [item for item in mf2_raw['items'] if item['type'][0] == 'h-card']
+
+            h_feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] == 'h-feed']
+
+            feed_title = None
+            feed_icon = None
+
+            if len(h_feed) > 0:
+                feed = h_feed[0]["children"]
+                feed_title = h_feed[0]["properties"].get("name")
+
+                if feed_title:
+                    feed_title = feed_title[0]
+
+                feed_icon = h_feed[0]["properties"].get("icon")
+
+                if feed_icon:
+                    feed_icon = feed_icon[0]
+            else:
+                # get all non h-card items
+                # this will let the program parse non h-entry feeds such as h-event feeds
+                feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] != 'h-card']
 
             # this should use actual published dates
             # for now, we are just using the current time
-            published = datetime.datetime.now().strftime("%Y%m%d")
 
-            for result in results:
+            for child in feed[:5]:
+                result = hfeed.process_hfeed(child, hcard, channel, url, feed_id, feed_title)
+
                 items_to_return.append(result)
 
-        ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+        last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
 
-        for result in items_to_return:
-            published = result[1]
-            result = result[0]
+        if last_id[0] != None:
+            last_id = last_id[0] + 1
+        else:
+            last_id = 0
 
-            cursor.execute("INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?)", (channel, json.dumps(result), published, "unread", result["url"], ten_random_letters, 0, ))
-            
-        return jsonify({"success": "Entry added to feed."}), 200
+        for record in items_to_return:
+            published = record.get("published")
+
+            cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+                (channel,
+                    json.dumps(record),
+                    record["published"],
+                    0,
+                    record["url"],
+                    record["url"],
+                    0,
+                    feed_id,
+                    last_id
+                ))
+
+            last_id += 1
+
+    return jsonify({"success": "Entry added to feed."}), 200
 
 @main.route("/websub_callback")
 def verify_websub_subscription():

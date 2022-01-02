@@ -210,12 +210,12 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
         if len(h_feed) > 0:
             feed = h_feed[0]["children"]
-            feed_title = h_feed[0]["properties"]["name"][0]
+            feed_title = h_feed[0]["properties"].get("name")
 
             if feed_title:
                 feed_title = feed_title[0]
 
-            feed_icon = h_feed[0]["properties"]["icon"]
+            feed_icon = h_feed[0]["properties"].get("icon")
 
             if feed_icon:
                 feed_icon = feed_icon[0]

@@ -30,15 +30,15 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         else:
             h_card = []
 
-        if h_card != [] and h_card != None:
+        if len(h_card) > 0 and h_card != None:
             jf2["author"] = {
                 "type": "card",
-                "name": h_card[0]["properties"]["name"][0],
-                "url": indieweb_utils.canonicalize_url(h_card[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+                "name": h_card["properties"]["name"][0],
+                "url": indieweb_utils.canonicalize_url(h_card["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
             }
 
-            if h_card[0]["properties"].get("photo"):
-                jf2["photo"] = indieweb_utils.canonicalize_url(h_card[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+            if h_card["properties"].get("photo"):
+                jf2["photo"] = indieweb_utils.canonicalize_url(h_card["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
     elif feed_title != None:
         jf2["author"] = {
             "type": "card",

@@ -30,7 +30,6 @@
 
             var channel = document.getElementById('channel');
 
-            console.log(channel.options)
             var channel_id = channel.options[channel.selectedIndex].value;
 
             xhr.open('GET', '/search?query=' + term + '&channel=' + channel_id + '&format=json');

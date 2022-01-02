@@ -15,7 +15,7 @@
   </div>
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
 <section class="feed flex_right_home">
-    <ul>
+    <ul id="feed_list">
         <li>
             <form method="POST" action="{{ session.get('micropub_url') }}" style="text-align: right;" id="post">
                 <textarea rows="8" id="post" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
@@ -123,5 +123,39 @@
         </form>
     </div>
 </section>
-<script src="/reader.js"></script>
+<script>
+    function get_reader_data() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/retrieve?last_id={{ last_id }}&channel={{ page_channel_uid }}");
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var data = JSON.parse(xhr.responseText);
+                if (data["last_id"] != "{{ last_id }}") {
+                    var feed_list = document.getElementById("feed_list");
+                    if (document.getElementById("feed_notification")) {
+                        var new_feed_list_item = document.getElementById("feed_notification");
+                    } else {
+                        var new_feed_list_item = document.createElement("li");
+                    }
+
+                    new_feed_list_item.setAttribute("onclick", "location.reload()");
+                    new_feed_list_item.setAttribute("id", "feed_notification");
+                    new_feed_list_item.style.cursor = "pointer";
+                    new_feed_list_item.style.background = "lightgreen";
+                    new_feed_list_item.style.textAlign = "center";
+                    new_feed_list_item.style.fontWeight = "bold";
+
+                    new_feed_list_item.innerHTML = "There are new posts in this channel. Click here to refresh and see the new posts.";
+
+                    // add new post notification as first item
+                    feed_list.insertBefore(new_feed_list_item, feed_list.firstChild);
+                }
+            }
+        }
+        xhr.send();
+    }
+    // make reader request every minute
+    setInterval(get_reader_data, 60000);
+</script>
+
 {% endblock %}

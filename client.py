@@ -123,6 +123,11 @@ def microsub_reader(channel):
 
     published_dates = [p.get("published") for p in microsub_req.json()["items"]]
 
+    if len(microsub_req.json()["items"]) > 0:
+        last_num = microsub_req.json()["items"][0]["_id"]
+    else:
+        last_num = ""
+
     return render_template("client/reader.html",
         title=f"Your {channel_name} Feed | Cinnamon",
         results=microsub_req.json()["items"],
@@ -133,7 +138,8 @@ def microsub_reader(channel):
         published_dates=published_dates,
         feeds=feeds,
         channel_name=channel_name,
-        show_all_content=False
+        show_all_content=False,
+        last_id=last_num
     )
 
 @client.route("/react", methods=["POST"])
@@ -295,6 +301,41 @@ def preview_feed():
         channel_name=channel_name,
         channels=channel_req.json()["channels"]
     )
+
+@client.route("/retrieve")
+def retrieve_new_entries():
+    auth_result = check_token(request.headers, session)
+
+    if auth_result == False:
+        return redirect("/login")
+
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    last_id = request.args.get("last_id")
+
+    if not last_id:
+        return jsonify({"message": "last_id is required"}), 400
+
+    channel = request.args.get("channel")
+
+    if not channel:
+        channel = "all"
+
+    microsub_req = requests.get(
+        f"{session.get('server_url')}?action=timeline&channel={channel}",
+        headers=headers
+    )
+
+    json_data = microsub_req.json()
+
+    if len(json_data["items"]) > 0:
+        last_num = json_data["items"][0]["_id"]
+    else:
+        last_num = ""
+
+    return jsonify({"last_id": last_num})
 
 @client.route("/search")
 def search_feed():
