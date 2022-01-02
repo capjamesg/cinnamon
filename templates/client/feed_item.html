@@ -46,9 +46,9 @@
     {% endif %}
     <p class="reaction_set">
         {% if "create" in session.get("scope") and session.get('micropub_url') %}
-            <a onclick="send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of={{ w['url'] }}" class="reaction">❤️</a>
-            <a onclick="send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">🔖</a>
-            <a onclick="toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">💬</a>
+            <a onclick="event.preventDefault(); send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of={{ w['url'] }}" class="reaction">❤️</a>
+            <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">🔖</a>
+            <a onclick="event.preventDefault(); toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">💬</a>
         {% endif %}
         <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">🗑️</a>
         {% if show_all_content != True and not w['_id'].startswith("http") %}

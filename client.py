@@ -159,11 +159,6 @@ def react_to_post():
 
     is_reply = request.args.get("is_reply")
 
-    # get all hashtags from content
-
-    hashtags = re.findall(r"#(\w+)", request.form.get("content"))
-    hashtags.append("Note")
-
     if is_reply == "true":
         request_to_make = {
             "h": "entry",
@@ -173,6 +168,11 @@ def react_to_post():
             }
         }
     elif is_reply == "note":
+        # get all hashtags from content
+
+        hashtags = re.findall(r"#(\w+)", request.form.get("content"))
+        hashtags.append("Note")
+
         request_to_make = {
             "type": ["h-entry"],
             "properties": {
