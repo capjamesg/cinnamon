@@ -4,6 +4,7 @@ from feeds import read_later
 import requests
 from actions import *
 from config import *
+import re
 
 client = Blueprint('client', __name__)
 
@@ -154,18 +155,29 @@ def react_to_post():
         "Content-Type": "application/json",
     }
 
+    session["micropub_url"] = "https://micropub.jamesg.blog/micropub"
+
     is_reply = request.args.get("is_reply")
+
+    # get all hashtags from content
+
+    hashtags = re.findall(r"#(\w+)", request.form.get("content"))
+    hashtags.append("Note")
 
     if is_reply == "true":
         request_to_make = {
             "h": "entry",
             "in-reply-to": [request.form.get("in-reply-to")],
             "properties": {
-                "content": [
-                    {
-                        "html": request.form.get("content")
-                    }
-                ]
+                "content": [request.form.get("content")]
+            }
+        }
+    elif is_reply == "note":
+        request_to_make = {
+            "type": ["h-entry"],
+            "properties": {
+                "content": [request.form.get("content")],
+                "category": hashtags
             }
         }
     else:
@@ -174,9 +186,12 @@ def react_to_post():
             request.form.get("reaction"): request.form.get("url")
         }
 
-    requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
+    r = requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
 
-    return "OK"
+    if r.status_code != 201:
+        return "error"
+
+    return r.headers.get("Location", "")
 
 @client.route("/read", methods=["POST"])
 def mark_channel_as_read():
@@ -301,6 +316,24 @@ def preview_feed():
         channel_name=channel_name,
         channels=channel_req.json()["channels"]
     )
+
+@client.route("/media", methods=["POST"])
+def make_micropub_media_request():
+    auth_result = check_token(request.headers, session)
+
+    if auth_result == False:
+        return redirect("/login")
+
+    headers = {
+        "Authorization": "Bearer " + session["access_token"]
+    }
+
+    photo_r = requests.post("https://micropub.jamesg.blog/media", files=request.files, headers=headers)
+
+    if photo_r.status_code != 201:
+        return "error"
+
+    return jsonify({"result": photo_r.headers.get("Location", "")}), 200
 
 @client.route("/retrieve")
 def retrieve_new_entries():

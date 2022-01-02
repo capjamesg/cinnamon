@@ -553,6 +553,15 @@ details, summary {
 	width: 100%;
 	box-sizing: border-box;
 }
+.dragover, .data_message {
+	border: 3px solid darkblue;
+	background-color: lightblue;
+}
+.data_message {
+	padding: 10px;
+	border-radius: 10px;
+	text-align: center;
+}
 details {
 	margin-bottom: 20px;
 }

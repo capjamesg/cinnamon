@@ -127,18 +127,24 @@ function send_notification(notification_text) {
     }, 5000);
 }
 
-function post() {
+function post_note() {
     // send form-encoded response to micropub endpoint
-    var form = document.getElementById("post");
+    var form = document.getElementById("content");
     
-    fetch(form.action, {
+    fetch("/react?is_reply=note", {
         method: 'POST',
-        body: new FormData(form)
+        body: new URLSearchParams(
+            {
+                "h": "entry",
+                "content": form.value
+            }
+        )
     }).then(function(response) {
-        var location = response.headers.get('Location');
-        send_notification("Your post has been created at" + location + ".");
-    }).catch(function(response) {
-        send_notification("There was an error creating your post.");
+        if (response.ok) {
+            send_notification("<p>You post has been created.</p>");
+        } else {
+            send_notification("<p>There was an error sending your reply.</p>");
+        }
     });
 }
 

@@ -16,12 +16,10 @@
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
 <section class="feed flex_right_home">
     <ul id="feed_list">
-        <li>
-            <form method="POST" action="{{ session.get('micropub_url') }}" style="text-align: right;" id="post">
-                <textarea rows="8" id="post" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
-                <input id="h" name="h" value="entry" type="hidden">
-                <input type="submit" value="Post" id="post_button" style="width: 100px; text-align: center;" onclick="post()">
-            </form>
+        <li style="text-align: right;">
+            <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
+            <p id="data_message"></p>
+            <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
         </li>
     {% if results | length > 0 %}
     {% set count = namespace(value=0) %}
@@ -124,6 +122,89 @@
     </div>
 </section>
 <script>
+    var form = document.getElementById("content");
+
+    // draggable code derived from https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
+    ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        form.addEventListener(eventName, preventDefaults, false)
+    })
+
+    function preventDefaults (e) {
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+    form.addEventListener('dragover', handleDragOver) 
+
+    function handleDragOver(e) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        var data_message = document.getElementById("data_message");
+
+        data_message.innerHTML = "Drop an image into the box above to upload it to your site.";
+        data_message.className = "data_message";
+
+        form.after(data_message);
+
+        form.classList.add('dragover')
+    }
+
+    form.addEventListener('dragleave', handleDragLeave)
+    
+    function handleDragLeave(e) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        var data_message = document.getElementById("data_message");
+
+        data_message.innerHTML = "";
+        data_message.className = "";
+        
+        form.classList.remove('dragover')
+    }
+
+    form.addEventListener('drop', handleDrop, false)
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer
+        let files = dt.files
+
+        handleFiles(files)
+        handleDragLeave()
+    }
+
+    function handleFiles(files) {
+        ([...files]).forEach(uploadFile)
+    }
+
+    function uploadFile(file) {
+        let formData = new FormData()
+
+        formData.append('file', file)
+
+        fetch("/media", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(function(response) {
+            var uploaded_files = document.createElement("p");
+
+            uploaded_files.innerHTML = "Uploaded " + response["result"];
+            uploaded_files.style.backgroundColor = "lightgreen";
+            uploaded_files.style.padding = "5px";
+            uploaded_files.style.margin = "5px";
+            uploaded_files.style.borderRadius = "10px";
+            uploaded_files.style.textAlign = "center";
+
+            form.after(uploaded_files);
+
+            send_notification("<p>Your photo was successfully uploaded.</p>")
+        })
+        .catch(() => { send_notification("<p>Your photo could not be uploaded.</p>") })
+    }
+
     function get_reader_data() {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "/retrieve?last_id={{ last_id }}&channel={{ page_channel_uid }}");
