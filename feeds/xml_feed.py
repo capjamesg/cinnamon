@@ -168,7 +168,7 @@ def process_xml_feed(entry, feed, url):
     
     if entry.get("media_content") and len(entry.get("media_content")) > 0:
         for media in entry.get("media_content"):
-            if media.get("url"):
+            if media.get("url") != None:
                 if media.get("url").startswith("https://www.youtube.com") or media.get("url").startswith("http://www.youtube.com"):
                     new_url = media["url"].replace("/v/", "/embed/")
                     media["url"] = new_url

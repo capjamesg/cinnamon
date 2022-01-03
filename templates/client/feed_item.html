@@ -33,9 +33,9 @@
             <source src='{{ w["audio"][0]["url"] }}' type='audio/mpeg'>
         </audio>
     {% endif %}
-    {% if w.get("content") and w["content"].get("text") and show_all_content != True %}
-    {% set content = w["content"]["text"].split("\n")[:3] %}
-    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ "<br>".join(content) | safe }} {% if content | length == 75 %}...{% endif %}</span><span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
+    {% if w.get("content") and w["content"].get("html") and show_all_content != True %}
+    {% set content = w["content"]["html"].split(". ")[:3] %}
+    <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ ". ".join(content) | safe }} {% if content | length == 75 %}...{% endif %}</span><span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
     {% if content | length == 75 %}<p class="js"><a onclick="show_all('{{ w['_id'] }}')" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
     {% elif show_all_content == False %}
     <p><a href='{{ w["url"] }}'>Read the full post.</a></p>

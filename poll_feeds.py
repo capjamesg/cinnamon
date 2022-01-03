@@ -31,7 +31,7 @@ def validate_entry_count(entries, feed_url, feed_id):
     length = len(entries)
 
     if length < 3:
-        published = datetime.datetime.now().isoformat()
+        published = datetime.datetime.now().strftime("%Y%m%d")
 
         jf2 = {
             "type": "entry",
@@ -40,6 +40,7 @@ def validate_entry_count(entries, feed_url, feed_id):
                 "html": f"{feed_url} feed does not have any posts. Please check that the feed URL is working correctly.",
             },
             "published": published,
+            "title": f"{feed_url} feed does not have any posts",
             "url": "https://webmention.jamesg.blog",
             "wm-property": "article"
         }

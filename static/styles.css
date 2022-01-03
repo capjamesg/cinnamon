@@ -482,7 +482,7 @@ aside, .feed li, #settings, .bottom-navigation, .content_box, .main_content_box 
 	border: 1px solid lightgrey;
 	margin-bottom: 20px;
 	box-sizing: border-box;
-	width: 100%;
+	max-width: 100%;
 	display: block;
 }
 aside button {

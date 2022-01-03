@@ -17,16 +17,13 @@ def read_later(url):
     soup = BeautifulSoup(r.text, "lxml")
 
     if soup.find(".h-entry"):
-        content = soup.find(".h-entry").get_text()
+        content = soup.find(".h-entry").get_text(separator="\n")
     elif soup.find("article"):
-        content = soup.find("article").get_text()
+        content = soup.find("article").get_text(separator="\n")
     else:
-        content = soup.find("body").get_text()
+        content = ""
 
-    month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
-    day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
-    hour_minute_second = str(datetime.datetime.now().hour).zfill(2) + ":" + str(datetime.datetime.now().minute).zfill(2) + ":" + str(datetime.datetime.now().second).zfill(2)
-    published_date = f"{datetime.datetime.now().year}{month_with_padded_zero}{day_with_padded_zero}T{hour_minute_second}"
+    date = datetime.datetime.now().strftime("%Y%m%d")
 
     record = {
         "result": {
@@ -34,11 +31,10 @@ def read_later(url):
             "type": "summary",
             "content": {
                 "text": content,
-                "html": r.text
+                "html": content
             },
             "title": soup.title.text,
-            "published": published_date,
-
+            "published": date
         }
     }
 
@@ -67,17 +63,21 @@ def read_later(url):
         if len(all_images) > 0:
             record["photo"] = indieweb_utils.canonicalize_url(all_images[0]["src"], url.split("/")[2], all_images[0]["src"])
 
-
     database = sqlite3.connect("microsub.db")
 
     with database:
         cursor = database.cursor()
 
-        last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()[0]
+        last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
 
-        feed_id = cursor.execute("SELECT id FROM following WHERE channel = 'read-later';").fetchone()[0]
+        if last_id[0] != None:
+            last_id = last_id[0] + 1
+        else:
+            last_id = 0
 
         last_id += 1
+
+        feed_id = cursor.execute("SELECT id FROM following WHERE channel = 'read-later';").fetchone()[0]
 
         cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
             (
