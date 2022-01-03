@@ -4,11 +4,10 @@
     <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
     <h2>Settings</h2>
     <ul>
+      <li><a href="/feeds">Following</a></li>
       <li><a href="/channels">Channels</a></li>
-      <li><a href="/feeds">Feeds</a></li>
-      {% if session.get("micropub_url") %}
-        <li><a href="{{ session.get('micropub_url') }}">Micropub</a></li>
-      {% endif %}
+      <li><a href="/search">Search</a></li>
+      <li><a href="/explore">Explore</a></li>
       <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
       <li><a href="/logout">Logout</a></li>
     </ul>

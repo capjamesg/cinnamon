@@ -19,6 +19,10 @@
 
     <link rel="apple-touch-icon-precomposed" href="/favicon.ico">
 
+    <link rel="apple-touch-icon" sizes="196x196" href="/favicon.ico">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
     <!-- Twitter Card data -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Cinnamon">
@@ -75,9 +79,9 @@
     <main>
       <nav id="top_navigation">
         {% if session.get("me") %}
-        <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
+          <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
         {% else %}
-        <p><a href="/">Cinnamon</a></p>
+          <p><a href="/">Cinnamon</a></p>
         {% endif %}
         {% if session.get("me") %}
         <ul id="desktop_navigation">
@@ -89,8 +93,8 @@
           <li><a href="/logout">Logout</a></li>
         </ul>
         <ul id="mobile_navigation">
-          <li><a onclick="show_channels()">Channels</a></li>
-          <li><a onclick="show_settings()">Settings</a></li>
+          <li><a href="/channels">Channels</a></li>
+          <li><a onclick="show_settings()">Menu</a></li>
         </ul>
         {% else %}
         <ul>

@@ -485,6 +485,9 @@ aside, .feed li, #settings, .bottom-navigation, .content_box, .main_content_box 
 	max-width: 100%;
 	display: block;
 }
+#settings ul li {
+	padding-bottom: 30px;
+}
 aside button {
 	width: 100%;
 }
