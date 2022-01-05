@@ -17,7 +17,7 @@
     <ul id="feed_list">
         <li style="text-align: right;">
             <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
-            <p>(<span id="character_count">0</span>)</p>
+            <input type="file" id="post_image" style="display: none;"><label for="post_image" style="padding: 10px; float: left;">📷</label>(<span id="character_count">0</span>)
             <p id="data_message"></p>
             <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
         </li>
@@ -130,6 +130,13 @@
         character_count_element.innerHTML = form.value.length;
     }
 
+    var post_image = document.getElementById("post_image");
+
+    post_image.addEventListener("change", function() {
+        var file = this.files[0];
+        uploadFile(file);
+    });
+
     // draggable code derived from https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
     ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         form.addEventListener(eventName, preventDefaults, false)
@@ -198,11 +205,8 @@
             var uploaded_files = document.createElement("p");
 
             uploaded_files.innerHTML = "Uploaded " + response["result"];
-            uploaded_files.style.backgroundColor = "lightgreen";
-            uploaded_files.style.padding = "5px";
-            uploaded_files.style.margin = "5px";
-            uploaded_files.style.borderRadius = "10px";
-            uploaded_files.style.textAlign = "center";
+            uploaded_files.classList.add("success");
+            form.value += "<img class='u-photo' src='" + response["url"] + "' alt='' />";
 
             form.after(uploaded_files);
 
@@ -227,10 +231,7 @@
 
                     new_feed_list_item.setAttribute("onclick", "location.reload()");
                     new_feed_list_item.setAttribute("id", "feed_notification");
-                    new_feed_list_item.style.cursor = "pointer";
-                    new_feed_list_item.style.background = "lightgreen";
-                    new_feed_list_item.style.textAlign = "center";
-                    new_feed_list_item.style.fontWeight = "bold";
+                    new_feed_list_item.classList.add("success");
 
                     new_feed_list_item.innerHTML = "There are new posts in this channel. Click here to refresh and see the new posts.";
 

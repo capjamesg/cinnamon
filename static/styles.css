@@ -384,7 +384,6 @@ input[type="submit"] {
 	}
 	nav {
 		background-color: white;
-		border-radius: 10px;
 		padding: 10px;
 		border: 1px solid lightgray;
 	}
@@ -478,12 +477,17 @@ aside, .feed li, #settings, .bottom-navigation, .content_box, .main_content_box 
 	padding: 10px;
 	background-color: white;
 	box-shadow: 2px 2px lightblue;
-	margin-right: 10px;
 	border: 1px solid lightgrey;
 	margin-bottom: 20px;
 	box-sizing: border-box;
 	max-width: 100%;
 	display: block;
+}
+.success {
+	border: 1px solid lightgreen;
+	background: white;
+	text-align: center;
+	padding: 10px;
 }
 #settings ul li {
 	padding-bottom: 30px;
