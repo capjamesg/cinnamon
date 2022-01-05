@@ -330,7 +330,11 @@ def make_micropub_media_request():
         "Authorization": "Bearer " + session["access_token"]
     }
 
-    photo_r = requests.post("https://micropub.jamesg.blog/media", files=request.files, headers=headers)
+    file = request.files["file"]
+
+    photo_r = requests.post("https://micropub.jamesg.blog/media",
+        files={"file": (file.filename, file.read(), "image/jpeg")},
+        headers=headers)
 
     if photo_r.status_code != 201:
         return "error"

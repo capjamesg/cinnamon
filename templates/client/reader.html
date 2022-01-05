@@ -206,7 +206,7 @@
 
             uploaded_files.innerHTML = "Uploaded " + response["result"];
             uploaded_files.classList.add("success");
-            form.value += "<img class='u-photo' src='" + response["url"] + "' alt='' />";
+            form.value += "<img class='u-photo' src='" + response["result"] + "' alt='' />";
 
             form.after(uploaded_files);
 
