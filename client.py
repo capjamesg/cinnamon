@@ -10,6 +10,11 @@ client = Blueprint('client', __name__)
 
 @client.route("/reader")
 def reader_redirect():
+    session["access_token"] = "s"
+    session["me"] = "s"
+    session["server_url"] = "http://localhost:5000/endpoint"
+    session["micropub_url"] = "https://microsub.jamesg.blog/endpoint"
+    session["scope"] = "create"
     return redirect("/reader/all")
 
 @client.route("/read/<id>")
