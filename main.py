@@ -1,12 +1,25 @@
+import sqlite3
+
+import requests
 from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, abort
 from check_token import verify as check_token
-import datetime
-import sqlite3
-import requests
 from actions import *
-from config import *
 
 main = Blueprint('main', __name__, template_folder='templates')
+
+def microsub_api_request(post_data, success_message):
+    request = requests.post(
+        session.get("server_url"),
+        data=post_data,
+        headers={
+            'Authorization': 'Bearer ' + session["access_token"]
+        }
+    )
+
+    if request.status_code == 200:
+        flash(success_message)
+    else:
+        flash(request.json()["error"])
 
 @main.route("/")
 def index():
@@ -27,12 +40,12 @@ def home():
         action = request.form.get("action")
         method = request.form.get("method")
         channel = request.form.get("channel")
-        id = request.form.get("id")
+        identifier = request.form.get("id")
     else:
         action = request.args.get("action")
         method = request.args.get("method")
         channel = request.args.get("channel")
-        id = request.args.get("id")
+        identifier = request.args.get("id")
 
     is_authenticated = check_token(request.headers, session)
 
@@ -42,9 +55,9 @@ def home():
     if not action:
         return jsonify({"error": "No action specified."}), 400
     
-    if action == "timeline" and request.method == "GET" and not id:
+    if action == "timeline" and request.method == "GET" and not identifier:
         return get_timeline()
-    elif action == "timeline" and request.method == "GET" and id:
+    elif action == "timeline" and request.method == "GET" and identifier:
         return get_post()
     elif action == "timeline" and request.method == "POST" and method == "remove":
         return remove_entry()
@@ -77,20 +90,21 @@ def home():
     elif action == "channels" and request.method == "POST":
         if request.form.get("name") and request.form.get("channel"):
             return update_channel()
-        elif request.form.get("channels") and method == "order":
+
+        if request.form.get("channels") and method == "order":
             return reorder_channels()
-        elif method == "delete":
+        if method == "delete":
             return delete_channel()
-        else:
-            return create_channel()
-    else:
-        return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
+
+        return create_channel()
+    
+    return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
 
 @main.route("/channels")
 def dashboard():
     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     connection = sqlite3.connect("microsub.db")
@@ -102,43 +116,11 @@ def dashboard():
 
         return render_template("server/dashboard.html", title="Cinnamon", channels=all_channels)
 
-# @main.route("/feeds", methods=["GET", "POST"])
-# def feed_list():
-#     auth_result = check_token(request.headers, session)
-
-#     if auth_result == False:
-#         return redirect("/login")
-
-#     if request.method == "POST":
-#         req = {
-#             "action": "follow",
-#             "channel": request.form.get("channel"),
-#             "url": request.form.get("url")
-#         }
-
-#         r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
-
-#         if r.status_code == 200:
-#             flash(f"You are now following {request.form.get('url')}")
-#         else:
-#             flash(r.json()["error"])
-
-#         return redirect("/reader/all")
-
-#     connection = sqlite3.connect("microsub.db")
-
-#     with connection:
-#         cursor = connection.cursor()
-
-#         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
-
-#         return render_template("server/feed_management.html", title="Feed Management | Cinnamon", channels=all_channels)
-
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     if request.form.get("channel"):
@@ -148,12 +130,10 @@ def reorder_channels_view():
             "channels": request.form.getlist("channel")
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
-
-        if r.status_code == 200:
-            flash("Your channels have been reordered.")
-        else:
-            flash(r.json()["error"])
+        microsub_api_request(
+            req,
+            "Your channels have been reordered."
+        )
 
         return redirect("/channels")
     else:
@@ -163,7 +143,7 @@ def reorder_channels_view():
 def create_channel_view():
     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     if request.form.get("name"):
@@ -172,22 +152,18 @@ def create_channel_view():
             "name": request.form.get("name")
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={'Authorization': 'Bearer ' + session["access_token"]})
-
-        if r.status_code == 200:
-            flash(f"You have created a new channel called {request.form.get('name')}.")
-        else:
-            flash(r.json()["error"])
-
-        return redirect("/channels")
-    else:
-        return redirect("/channels")
+        microsub_api_request(
+            req,
+            f"You have created a new channel called {request.form.get('name')}."
+        )
+    
+    return redirect("/channels")
 
 @main.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     if request.form.get("channel"):
@@ -197,22 +173,20 @@ def delete_channel_view():
             "method": "delete"
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session["access_token"]})
-
-        if r.status_code == 200:
-            flash(f"You have deleted the {r.json()['channel']} channel.")
-        else:
-            flash(r.json()["error"])
+        microsub_api_request(
+            req,
+            f"The specified channel has been deleted."
+        )
 
         return redirect("/channels")
-    else:
-        return redirect("/channels")
+    
+    return redirect("/channels")
 
 @main.route("/unfollow", methods=["POST"])
 def unfollow_view():
     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     if request.form.get("channel") and request.form.get("url"):
@@ -222,24 +196,14 @@ def unfollow_view():
             "url": request.form.get("url")
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
+        microsub_api_request(
+            req,
+            f"Your unfollow was successful."
+        )
+    
+    return redirect("/feeds")
 
-        if r.status_code == 200:
-            return jsonify(r.json()), 200
-        else:
-            return jsonify(r.json()), 400
-    else:
-        return redirect("/feeds")
-        
-@main.route("/discover-feed")
-def discover_feed():
-    auth_result = check_token(request.headers, session)
-
-    if auth_result == False:
-        return redirect("/login")
-
-    url = request.args.get("subscribe-to")
-
+def discover_web_page_feeds(url):
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
     elif url.startswith("//"):
@@ -250,8 +214,7 @@ def discover_feed():
 
         web_page = web_page.text
     except:
-        flash("No feed could be found attached to the web page you submitted.")
-        return redirect("/feeds")
+        return None
 
     soup = BeautifulSoup(web_page, "lxml")
 
@@ -280,6 +243,19 @@ def discover_feed():
         elif f.startswith("//"):
             feeds[feed] = "https:" + f
 
+    return feeds
+        
+@main.route("/discover-feed")
+def discover_feed():
+    auth_result = check_token(request.headers, session)
+
+    if not auth_result:
+        return redirect("/login")
+
+    url = request.args.get("subscribe-to")
+
+    feeds = indieweb_utils.discover_web_page_feeds(url)
+
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
         return redirect("/feeds")
@@ -290,7 +266,7 @@ def discover_feed():
 def get_all_feeds():
     auth_result = check_token(request.headers, session)
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     connection = sqlite3.connect("microsub.db")
@@ -304,14 +280,12 @@ def get_all_feeds():
             "name": request.form.get("name"),
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
+        microsub_api_request(
+            req,
+            f"The channel was successfully renamed to {request.form.get('name')}"
+        )
 
-        if r.status_code == 200:
-            flash(f"The channel was successfully renamed to {request.form.get('name')}")
-        else:
-            flash("Something went wrong. Please try again.")
-
-        return redirect(f"/reader/{id}")
+        return redirect(f"/reader/all")
 
     with connection:
         cursor = connection.cursor()
@@ -321,19 +295,19 @@ def get_all_feeds():
         else:
             feeds = cursor.execute("SELECT * FROM following").fetchall()
 
-        count = len(feeds)
+    count = len(feeds)
 
-        return render_template("server/modify_channel.html",
-            title=f"People You Follow | Cinnamon",
-            feeds=feeds,
-            count=count
-        )
+    return render_template("server/modify_channel.html",
+        title=f"People You Follow | Cinnamon",
+        feeds=feeds,
+        count=count
+    )
 
 @main.route("/mute", methods=["POST"])
 def mute_view():
     auth_result = check_token(session.get("access_token"))
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     action = request.form.get("action")
@@ -362,16 +336,14 @@ def mute_view():
                 flash(f"You have unmuted {r.json()['url']}.")
         else:
             flash(r.json()["error"])
-
-        return redirect(f"/channel/{request.form.get('channel')}")
-    else:
-        return redirect(f"/channel/{request.form.get('channel')}")
+    
+    return redirect(f"/channel/{request.form.get('channel')}")
 
 @main.route("/block", methods=["POST"])
 def block_view():
     auth_result = check_token(session.get("access_token"))
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     action = request.form.get("action")
@@ -380,7 +352,7 @@ def block_view():
         flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
         return redirect(f"/reader/{request.form.get('channel')}")
 
-    if action != "block" and action != "unblock":
+    if action not in ("block", "unblock"):
         flash("Invalid action.")
         return redirect(f"/reader/{request.form.get('channel')}")
 
@@ -400,10 +372,8 @@ def block_view():
                 flash(f"You have unblocked {r.json()['url']}.")
         else:
             flash(r.json()["error"])
-
-        return redirect(f"/channel/{request.form.get('channel')}")
-    else:
-        return redirect(f"/channel/{request.form.get('channel')}")
+    
+    return redirect(f"/channel/{request.form.get('channel')}")
 
 @main.route("/websub/<uid>", methods=["POST"])
 def save_new_post_from_websub(uid):
@@ -517,7 +487,7 @@ def save_new_post_from_websub(uid):
 def verify_websub_subscription():
     auth_result = check_token(session.get("access_token"))
 
-    if auth_result == False:
+    if not auth_result:
         return redirect("/login")
 
     if not request.args.get("hub.mode"):
@@ -531,7 +501,13 @@ def verify_websub_subscription():
 
         with connection:
             cursor = connection.cursor()
-            check_subscription = cursor.execute("SELECT * FROM websub_subscriptions WHERE url = ? AND random_string = ?", (request.args.get("hub.topic"), request.args.get("hub.challenge"), )).fetchone()
+            check_subscription = cursor.execute(
+                "SELECT * FROM websub_subscriptions WHERE url = ? AND random_string = ?",
+                    (
+                        request.args.get("hub.topic"),
+                        request.args.get("hub.challenge"),
+                    )
+            ).fetchone()
 
             if not check_subscription:
                 return jsonify({"error": "Subscription does not exist."}), 400
@@ -539,8 +515,8 @@ def verify_websub_subscription():
             cursor.execute("UPDATE websub_subscriptions SET approved = ? WHERE url = ?", (1, request.args.get("hub.topic"), ))
 
         return request.args.get("hub.challenge"), 200
-    else:
-        return jsonify({"error": "No challenge found."}), 400
+    
+    return jsonify({"error": "No challenge found."}), 400
 
 if __name__ == "__main__":
     main.run()

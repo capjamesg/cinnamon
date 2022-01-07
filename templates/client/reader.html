@@ -17,7 +17,7 @@
     <ul id="feed_list">
         <li style="text-align: right;">
             <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
-            <input type="file" id="post_image" style="display: none;"><label for="post_image" style="padding: 10px; float: left;">📷</label>(<span id="character_count">0</span>)
+            <input type="file" id="post_image" style="display: none;"><label for="post_image" style="padding: 10px; float: left;">📷</label><span onclick="add_rsvp_text()">📅</span>(<span id="character_count">0</span>)
             <p id="data_message"></p>
             <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
         </li>
@@ -244,6 +244,10 @@
     }
     // make reader request every minute
     setInterval(get_reader_data, 60000);
+
+    function add_rsvp_text() {
+        form.value += "I am RSVP'ing <span class='p-rsvp'>yes</span> to <a href='' class='in-reply-to'>Event</a>.";
+    }
 </script>
 
 {% endblock %}

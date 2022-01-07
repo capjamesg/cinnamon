@@ -140,40 +140,6 @@ def mark_as_read():
 
             return {"type": "mark_as_read"}
 
-def discover_urls():
-    url = request.args.get("url")
-
-    r = requests.get(url)
-
-    link_header = r.headers.get("Link")
-
-    endpoints = {}
-
-    look_for = ["authorization_endpoint", "token_endpoint", "microsub"]
-
-    if link_header:
-        for l in look_for:
-            parsed_links = requests.utils.parse_header_links(link_header.rstrip('>').replace('>,<', ',<'))
-
-            for link in parsed_links:
-                if l in link["rel"]:
-                    endpoints[l] = link["url"]
-                    break
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    # look for endpoints on url if none are available
-
-    for item in soup():
-        for l in look_for:
-            if l not in endpoints.keys():
-                if item.name == "a" and item.get("rel") and item["rel"][0] == l:
-                    endpoints[l] = item.get("href")
-                    break
-                elif item.name == "link" and item.get("rel") and item["rel"][0] == l:
-                    endpoints[l] = item.get("href")
-                    break
-
 def search_for_content():
     connection = sqlite3.connect("microsub.db")
 
@@ -199,7 +165,7 @@ def preview():
     except:
         return jsonify({"error": "invalid url"}), 400
 
-    soup = BeautifulSoup(r.text, "html.parser")
+    soup = BeautifulSoup(r.text, "lxml")
 
     if r.headers.get('content-type'):
         content_type = r.headers['content-type']
@@ -259,7 +225,7 @@ def preview():
 
     url_to_check = url_protocol + "//" + url_domain
 
-    soup = BeautifulSoup(requests.get(url_to_check).text, "html.parser")
+    soup = BeautifulSoup(requests.get(url_to_check).text, "lxml")
 
     favicon = soup.find("link", rel="shortcut icon")
 
