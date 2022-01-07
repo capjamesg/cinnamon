@@ -28,6 +28,28 @@ This project is in active development. The entire Micropub specification is not 
 
 ## Getting Started
 
+You can install and configure this Microsub server using Docker or manually.
+
+## Docker Setup
+
+To set up this project with Docker, first install Docker on your local machine.
+
+Next, run the following command:
+
+    docker build -t microsub .
+
+This will build the microsub image using the Dockerfile in the root directory of this project.
+
+The Dockerfile automates the project setup process.
+
+Next, run:
+
+    docker run microsub
+
+This will run the microsub server on port 5000.
+
+## Mnaual Setup
+
 To use this Microsub server for yourself, please run the following command:
 
     pip install -r requirements.txt
@@ -75,4 +97,4 @@ This project is licensed under the [MIT license](LICENSE).
 
 ## Maintainers
 
-- capjamesg
+- [capjamesg](https://github.com/capjamesg)
