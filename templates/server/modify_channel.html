@@ -3,6 +3,12 @@
 <section class="content_box">
     <h1>People You Follow</h1>
     <p>You follow {{ count }} people.</p>
+    <form action="/search" method="get">
+        <input type="text" name="q" id="search" placeholder="Search for a feed..." value="{{ q }}">
+        <input type="submit" value="Search">
+    </form>
+    <ul id="results" class="feed">
+    </ul>
     {% if feeds %}
         <ul>
             {% for feed in feeds %}
@@ -23,7 +29,7 @@
                     <form action="/mute" method="POST"><input type="hidden" name="channel" value="{{ feed[1] }}">
                         <input type="hidden" name="url" value="{{ feed[1] }}">
                         <input type="hidden" name="action" value="mute">
-                        <input type="submit" value="Mute">
+                        <input type="submit" value="Mute" class="reaction">
                     </form>
                     {% elif feed[6] != 0 and "block" in session.get("scope") %}
                     <form action="/mute" method="POST">

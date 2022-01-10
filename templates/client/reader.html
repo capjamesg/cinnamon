@@ -4,12 +4,12 @@
     <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
     <h2>Settings</h2>
     <ul>
-      <li><a href="/feeds">Following</a></li>
-      <li><a href="/channels">Channels</a></li>
-      <li><a href="/search">Search</a></li>
-      <li><a href="/explore">Explore</a></li>
-      <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
-      <li><a href="/logout">Logout</a></li>
+      <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
+      <li><a href="/channels">📚 Channels</a></li>
+      <li><a href="/search">🔎 Search</a></li>
+      <li><a href="/explore">💡 Explore</a></li>
+      <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+      <li><a href="/logout">🔒 Logout</a></li>
     </ul>
   </div>
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
@@ -17,7 +17,13 @@
     <ul id="feed_list">
         <li style="text-align: right;">
             <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
-            <input type="file" id="post_image" style="display: none;"><label for="post_image" style="padding: 10px; float: left;">📷</label><span onclick="add_rsvp_text()">📅</span>(<span id="character_count">0</span>)
+            <p class="reaction_set" style="float: left;">
+                <input type="file" id="post_image" style="display: none;">
+                <label for="post_image" class="reaction">📷</label>
+                <span onclick="add_rsvp_text()" class="reaction">📅</span>
+                <span onclick="add_review_text()" class="reaction">⭐</span>
+            </p>
+            (<span id="character_count">0</span>)
             <p id="data_message"></p>
             <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
         </li>
@@ -247,6 +253,10 @@
 
     function add_rsvp_text() {
         form.value += "I am RSVP'ing <span class='p-rsvp'>yes</span> to <a href='' class='in-reply-to'>Event</a>.";
+    }
+
+    function add_review_text() {
+        form.value += "Review of <span class='p-name'>Review</span>. <span class='p-rating'>5</span>/5.";
     }
 </script>
 

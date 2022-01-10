@@ -158,13 +158,35 @@ def react_to_post():
     is_reply = request.args.get("is_reply")
 
     if is_reply == "true":
-        request_to_make = {
-            "h": "entry",
-            "in-reply-to": [request.form.get("in-reply-to")],
-            "properties": {
-                "content": [request.form.get("content")]
+        content = request.form.get("content")
+        parsed = BeautifulSoup(content, "lxml")
+
+        if "p-rating" in content:
+            request_to_make = {
+                "h": "review",
+                "properties": {
+                    "content": [content]
+                }
             }
-        }
+        else:
+            request_to_make = {
+                "h": "entry",
+                "in-reply-to": [request.form.get("in-reply-to")],
+                "properties": {
+                    "content": [content]
+                }
+            }
+
+        name = parsed.find("span", {"class": "p-name"})
+
+        if name:
+            request_to_make["properties"]["name"] = name.text
+
+        rating = parsed.find("span", {"class": "p-rating"})
+
+        if rating:
+            request_to_make["properties"]["rating"] = rating.text
+
     elif is_reply == "note":
         # get all hashtags from content
 
