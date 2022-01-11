@@ -89,15 +89,15 @@
         {% endif %}
         {% if session.get("me") %}
         <ul id="desktop_navigation">
-          <li><a href="/feeds">Following</a></li>
-          <li><a href="/channels">Channels</a></li>
-          <li><a href="/search">Search</a></li>
-          <li><a href="/explore">Explore</a></li>
-          <li><a href="/settings">Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
-          <li><a href="/logout">Logout</a></li>
+          <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
+          <li><a href="/channels">📚 Channels</a></li>
+          <li><a href="/search">🔎 Search</a></li>
+          <li><a href="/explore">💡 Explore</a></li>
+          <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+          <li><a href="/logout">🔒 Logout</a></li>
         </ul>
         <ul id="mobile_navigation">
-          <li><a href="/channels">Channels</a></li>
+          <li><a href="/channels">📚 Channels</a></li>
           <li><a onclick="show_settings()">Menu</a></li>
         </ul>
         {% else %}
@@ -142,6 +142,18 @@
         }
       </script>
       <div id="main">
+        <div id="settings" style="display: none;">
+          <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
+          <h2>Settings</h2>
+          <ul>
+            <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
+            <li><a href="/channels">📚 Channels</a></li>
+            <li><a href="/search">🔎 Search</a></li>
+            <li><a href="/explore">💡 Explore</a></li>
+            <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+            <li><a href="/logout">🔒 Logout</a></li>
+          </ul>
+        </div>
         {% block content %}
         {% endblock %}
       </div>
