@@ -250,8 +250,10 @@ def mark_channel_as_read():
 
     return redirect(f"/reader/{channel}")
 
-@client.route("/reader/<channel>/delete/<entry_id>")
-def delete_entry_in_channel(channel, entry_id):
+@client.route("/reader/<channel>/delete")
+def delete_entry_in_channel(channel):
+    entry_id = request.args.get("entry_id")
+
     auth_result = check_token(request.headers, session)
 
     if auth_result == False:
@@ -270,7 +272,11 @@ def delete_entry_in_channel(channel, entry_id):
 
     r = requests.post(session.get("server_url"), data=data, headers=headers)
 
-    flash("The entry was successfully deleted.")
+    if r.status_code == 200:
+        flash("The entry was successfully deleted.")
+    else:
+        flash("There was an error deleting the entry.")
+
     return redirect(f"/reader/{channel}")
 
 @client.route("/preview")
@@ -354,7 +360,7 @@ def make_micropub_media_request():
 
     file = request.files["file"]
 
-    photo_r = requests.post("https://micropub.jamesg.blog/media",
+    photo_r = requests.post(session.get("media_endpoint"),
         files={"file": (file.filename, file.read(), "image/jpeg")},
         headers=headers)
 

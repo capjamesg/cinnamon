@@ -8,10 +8,10 @@
         <p>Your Microsub server is located at: <a href='{{ session.get("server_url") }}'>{{ session.get("server_url") }}</a></p>
         <p>Your access token is:</p>
         <code>{{ session.get("access_token") }}</code>
-        {% if session.get("scopes") and session.get("scopes").split(" ") | length > 0 %}
+        {% if session.get("scope") and session.get("scope").split(" ") | length > 0 %}
             <p>The following scopes have been approved for your account:</p>
             <ul>
-                {% for scope in session.get("scopes").split(" ") %}
+                {% for scope in session.get("scope").split(" ") %}
                     <li>{{ scope }}</li>
                 {% endfor %}
             </ul>

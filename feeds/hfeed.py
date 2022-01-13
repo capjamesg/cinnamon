@@ -11,7 +11,10 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         "url": indieweb_utils.canonicalize_url(child["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
     }
 
-    jf2["type"] = indieweb_utils.get_post_type(child)
+    if child["properties"].get("content"):
+        jf2["type"] = indieweb_utils.get_post_type(child)
+    else:
+        jf2["type"] = "article"
 
     if hcard:
         jf2["author"] = {
@@ -22,7 +25,7 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         
         # if hcard[0]["properties"].get("photo"):
         #     jf2["photo"] = indieweb_utils.canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
-    elif child["properties"].get("author"):
+    elif child["properties"].get("author") is not None and isinstance(child["properties"].get("author"), dict):
         if type(child["properties"].get("author")[0]["properties"]) == str:
             h_card = [{"properties": {"name": child["properties"].get("author")[0]}}]
         elif child["properties"].get("author")[0]["properties"].get("url"):
@@ -30,7 +33,7 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         else:
             h_card = []
 
-        if len(h_card) > 0 and h_card != None:
+        if h_card and len(h_card) > 0:
             jf2["author"] = {
                 "type": "card",
                 "name": h_card["properties"]["name"][0],
@@ -78,6 +81,12 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         jf2["content"] = {
             "text": BeautifulSoup(child["properties"].get("summary")[0], "lxml").get_text(separator="\n"),
             "html": child["properties"].get("summary")[0]
+        }
+    # this is non standard but supported by jvt.me, whose bookmarks I would like to see properly in my reader
+    elif child["properties"].get("bridgy-twitter-content"):
+        jf2["content"] = {
+            "text": BeautifulSoup(child["properties"].get("bridgy-twitter-content")[0], "lxml").get_text(separator="\n"),
+            "html": child["properties"].get("bridgy-twitter-content")[0]
         }
 
     wm_properties = ["in-reply-to", "like-of", "bookmark-of", "repost-of"]

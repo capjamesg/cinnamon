@@ -27,7 +27,7 @@ def process_json_feed(item, feed):
                 item.get("url").split("/")[2],
                 feed.get("feed_url")
             )
-    elif item.get("author") != None:
+    elif item.get("author") != None and item["author"].get("url"):
         result["author"] = {
             "type": "card",
             "name": item.get("author").get("name"),
@@ -81,9 +81,11 @@ def process_json_feed(item, feed):
 
     result["published"] = date
 
+    parsed_html = BeautifulSoup(item.get("content_html"), "lxml")
+
     if item.get("content_html"):
         result["content"] = {}
-        result["content"]["text"] = BeautifulSoup(item.get("content_html"), "lxml").get_text(separator="\n")
+        result["content"]["text"] = parsed_html.get_text(separator="\n")
         result["content"]["html"] = item.get("content_html")
 
     if item.get("title"):

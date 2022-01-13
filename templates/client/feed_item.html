@@ -5,7 +5,7 @@
     {% if w.get("photo") and w.get("video") and (w["video"][0]["url"].startswith("https://youtube.com") or w["video"][0]["url"].startswith("https://www.youtube.com")) %}
         <a href="{{ w["video"][0]["url"] }}" class="embedded_video" onclick="show_video('{{ w["video"][0]["url"] }}', '{{ w['_id'] }}');" id="{{ w['_id'] }}"><img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' /></a>
         <p>Click the image above to show the video.</p>
-    {% elif w.get("photo") %}
+    {% elif w.get("photo") and w.get("content") and "img" not in w.get("content").get("html", "") %}
         <img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' />
     {% endif %}
     {% if w.get("author") %}
@@ -24,7 +24,11 @@
     {% elif w.get("published") %}
     <p>Published on {{ w["published"] | strftime }}.</p>
     {% endif %}
-    {% if w.get("video") and (not w["video"][0]["url"].startswith("https://youtube.com") and not w["video"][0]["url"].startswith("https://www.youtube.com")) %}
+    {% if w.get("video")
+        and (not w["video"][0]["url"].startswith("https://youtube.com")
+        and not w["video"][0]["url"].startswith("https://www.youtube.com"))
+        and w.get("content")
+        and "video" not in w.get("content").get("html", "") %}
         <video controls>
             <source src='{{ w["video"][0]["url"] }}' type='video/mp4'>
         </video>
@@ -50,7 +54,7 @@
             <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction">🔖</a>
             <a onclick="event.preventDefault(); toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">💬</a>
         {% endif %}
-        <a href="/reader/{{ page_channel_uid }}/delete/{{ w['_id'] }}" class="reaction">🗑️</a>
+        <a href="/reader/{{ page_channel_uid }}/delete?entry_id={{ w['_id'] }}" class="reaction">🗑️</a>
         {% if show_all_content != True and not w['_id'].startswith("http") %}
             <a href="/read/{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
         {% elif show_all_content != True and w['_id'].startswith("http") %}

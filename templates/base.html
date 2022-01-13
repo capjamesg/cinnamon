@@ -83,7 +83,11 @@
     <main>
       <nav id="top_navigation">
         {% if session.get("me") %}
-          <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
+          {% if channel_name %}
+            <p><a href="/reader/all" id="page_title">Cinnamon</a> (Viewing {{ channel_name }} Channel)</p>
+          {% else %}
+            <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
+          {% endif %}
         {% else %}
           <p><a href="/">Cinnamon</a></p>
         {% endif %}
@@ -142,18 +146,20 @@
         }
       </script>
       <div id="main">
-        <div id="settings" style="display: none;">
-          <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
-          <h2>Settings</h2>
-          <ul>
-            <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
-            <li><a href="/channels">📚 Channels</a></li>
-            <li><a href="/search">🔎 Search</a></li>
-            <li><a href="/explore">💡 Explore</a></li>
-            <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
-            <li><a href="/logout">🔒 Logout</a></li>
-          </ul>
-        </div>
+        {% if session.get("me") %}
+          <div id="settings" style="display: none;">
+            <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
+            <h2>Settings</h2>
+            <ul>
+              <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
+              <li><a href="/channels">📚 Channels</a></li>
+              <li><a href="/search">🔎 Search</a></li>
+              <li><a href="/explore">💡 Explore</a></li>
+              <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+              <li><a href="/logout">🔒 Logout</a></li>
+            </ul>
+          </div>
+        {% endif %}
         {% block content %}
         {% endblock %}
       </div>

@@ -10,10 +10,10 @@
         <a href="/reader/{{ channels[i][1] }}">{{ channels[i][0] }}</a>
         <div style="float: right; position: relative;">
         {% if i != 0 %}
-        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i-1][1] }}"><input type="submit" value="⬆️" aria-labelledby="Move Up"></form>
+        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i-1][1] }}"><input type="submit" value="⬆️" class="reaction" aria-labelledby="Move Up"></form>
         {% endif %}
         {% if i < channels | length - 1 %}
-        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i+1][1] }}"><input type="submit" value="⬇️" aria-labelledby="Move Down"></form>
+        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i+1][1] }}"><input type="submit" value="⬆️" class="reaction" value="⬇️" aria-labelledby="Move Down"></form>
         {% endif %}
         </div>
       </li>

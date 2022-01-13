@@ -204,6 +204,11 @@
 
             form.after(uploaded_files);
 
+            // after 10 seconds, remove the success message
+            setTimeout(function() {
+                uploaded_files.remove();
+            }, 10000);
+
             send_notification("<p>Your photo was successfully uploaded.</p>")
         })
         .catch(() => { send_notification("<p>Your photo could not be uploaded.</p>") })

@@ -532,20 +532,22 @@ def unmute():
 def remove_entry():
     connection = sqlite3.connect("microsub.db")
 
-    if request.args.getlist("entry[]"):
-        for entry in request.args.getlist("entry[]"):
+    if request.form.getlist("entry[]"):
+        for entry in request.form.getlist("entry[]"):
+            print(entry)
             with connection:
                 cursor = connection.cursor()
-                cursor.execute("UPDATE timeline SET hidden = 1 WHERE channel = ? AND uid = ?", (request.form.get("channel"), entry ))
+                cursor.execute("UPDATE timeline SET hidden = 1 WHERE uid = ?", (entry, ))
 
-                return {"type": "remove_entry"}
+        return {"type": "remove_entry"}
+
     else:
         with connection:
             cursor = connection.cursor()
 
-            cursor.execute("UPDATE timeline SET hidden = 1 WHERE channel = ? AND uid = ?", (request.form.get("channel"), request.form.get("entry") ))
+            cursor.execute("UPDATE timeline SET hidden = 1 WHERE uid = ?", (request.form.get("entry"), ))
 
-            return {"type": "remove_entry"}
+        return {"type": "remove_entry"}
 
 def reorder_channels():
     connection = sqlite3.connect("microsub.db")

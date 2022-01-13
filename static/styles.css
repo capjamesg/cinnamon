@@ -454,6 +454,7 @@ ol {
 	display: inline-block;
 	border-radius: 10px;
 	border: 1px solid lightgrey;
+	background-color: white;
 }
 .notification {
 	padding: 15px;

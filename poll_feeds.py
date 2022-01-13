@@ -220,10 +220,11 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
             if feed_icon:
                 feed_icon = feed_icon[0]
+            feed = [item for item in feed if item["type"] == ["h-entry"]]
         else:
             # get all non h-card items
             # this will let the program parse non h-entry feeds such as h-event feeds
-            feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] != 'h-card']
+            feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] != ['h-card']]
 
             if len(feed) == 0:
                 return None
@@ -232,7 +233,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
         validate_entry_count(feed, url, feed_id)
 
-        for child in feed[:5]:
+        for child in feed[:10]:
             result = hfeed.process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title)
 
             ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
@@ -277,7 +278,7 @@ def poll_feeds():
             channel_uids = []
             tasks = []
 
-            # subscriptions = [["https://calumryan.com/feeds/atom", "", "", ""]]
+            subscriptions = [["https://jvt.me", "", "", ""]]
 
             for s in subscriptions:
                 if s[0] != None:
