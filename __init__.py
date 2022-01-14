@@ -1,5 +1,6 @@
 from flask import Flask, render_template, send_from_directory
 from dateutil import parser
+from datetime import timedelta
 from config import SENTRY_DSN, SENTRY_SERVER_NAME
 import os
 
@@ -24,6 +25,9 @@ def create_app():
 
     # read config.py file
     app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
+
+    # set maximum lifetime for session
+    app.permanent_session_lifetime = timedelta(days=120)
 
     # blueprint for non-auth parts of app
     from main import main as main_blueprint

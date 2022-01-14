@@ -38,6 +38,8 @@ def indieauth_callback_handler_view():
     session["access_token"] = response.get("access_token")
     session["scope"] = response.get("scope")
 
+    session.permanent = True
+
     return redirect("/")
 
 @auth.route("/logout")

@@ -192,7 +192,7 @@ def react_to_post():
 
         content = request.form.get("content")
 
-        content += '<a href="https://brid.gy/publish/twitter"></a>'
+        content += '<a href="https://brid.gy/publish/twitter?bridgy_omit_link=true"></a>'
 
         hashtags = re.findall(r"#(\w+)", content)
         hashtags.append("Note")
@@ -360,7 +360,7 @@ def make_micropub_media_request():
 
     file = request.files["file"]
 
-    photo_r = requests.post(session.get("media_endpoint"),
+    photo_r = requests.post(MEDIA_ENDPOINT,
         files={"file": (file.filename, file.read(), "image/jpeg")},
         headers=headers)
 
