@@ -65,6 +65,8 @@ def home():
         return mark_as_read()
     elif action == "preview" and request.method == "POST":
         return preview()
+    elif action == "react" and request.method == "POST":
+        return react()
     elif action == "search" and not channel:
         return search_for_feeds()
     elif action == "search" and channel:

@@ -103,7 +103,8 @@ function submit_micropub(id, url) {
         body: new URLSearchParams({
             "h": "entry",
             "in-reply-to": url,
-            "content": form.value
+            "content": form.value,
+            "uid": id
         })
     }).then(function(response) {
         if (response.ok) {
@@ -155,7 +156,8 @@ function send_reaction(reaction, reaction_name, post_url, post_id) {
         body: new URLSearchParams({
             "h": "entry",
             "reaction": reaction,
-            "url": post_url
+            "url": post_url,
+            "uid": post_id
         })
     }).then(function(response) {
         // if status code == 200

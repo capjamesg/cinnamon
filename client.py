@@ -215,6 +215,32 @@ def react_to_post():
     if r.status_code != 201:
         return "error"
 
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    if is_reply == "true":
+        data_to_send = {
+            "action": "react",
+            "reaction": "reply",
+            "uid": request.form.get("uid"),
+            "content": request.form.get("content"),
+            "url": r.headers.get("Location", "t")
+        }
+    else:
+        data_to_send = {
+            "action": "react",
+            "reaction": request.form.get("reaction"),
+            "uid": request.form.get("uid"),
+            "url": r.headers.get("Location", "t")
+        }
+
+    requests.post(
+        session.get("server_url"),
+        data=data_to_send,
+        headers=headers
+    )
+
     return r.headers.get("Location", "")
 
 @client.route("/read", methods=["POST"])
