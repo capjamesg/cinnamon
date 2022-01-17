@@ -1,6 +1,6 @@
 <li {% if w["_is_read"] == False %}class="unread"{% endif %}>
     {% if w.get("title") %}
-    <h3 id="{{ w['_id'] }}-heading"><a href='{{ w["url"] }}'>{{ w["title"] }}</a></h3>
+    <h3 id="{{ w['_id'] }}-heading"><a href='{{ w["url"] }}' target="_blank">{{ w["title"] }}</a></h3>
     {% endif %}
     {% if w.get("photo") and w.get("video") and (w["video"][0]["url"].startswith("https://youtube.com") or w["video"][0]["url"].startswith("https://www.youtube.com")) %}
         <a href="{{ w["video"][0]["url"] }}" class="embedded_video" onclick="show_video('{{ w["video"][0]["url"] }}', '{{ w['_id'] }}');" id="{{ w['_id'] }}"><img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' /></a>
@@ -15,7 +15,7 @@
         {% endif %}
         <p style="flex: 1;">
             Written by 
-            <a href='{{ w["author"]["url"] }}'>
+            <a href='{{ w["author"]["url"] }}' target="_blank">
                 {{ w["author"]["name"] }}
             </a>
             on {{ w["published"] | strftime }}
@@ -42,7 +42,7 @@
     <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ ". ".join(content) | safe }} {% if content | length == 75 %}...{% endif %}</span><span id="{{ w['_id'] }}-full" style="display: none;">{{ " ".join(w["content"]["text"].split(" ")[75:]) }}</span></p>
     {% if content | length == 75 %}<p class="js"><a onclick="show_all('{{ w['_id'] }}')" id="{{ w['_id'] }}-show">Show more</a></p>{% endif %}
     {% elif show_all_content == False %}
-    <p><a href='{{ w["url"] }}'>Read the full post.</a></p>
+    <p><a href='{{ w["url"] }}' target="_blank">Read the full post.</a></p>
     {% else %}
     <hr>
     <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ w["content"]["html"] | safe }}</span></p>
@@ -58,7 +58,7 @@
         {% if show_all_content != True and not w['_id'].startswith("http") %}
             <a href="/read/{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
         {% elif show_all_content != True and w['_id'].startswith("http") %}
-            <a href="{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
+            <a href="{{ w['url'] }}" class="reaction-no-link" target="_blank">Read Full Post 📚</a>
         {% endif %}
 
         {% if session.get('micropub_url') %}
@@ -77,7 +77,7 @@
             {% for reply in w["reactions"]["replies"] %}
             <p>
                 {{ reply["content"] }}
-                (<a href="{{ reply["url"] }}">{{ reply["url"] }}</a>)
+                (<a href="{{ reply["url"] }}" target="_blank">{{ reply["url"] }}</a>)
             </p>
             {% endfor %}
         {% endif %}

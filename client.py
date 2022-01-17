@@ -153,7 +153,8 @@ def microsub_reader(channel):
         feeds=feeds,
         channel_name=channel_name,
         show_all_content=False,
-        last_id=last_num
+        last_id=last_num,
+        channel_id=channel
     )
 
 @client.route("/react", methods=["POST"])

@@ -28,11 +28,11 @@ def index():
     if is_authenticated:
         return redirect("/reader/all")
 
-    return render_template("index.html", title="Home | Cinnamon")
+    return render_template("index.html", title="Home | Cinnamon", channels=[])
 
 @main.route("/setup")
 def setup():
-    return render_template("setup.html", title="Setup | Cinnamon")
+    return render_template("setup.html", title="Setup | Cinnamon", channels=[])
 
 @main.route("/endpoint", methods=["GET", "POST"])
 def home():

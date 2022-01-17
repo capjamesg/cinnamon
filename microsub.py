@@ -88,6 +88,11 @@ def dashboard():
 
         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
 
+        feeds = requests.get(
+            f"{session.get('server_url')}?action=follow&channel={channel}",
+            headers=headers
+        ).json()
+
         return render_template("dashboard.html", title="Microsub Dashboard", channels=all_channels)
 
 @app.route("/following", methods=["GET", "POST"])
@@ -323,7 +328,7 @@ def discover_auth_endpoint():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("auth.html", title="Webmention Dashboard Login")
+    return render_template("auth.html", title="Webmention Dashboard Login", channels=[])
 
 @app.route("/discover-feed", methods=["POST"])
 def discover_feed():
@@ -402,15 +407,15 @@ def assets(path):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template("404.html", title="Page not found", error=404), 404
+    return render_template("404.html", title="Page not found", error=404, channels=[]), 404
 
 @app.errorhandler(405)
 def method_not_allowed(e):
-    return render_template("404.html", title="Method not allowed", error=405), 405
+    return render_template("404.html", title="Method not allowed", error=405, channels=[]), 405
 
 @app.errorhandler(500)
 def server_error(e):
-    return render_template("404.html", title="Server error", error=500), 500
+    return render_template("404.html", title="Server error", error=500, channels=[]), 500
 
 @app.route("/robots.txt")
 def robots():

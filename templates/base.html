@@ -27,6 +27,8 @@
 
     <meta name="apple-mobile-web-app-capable" content="yes">
 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
     <!-- Twitter Card data -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Cinnamon">
@@ -171,16 +173,18 @@
         {% endif %}
         {% block content %}
         {% endblock %}
-        <footer class="sticky_footer mobile">
-          <ul>
-            <li><a href="/reader/all"><img src="/static/icons/home.svg" alt="Home" /></a></li>
-            <li><a href="/search"><img src="/static/icons/search.svg" alt="Search" /></a></li>
-            <li><a href="/reader/all"><img src="/static/icons/create.svg" alt="Write a Post" /></a></li>
-            <li><a href="/reader/{{ channels[1]['uid'] }}"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
-            <li><a href="#" onclick="subscribe_modal()"><img src="/static/icons/follow.svg" alt="Follow" /></a></li>
-            <li><a href="/settings"><img src="/static/icons/settings.svg" alt="Settings" /></a></li>
-          </ul>
-        </footer>
+        {% if session.get("me") %}
+          <footer class="sticky_footer mobile">
+            <ul>
+              <li><a href="/reader/all"><img src="/static/icons/home.svg" alt="Home" /></a></li>
+              <li><a href="/search"><img src="/static/icons/search.svg" alt="Search" /></a></li>
+              <li><a href="/reader/all"><img src="/static/icons/create.svg" alt="Write a Post" /></a></li>
+              <li><a href="/reader/{{ channels[1]['uid'] }}"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
+              <li><a href="#" onclick="subscribe_modal()"><img src="/static/icons/follow.svg" alt="Follow" /></a></li>
+              <li><a href="/settings"><img src="/static/icons/settings.svg" alt="Settings" /></a></li>
+            </ul>
+          </footer>
+        {% endif %}
       </div>
       <a href="#main" class="accessibility_label">Go Back to the Top</a>
     </main>

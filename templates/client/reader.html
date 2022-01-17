@@ -3,18 +3,20 @@
 <div style="display: flex; flex-wrap: wrap; flex-direction: row; margin-top: 15px;">
 <section class="feed flex_right_home">
     <ul id="feed_list">
-        <li style="text-align: right;">
-            <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
-            <p class="reaction_set" style="float: left;">
-                <input type="file" id="post_image" style="display: none;">
-                <label for="post_image" class="reaction">📷</label>
-                <span onclick="add_rsvp_text()" class="reaction">📅</span>
-                <span onclick="add_review_text()" class="reaction">⭐</span>
-            </p>
-            (<span id="character_count">0</span>)
-            <p id="data_message"></p>
-            <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
-        </li>
+        {% if channels[1]['uid'] != channel_id %}
+            <li style="text-align: right;">
+                <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
+                <p class="reaction_set" style="float: left;">
+                    <input type="file" id="post_image" style="display: none;">
+                    <label for="post_image" class="reaction">📷</label>
+                    <span onclick="add_rsvp_text()" class="reaction">📅</span>
+                    <span onclick="add_review_text()" class="reaction">⭐</span>
+                </p>
+                (<span id="character_count">0</span>)
+                <p id="data_message"></p>
+                <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
+            </li>
+        {% endif %}
     {% if results | length > 0 %}
     {% set count = namespace(value=0) %}
       {% for w in results %}
@@ -57,27 +59,6 @@
     </div>
 </section>
 </div>
-<section class="content_box modal" style="display: none;" id="subscribe">
-    <div class="modal_content">
-        <span class="close" onclick="trigger_modal('subscribe')">&times;</span>
-        <h2>Subscribe to a Feed</h2>
-        <p>Use the form below to subscribe to a feed.</p>
-        <p>You can subscribe to RSS, Microformats 2, and JSON Feed feeds.</p>
-        <form action="/preview" method="GET">
-        <label for="channel">Channel Name:</label><br>
-        <select name="channel" id="channel">
-            {% for channel in channels %}
-                {% if channel.uid != "all" %}
-                    <option value="{{ channel.uid }}" {% if channel.uid == page_channel_uid %}selected{% endif %}>{{ channel.name }}</option>
-                {% endif %}
-            {% endfor %}
-        </select><br>
-        <label for="url">Feed Address:</label><br>
-        <input id="url" type="url" name="url" placeholder="https://jamesg.blog/feed.xml" /><br>
-        <input type="submit" value="Preview Subscription" />
-        </form>
-    </div>
-</section>
 <section class="content_box modal" style="display: none;" id="channel_settings">
     <div class="modal_content">
         <span class="close" onclick="trigger_modal('channel_settings')">&times;</span>
@@ -100,18 +81,6 @@
             <input type="hidden" name="method" id="method" value="delete">
             <input type="hidden" name="action" id="action" value="channels">
             <input type="submit" value="Delete Channel">
-        </form>
-    </div>
-</section>
-<section class="content_box modal" style="display: none;" id="search">
-    <div class="modal_content">
-        <span class="close" onclick="trigger_modal('search')">&times;</span>
-        <h2>Search for a post</h2>
-        <p>Use the form below to find a blog post in your feed.</p>
-        <form method="GET" action="/search" role="search">
-            <input type="hidden" name="channel" value="{{ page_channel_uid }}">
-            <input type="text" name="query" placeholder="Search for a post" aria-label="Search for a post" class="search_bar" style="width: 75%;">
-            <button class="search_button" style="width: 25%;">Search</button>
         </form>
     </div>
 </section>
