@@ -288,7 +288,7 @@ def get_all_feeds():
         )
 
         return redirect(f"/reader/all")
-
+    connection.row_factory = sqlite3.Row
     with connection:
         cursor = connection.cursor()
 
@@ -296,6 +296,9 @@ def get_all_feeds():
             feeds = cursor.execute("SELECT * FROM following WHERE channel = ? ORDER BY id DESC", (channel,)).fetchall()
         else:
             feeds = cursor.execute("SELECT * FROM following ORDER BY id DESC").fetchall()
+
+    # source: https://nickgeorge.net/programming/python-sqlite3-extract-to-dictionary/#writing_a_function
+    unpacked = [{k: item[k] for k in item.keys()} for item in feeds]
 
     count = len(feeds)
 
@@ -307,9 +310,9 @@ def get_all_feeds():
 
     return render_template("server/modify_channel.html",
         title=f"People You Follow | Cinnamon",
-        feeds=feeds,
+        feeds=unpacked,
         count=count,
-        channels=channel_req.json()["channels"],
+        channels=channel_req.json()["channels"]
     )
 
 @main.route("/mute", methods=["POST"])

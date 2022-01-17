@@ -131,6 +131,17 @@ def microsub_reader(channel):
     else:
         last_num = ""
 
+    requests.post(
+        session.get("server_url"),
+        data={
+            "action": "timeline",
+            "channel": channel,
+            "method": "mark_read",
+            "last_read_entry": last_num
+        },
+        headers=headers
+    )
+
     return render_template("client/reader.html",
         title=f"Your {channel_name} Feed | Cinnamon",
         results=microsub_req.json()["items"],
@@ -209,7 +220,12 @@ def react_to_post():
     else:
         request_to_make = {
             "h": "entry",
-            request.form.get("reaction"): request.form.get("url")
+            "properties": {
+                request.form.get("reaction"): [{
+                    request.form.get("reaction"): request.form.get("url")
+                }],
+                "category": [request.form.get("reaction")]
+            }
         }
 
     r = requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)

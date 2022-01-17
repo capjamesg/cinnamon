@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="search_box main_content_box">
-    <h1>Search</h1>
-    <p>Find content from feeds you follow.</p>
     <form action="/search" method="get">
         <input type="text" name="q" id="search" placeholder="Chemex coffee recipe" value="{{ q }}">
         <select name="channel" id="channel" aria-labelledby="Channel in which to search (optional)">
@@ -10,8 +8,14 @@
                 <option value="{{ c.uid }}">{{ c.name }}</option>
             {% endfor %}
         </select>
-        <input type="submit" value="Search">
     </form>
+    <footer class="search_list">
+        <ul>
+            <li><a href="/search">Saved Posts</a></li>
+            <li><a href="/following">Following</a></li>
+            <li><a href="/discover">People</a></li>
+        </ul>
+    </footer>
     <ul id="results" class="feed">
     </ul>
 </section>

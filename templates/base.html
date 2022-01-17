@@ -84,7 +84,7 @@
       <nav id="top_navigation">
         {% if session.get("me") %}
           {% if channel_name %}
-            <p><a href="/reader/all" id="page_title">Cinnamon</a> (Viewing {{ channel_name }} Channel)</p>
+            <p><a href="/reader/all" id="page_title">Cinnamon</a> ({{ channel_name }} Posts)</p>
           {% else %}
             <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
           {% endif %}
@@ -97,7 +97,6 @@
           <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
           <li><a href="/lists">📚 Lists</a></li>
           <li><a href="/search">🔎 Search</a></li>
-          <li><a href="/explore">💡 Explore</a></li>
           <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
           <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">🔒 Logout</a></li>
@@ -167,7 +166,6 @@
               <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
               <li><a href="/lists">📚 Lists</a></li>
               <li><a href="/search">🔎 Search</a></li>
-              <li><a href="/explore">💡 Explore</a></li>
               <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
               <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
               <li><a href="/logout">🔒 Logout</a></li>
@@ -176,6 +174,16 @@
         {% endif %}
         {% block content %}
         {% endblock %}
+        <footer class="sticky_footer mobile">
+          <ul>
+            <li><a href="/reader/all"><img src="/static/icons/home.svg" alt="Home" /></a></li>
+            <li><a href="/search"><img src="/static/icons/search.svg" alt="Search" /></a></li>
+            <li><a href="/reader/all"><img src="/static/icons/create.svg" alt="Write a Post" /></a></li>
+            <li><a href="/notifications"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
+            <li><a href="#" onclick="subscribe_modal()"><img src="/static/icons/follow.svg" alt="Follow" /></a></li>
+            <li><a href="/settings"><img src="/static/icons/settings.svg" alt="Settings" /></a></li>
+          </ul>
+        </footer>
       </div>
       <a href="#main" class="accessibility_label">Go Back to the Top</a>
     </main>

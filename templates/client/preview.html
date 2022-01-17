@@ -5,10 +5,8 @@
     {% if feed["feed"].get("icon") %}
         <img src="{{ feed["feed"].get("icon") }}" alt="{{ feed["feed"].get("title") }} feed icon" />
     {% endif %}
-    <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
-    <h2>Confirm subscription</h2>
     <form action="/following" method="POST">
-        <label for="channel">Name of the channel to which you want to add your subscription:</label><br>
+        <label for="channel">List in which to save your subscription:</label><br>
         <select name="channel" id="channel">
             {% for c in channels %}
                 {% if c.uid != "all" %}

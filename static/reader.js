@@ -180,6 +180,8 @@ function send_reaction(reaction, reaction_name, post_url, post_id) {
         if (response.status == 200) {
             send_notification("<p>Your " + reaction_name + " has been sent.</p>");
         }
+        var reaction_link = document.getElementById(post_id + "-" + reaction);
+        reaction_link.classList.add("reacted");
     })
 }
 
