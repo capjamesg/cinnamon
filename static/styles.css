@@ -87,6 +87,11 @@ nav, footer ul {
 	padding-left: 25px;
 	padding-right: 25px;
 }
+.subscribe_button {
+	border: 2px solid lightgrey;
+	border-radius: 10px;
+	padding: 5px;
+}
 nav ul li {
 	display: inline-block;
 	padding-left: 10px;
@@ -486,6 +491,10 @@ aside, .feed li, #settings, .bottom-navigation, .content_box, .main_content_box 
 	box-sizing: border-box;
 	max-width: 100%;
 	display: block;
+}
+.inner_content_box {
+	margin: auto;
+	width: 50%;
 }
 .success {
 	border: 1px solid lightgreen;

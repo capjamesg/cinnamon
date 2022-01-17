@@ -102,7 +102,7 @@ def home():
     
     return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
 
-@main.route("/channels")
+@main.route("/lists")
 def dashboard():
     auth_result = check_token(request.headers, session)
 
@@ -137,9 +137,9 @@ def reorder_channels_view():
             "Your channels have been reordered."
         )
 
-        return redirect("/channels")
+        return redirect("/lists")
     else:
-        return redirect("/channels")
+        return redirect("/lists")
 
 @main.route("/create-channel", methods=["POST"])
 def create_channel_view():
@@ -159,7 +159,7 @@ def create_channel_view():
             f"You have created a new channel called {request.form.get('name')}."
         )
     
-    return redirect("/channels")
+    return redirect("/lists")
 
 @main.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
@@ -180,9 +180,9 @@ def delete_channel_view():
             f"The specified channel has been deleted."
         )
 
-        return redirect("/channels")
+        return redirect("/lists")
     
-    return redirect("/channels")
+    return redirect("/lists")
 
 @main.route("/unfollow", methods=["POST"])
 def unfollow_view():
@@ -203,7 +203,7 @@ def unfollow_view():
             f"Your unfollow was successful."
         )
     
-    return redirect("/feeds")
+    return redirect("/following")
 
 def discover_web_page_feeds(url):
     if not url.startswith("http://") and not url.startswith("https://"):
@@ -260,11 +260,11 @@ def discover_feed():
 
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
-        return redirect("/feeds")
+        return redirect("/following")
     
     return redirect("/preview?url={}".format(feeds[0]))
 
-@main.route("/feeds", methods=["GET", "POST"])
+@main.route("/following", methods=["GET", "POST"])
 def get_all_feeds():
     auth_result = check_token(request.headers, session)
 
@@ -293,16 +293,23 @@ def get_all_feeds():
         cursor = connection.cursor()
 
         if channel:
-            feeds = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
+            feeds = cursor.execute("SELECT * FROM following WHERE channel = ? ORDER BY id DESC", (channel,)).fetchall()
         else:
-            feeds = cursor.execute("SELECT * FROM following").fetchall()
+            feeds = cursor.execute("SELECT * FROM following ORDER BY id DESC").fetchall()
 
     count = len(feeds)
+
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     return render_template("server/modify_channel.html",
         title=f"People You Follow | Cinnamon",
         feeds=feeds,
-        count=count
+        count=count,
+        channels=channel_req.json()["channels"],
     )
 
 @main.route("/mute", methods=["POST"])

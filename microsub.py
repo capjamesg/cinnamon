@@ -74,7 +74,7 @@ def home():
     else:
         return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
 
-@app.route("/channels")
+@app.route("/lists")
 def dashboard():
     auth_result = check_token(request.headers, session)
 
@@ -90,7 +90,7 @@ def dashboard():
 
         return render_template("dashboard.html", title="Microsub Dashboard", channels=all_channels)
 
-@app.route("/feeds", methods=["GET", "POST"])
+@app.route("/following", methods=["GET", "POST"])
 def feed_list():
     auth_result = check_token(request.headers, session)
 
@@ -118,7 +118,7 @@ def feed_list():
         else:
             flash("Something went wrong. Please try again.")
 
-        return redirect("/feeds")
+        return redirect("/following")
 
     connection = sqlite3.connect("microsub.db")
 
@@ -150,9 +150,9 @@ def reorder_channels_view():
         else:
             flash(r.json()["error"])
 
-        return redirect("/channels")
+        return redirect("/lists")
     else:
-        return redirect("/channels")
+        return redirect("/lists")
 
 @app.route("/create-channel", methods=["POST"])
 def create_channel_view():
@@ -174,9 +174,9 @@ def create_channel_view():
         else:
             flash(r.json()["error"])
 
-        return redirect("/channels")
+        return redirect("/lists")
     else:
-        return redirect("/channels")
+        return redirect("/lists")
 
 @app.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
@@ -199,9 +199,9 @@ def delete_channel_view():
         else:
             flash(r.json()["error"])
 
-        return redirect("/channels")
+        return redirect("/lists")
     else:
-        return redirect("/channels")
+        return redirect("/lists")
 
 @app.route("/unfollow", methods=["POST"])
 def unfollow_view():
@@ -224,7 +224,7 @@ def unfollow_view():
         else:
             return jsonify(r.json()), 400
     else:
-        return redirect("/feeds")
+        return redirect("/following")
 
 @app.route("/callback")
 def indieauth_callback():
@@ -366,7 +366,7 @@ def discover_feed():
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
     
-    return redirect("/feeds")
+    return redirect("/following")
 
 @app.route("/channel/<id>", methods=["GET", "POST"])
 def modify_channel(id):

@@ -115,6 +115,22 @@ function submit_micropub(id, url) {
         toggle_textbox(id);
     });
 }
+function subscribe_modal() {
+    var modal = document.getElementById("subscribe-modal");
+    if (modal.style.display == "none") {
+        modal.style.display = "block";
+    } else {
+        modal.style.display = "none";
+    }
+}
+function show_list_form() {
+    var form = document.getElementById("list-form");
+    if (form.style.display == "none") {
+        form.style.display = "block";
+    } else {
+        form.style.display = "none";
+    }
+}
 function send_notification(notification_text) {
     var notification = document.createElement("section");
     var body = document.getElementsByTagName("body")[0];

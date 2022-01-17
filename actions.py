@@ -360,9 +360,9 @@ def get_follow(channel):
     with connection:
         cursor = connection.cursor()
         if channel == "all":
-            results = cursor.execute("SELECT * FROM following;").fetchall()
+            results = cursor.execute("SELECT * FROM following ORDER BY id DESC;").fetchall()
         else:
-            results = cursor.execute("SELECT * FROM following WHERE channel = ?", (channel,)).fetchall()
+            results = cursor.execute("SELECT * FROM following WHERE channel = ? ORDER by id DESC;", (channel,)).fetchall()
 
         results = [{"type": "feed", "url": r[1], "photo": r[3], "name": r[4]} for r in results]
 

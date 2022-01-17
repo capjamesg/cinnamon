@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="content_box">
-    <h2>Channels</h2>
+    <h2>Lists</h2>
+    <a href="#" onclick="trigger_modal('list-form')" class="subscribe_button" style="float: right;">Create a new list</a>
     {% if channels %}
       <p>Here are the channels in your feed:</p>
       <ul>
@@ -13,7 +14,7 @@
         <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i-1][1] }}"><input type="submit" value="⬆️" class="reaction" aria-labelledby="Move Up"></form>
         {% endif %}
         {% if i < channels | length - 1 %}
-        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i+1][1] }}"><input type="submit" value="⬆️" class="reaction" value="⬇️" aria-labelledby="Move Down"></form>
+        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i+1][1] }}"><input type="submit" value="⬇️" class="reaction" aria-labelledby="Move Down"></form>
         {% endif %}
         </div>
       </li>
@@ -23,15 +24,18 @@
       <p>You have not created any channels yet.</p>
     {% endif %}
 </section>
-<section class="content_box">
-    <h2>Create a Channel</h2>
-    <p>Use the form below to create a channel.</p>
+<section class="content_box modal" id="list-form" style="display: none;">
+  <div class="modal_content">
+    <span class="close" onclick="trigger_modal('list-form')">&times;</span>
+    <h2>Create a List</h2>
+    <p>Lists make it easy to categorise people you follow so you can easily keep track of the information that matters most to you.</p>
     <form action="/create-channel" method="POST">
-      <label for="name">Channel Name:</label><br>
+      <label for="name">Name:</label><br>
       <input type="text" name="name" id="name" placeholder="IndieWeb" required><br>
       <input type="submit" value="Create channel" />
       <input type="hidden" name="action" id="action" value="channels" />
     </form>
+  </div>
 </section>
 <!-- <section class="content_box">
   <h2>Discover a Feed</h2>
@@ -43,20 +47,4 @@
     <input type="submit" value="Discover feed" />
   </form>
 </section> -->
-<section class="content_box">
-    <h2>Subscribe to a Feed</h2>
-    <p>Use the form below to subscribe to a feed.</p>
-    <p>You can subscribe to RSS, Microformats 2, and JSON Feed feeds.</p>
-    <form action="/discover" method="GET">
-      <label for="channel">Channel Name:</label><br>
-      <select name="channel" id="channel">
-        {% for channel in channels %}
-          <option value="{{ channel[1] }}">{{ channel[0] }}</option>
-        {% endfor %}
-      </select><br>
-      <label for="url">Feed Address:</label><br>
-      <input id="url" type="url" name="url" placeholder="https://jamesg.blog/feed.xml" /><br>
-      <input type="submit" value="Preview Subscription" />
-    </form>
-  </section>
 {% endblock %}

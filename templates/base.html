@@ -65,7 +65,7 @@
       p, li, dt, dd, .indieweb_footer, input, label {
         color: white;
       }
-      input, textarea, .code, select, option {
+      input, textarea, .code, select, option, pre, code {
         background-color: #0c2548 !important;
         color: white;
       }
@@ -93,15 +93,17 @@
         {% endif %}
         {% if session.get("me") %}
         <ul id="desktop_navigation">
-          <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
-          <li><a href="/channels">📚 Channels</a></li>
+          <li><a href="#" onclick="subscribe_modal()" class="subscribe_button">Subscribe</a></li>
+          <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
+          <li><a href="/lists">📚 Lists</a></li>
           <li><a href="/search">🔎 Search</a></li>
           <li><a href="/explore">💡 Explore</a></li>
+          <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
           <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">🔒 Logout</a></li>
         </ul>
         <ul id="mobile_navigation">
-          <li><a href="/channels">📚 Channels</a></li>
+          <li><a href="/lists">📚 Lists</a></li>
           <li><a onclick="show_settings()">Menu</a></li>
         </ul>
         {% else %}
@@ -111,6 +113,17 @@
         </ul>
         {% endif %}
       </nav>
+      <section id="subscribe-modal" style="display: none;" class="content_box">
+        <div class="inner_content_box">
+          <h2>Follow Someone</h2>
+          <p>Enter a website below to follow the owner's content.</p>
+          <form action="/discover-feed" method="GET">
+            <label for="subscribe-to">Feed Address:</label><br>
+            <input id="subscribe-to" type="url" name="subscribe-to" placeholder="https://jamesg.blog" /><br>
+            <input type="submit" value="Preview" />
+          </form>
+        </div>
+      </section>
       <script src="/reader.js"></script>
       <script>
         if (localStorage.getItem('darkmode') == "true") {
@@ -151,10 +164,11 @@
             <span class="close mobile_close" onclick="trigger_modal('settings')">&times;</span>
             <h2>Settings</h2>
             <ul>
-              <li><a href="/feeds">🧑‍🤝‍🧑 Following</a></li>
-              <li><a href="/channels">📚 Channels</a></li>
+              <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
+              <li><a href="/lists">📚 Lists</a></li>
               <li><a href="/search">🔎 Search</a></li>
               <li><a href="/explore">💡 Explore</a></li>
+              <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
               <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
               <li><a href="/logout">🔒 Logout</a></li>
             </ul>

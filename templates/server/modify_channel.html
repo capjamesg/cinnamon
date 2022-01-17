@@ -3,14 +3,12 @@
 <section class="content_box">
     <h1>People You Follow</h1>
     <p>You follow {{ count }} people.</p>
-    <form action="/search" method="get">
-        <input type="text" name="q" id="search" placeholder="Search for a feed..." value="{{ q }}">
+    <form method="get">
+        <input type="text" name="q" id="search" placeholder="Search for someone..." value="{{ q }}">
         <input type="submit" value="Search">
     </form>
-    <ul id="results" class="feed">
-    </ul>
     {% if feeds %}
-        <ul>
+        <ul id="results" class="feed">
             {% for feed in feeds %}
             <li style="display: flex;">
                 <div style="flex: 0 75%;">
@@ -58,7 +56,57 @@
             {% endfor %}
         </ul>
     {% else %}
-        <p>There are no feeds in this channel.</p>
+        <ul id="results" class="feed">
+            <p>There are no feeds in this channel.</p>
+        </ul>
     {% endif %}
+    <script>
+        var search = document.getElementById('search');
+        search.addEventListener('keyup', function(e) {
+            // run query if space key is pressed
+            if (e.keyCode === 32) {
+                var term = search.value;
+    
+                var results = document.getElementById('results');
+    
+                results.innerHTML = "<p style='text-align: center;'>Searching for: " + term + "</p>";
+    
+                var xhr = new XMLHttpRequest();
+    
+                var channel = document.getElementById('channel');
+    
+                var channel_id = channel.options[channel.selectedIndex].value;
+    
+                xhr.open('GET', '/search?query=' + term + '&channel=' + channel_id + '&format=json');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        as_json = JSON.parse(xhr.responseText);
+    
+                        var all_results = "";
+    
+                        if (as_json["items"].length == 0) {
+                            all_results += "<p style='text-align: center;'>No results were found for your query.</p>";
+                        }
+    
+                        for (var i = 0; i < as_json["items"].length; i++) {
+                            result_item = `<li>
+                                <h3><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["title"]}</a></h3>
+                                <p>${as_json["items"][i]["author"] ? "Published by " + as_json["items"][i]["author"]["name"] + " on " : ""} ${as_json["items"][i]["published"].split("T").slice(0, 0)}</p>
+                                <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
+                                <p class="reaction_set">
+                                    <a href="${as_json["items"][i]["url"]}" class="reaction-no-link">Read Full Post 📚</a>
+                                </p>
+                            </li>`;
+    
+                            all_results += result_item;
+                        }
+    
+                        results.innerHTML = all_results;
+                    }
+                }
+                xhr.send();
+            }
+        });
+    </script>
 </section>
 {% endblock %}

@@ -7,7 +7,7 @@
     {% endif %}
     <p>{{ feed["feed"]["title"] }} is available at <a href="{{ feed["feed"]["url"] }}">{{ feed["feed"]["url"] }}</a></p>
     <h2>Confirm subscription</h2>
-    <form action="/feeds" method="POST">
+    <form action="/following" method="POST">
         <label for="channel">Name of the channel to which you want to add your subscription:</label><br>
         <select name="channel" id="channel">
             {% for c in channels %}

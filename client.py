@@ -115,7 +115,9 @@ def microsub_reader(channel):
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-    channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel]
+    all_channels = channel_req.json()["channels"]
+
+    channel_name = [c for c in all_channels if c["uid"] == channel]
 
     if len(channel_name) > 0:
         channel_name = channel_name[0]["name"]
@@ -483,7 +485,9 @@ def explore_new_feeds():
     query = request.args.get("query")
 
     if not query:
-        return render_template("client/discover.html", title="Explore | Cinnamon")
+        channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+        return render_template("client/discover.html", title="Explore | Cinnamon", channels=channel_req.json()["channels"])
 
     data = {
         "action": "search",
@@ -501,8 +505,15 @@ def settings():
     if auth_result == False:
         return redirect("/login")
 
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
     return render_template("client/settings.html",
-        title="Settings | Cinnamon"
+        title="Settings | Cinnamon",
+        channels=channel_req.json()["channels"]
     )
 
 @client.route("/reader.js")
