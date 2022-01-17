@@ -1,6 +1,9 @@
 html, body, header, figure {
 	margin: 0;
 }
+* {
+	max-width: 100%;
+}
 a {
 	text-decoration: none;
 }
@@ -356,7 +359,7 @@ input[type="submit"] {
 		display: none;
 	}
 	.inner_content_box {
-		width: 100%;
+		width: 100% !important;;
 	}
 	.button_list form {
 		float: right;
@@ -497,7 +500,7 @@ aside, .feed li, #settings, .bottom-navigation, .content_box, .main_content_box 
 }
 .inner_content_box {
 	margin: auto;
-	width: 50%;
+	width: 50em;
 }
 .success {
 	border: 1px solid lightgreen;

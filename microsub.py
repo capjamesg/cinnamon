@@ -125,8 +125,6 @@ def feed_list():
     with connection:
         cursor = connection.cursor()
 
-        all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
-
         return render_template("feed_management.html", title="Feed Management | Microsub Dashboard", channels=all_channels)
 
 @app.route("/reorder", methods=["POST"])

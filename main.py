@@ -114,9 +114,15 @@ def dashboard():
     with connection:
         cursor = connection.cursor()
 
+        headers = {
+            "Authorization": session["access_token"]
+        }
+
+        feeds = requests.get(session.get("server_url") + f"?action=follow&channel=all", headers=headers).json()
+
         all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
 
-        return render_template("server/dashboard.html", title="Cinnamon", channels=all_channels)
+        return render_template("server/dashboard.html", title="Cinnamon", channels=all_channels, feeds=feeds)
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
@@ -264,6 +270,28 @@ def discover_feed():
     
     return redirect("/preview?url={}".format(feeds[0]))
 
+@main.route("/following/search", methods=["POST"])
+def search_for_feed():
+    auth_result = check_token(request.headers, session)
+
+    if not auth_result:
+        return redirect("/login")
+
+    connection = sqlite3.connect("microsub.db")
+    connection.row_factory = sqlite3.Row
+
+    query = request.args.get("query")
+    
+    with connection:
+        cursor = connection.cursor()
+
+        feeds = cursor.execute("SELECT * FROM following WHERE name LIKE ? ORDER BY id DESC", (f"%{query}%", )).fetchall()
+
+    unpacked = [{k: item[k] for k in item.keys()} for item in feeds]
+
+    return jsonify({"items": unpacked}), 200
+
+
 @main.route("/following", methods=["GET", "POST"])
 def get_all_feeds():
     auth_result = check_token(request.headers, session)
@@ -288,7 +316,9 @@ def get_all_feeds():
         )
 
         return redirect(f"/reader/all")
+
     connection.row_factory = sqlite3.Row
+
     with connection:
         cursor = connection.cursor()
 

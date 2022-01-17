@@ -1,19 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="search_box main_content_box">
+    <h1>Search</h1>
     <form action="/search" method="get">
         <input type="text" name="q" id="search" placeholder="Chemex coffee recipe" value="{{ q }}">
         <select name="channel" id="channel" aria-labelledby="Channel in which to search (optional)">
             {% for c in channels %}
-                <option value="{{ c.uid }}">{{ c.name }}</option>
+                <option value="{{ c._id }}">{{ c.name }}</option>
             {% endfor %}
         </select>
     </form>
     <footer class="search_list">
         <ul>
-            <li><a href="/search">Saved Posts</a></li>
+            <li><a href="/search">Your Feed</a></li>
             <li><a href="/following">Following</a></li>
-            <li><a href="/discover">People</a></li>
+            <li><a href="/explore">People</a></li>
         </ul>
     </footer>
     <ul id="results" class="feed">
@@ -53,8 +54,28 @@
                             <p>${as_json["items"][i]["author"] ? "Published by " + as_json["items"][i]["author"]["name"] + " on " : ""} ${as_json["items"][i]["published"].split("T").slice(0, 0)}</p>
                             <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
                             <p class="reaction_set">
+                                {% if "create" in session.get("scope") and session.get('micropub_url') %}
+                                    <a onclick="event.preventDefault(); send_reaction('like-of', 'like', '${as_json["items"][i]["url"]}',
+                                    '${as_json["items"][i]["_id"]}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of=${as_json["items"][i]["url"]}" class="reaction">❤️</a>
+                                    <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '${as_json["items"][i]["url"]}', '${as_json["items"][i]["_id"]}')"\
+                                    href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of=${as_json["items"][i]["url"]}" class="reaction">🔖</a>
+                                    <a href="/reader/{{ page_channel__id }}/delete?entry_id=${as_json["items"][i]["_id"]}" class="reaction">🗑️</a>
+                                    <a onclick="event.preventDefault(); toggle_textbox('${as_json["items"][i]["_id"]}')" href="{{ session.get('micropub_url') }}/post?in-reply-to=${as_json["items"][i]["url"]}" class="reaction">💬</a>
+                                {% endif %}
                                 <a href="${as_json["items"][i]["url"]}" class="reaction-no-link">Read Full Post 📚</a>
                             </p>
+
+                            {% if session.get('micropub_url') %}
+                            <div id="${as_json["items"][i]["_id"]}-textbox" style="display: none; margin-top: 10px;">
+                                <label for="content">Reply content:</label><br>
+                                <textarea name="content" rows="8" id='${as_json["items"][i]["_id"]}-form'></textarea><br>
+                                <input type="hidden" name="h" value="entry">
+                                <input type="hidden" name="in-reply-to" value="${as_json["items"][i]["url"]}">
+                                <div style="text-align: right;">
+                                    <input type="submit" value="Send Reply 💬" onclick="submit_micropub('${as_json["items"][i]["_id"]}', '${as_json["items"][i]["url"]}')" />
+                                </div>
+                            </div>
+                            {% endif %}
                         </li>`;
 
                         all_results += result_item;

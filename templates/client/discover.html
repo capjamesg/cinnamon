@@ -1,12 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="search_box main_content_box">
-    <h1>Discover</h1>
-    <p>Find new feeds to follow by topic.</p>
-    <form action="/explore" method="get">
-        <input type="text" name="q" id="search" placeholder="Apple" value="{{ q }}">
-        <input type="submit" value="Search">
+    <h1>Discover People</h1>
+    <form action="/search" method="get">
+        <input type="text" name="q" id="search" placeholder="Chemex coffee recipe" value="{{ q }}">
+        <select name="channel" id="channel" aria-labelledby="Channel in which to search (optional)">
+            {% for c in channels %}
+                <option value="{{ c._id }}">{{ c.name }}</option>
+            {% endfor %}
+        </select>
     </form>
+    <footer class="search_list">
+        <ul>
+            <li><a href="/search">Your Feed</a></li>
+            <li><a href="/following">Following</a></li>
+            <li><a href="/explore">People</a></li>
+        </ul>
+    </footer>
     <ul id="results" class="feed">
     </ul>
 </section>

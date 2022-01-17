@@ -197,5 +197,8 @@ function send_unfollow(url, id) {
         if (response.status == 200) {
             send_notification("<p>You have unfollowed the feed.</p>");
         }
+        var list_item = document.getElementById(id);
+
+        list_item.parentNode.removeChild(list_item);
     })
 }

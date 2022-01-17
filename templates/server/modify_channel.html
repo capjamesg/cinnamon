@@ -10,13 +10,13 @@
     {% if feeds %}
         <ul id="results" class="feed">
             {% for feed in feeds %}
-            <li style="display: flex;">
+            <li style="display: flex;" id="{{ feed.id }}">
                 <div style="flex: 0 75%;">
                     {% if feed.get("photo") and feed.get("photo") != "" %}
                         <img src="{{ feed.get("photo") }}" style="width: 50px; height: 50px; border-radius: 50%; float: left; margin-right: 10px;">
                     {% endif %}
                     {% if feed.get("name") != None %}
-                        <p><a href="{{ feed.get("url") }}">{{ feed.get("name") }}</a> (#{{ feed[0] }})</p>
+                        <p><a href="{{ feed.get("url") }}">{{ feed.get("name") }}</a> (#{{ feed.get("channel") }})</p>
                     {% else %}
                         <p><a href="{{ feed.get("url") }}">{{ feed.get("url") }}</a></p>
                     {% endif %}
@@ -73,11 +73,7 @@
     
                 var xhr = new XMLHttpRequest();
     
-                var channel = document.getElementById('channel');
-    
-                var channel_id = channel.options[channel.selectedIndex].value;
-    
-                xhr.open('GET', '/search?query=' + term + '&channel=' + channel_id + '&format=json');
+                xhr.open('POST', '/following/search?query=' + term);
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         as_json = JSON.parse(xhr.responseText);
@@ -89,13 +85,16 @@
                         }
     
                         for (var i = 0; i < as_json["items"].length; i++) {
-                            result_item = `<li>
-                                <h3><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["title"]}</a></h3>
-                                <p>${as_json["items"][i]["author"] ? "Published by " + as_json["items"][i]["author"]["name"] + " on " : ""} ${as_json["items"][i]["published"].split("T").slice(0, 0)}</p>
-                                <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
-                                <p class="reaction_set">
-                                    <a href="${as_json["items"][i]["url"]}" class="reaction-no-link">Read Full Post 📚</a>
-                                </p>
+                            result_item = `
+                            <li style="display: flex;" id="${as_json["items"][i]["id"]}">
+                                <div style="flex: 0 75%;">
+                                    <img src="${as_json["items"][i]["photo"]}" style="width: 50px; height: 50px; border-radius: 50%; float: left; margin-right: 10px;">
+                                    ${
+                                        as_json["items"][i]["name"] != null ?
+                                        `<p><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["name"]}</a> (#${as_json["items"][i]["id"]})</p>` :
+                                        `<p><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["url"]}</a></p>`
+                                    }
+                                </div>
                             </li>`;
     
                             all_results += result_item;

@@ -65,7 +65,7 @@
       p, li, dt, dd, .indieweb_footer, input, label {
         color: white;
       }
-      input, textarea, .code, select, option, pre, code {
+      input, textarea, .code, select, option, pre, code, .reaction {
         background-color: #0c2548 !important;
         color: white;
       }
@@ -98,7 +98,7 @@
           <li><a href="/lists">📚 Lists</a></li>
           <li><a href="/search">🔎 Search</a></li>
           <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
-          <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+          <li><a href="/settings">👤 {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">🔒 Logout</a></li>
         </ul>
         <ul id="mobile_navigation">
@@ -164,10 +164,7 @@
             <h2>Settings</h2>
             <ul>
               <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
-              <li><a href="/lists">📚 Lists</a></li>
-              <li><a href="/search">🔎 Search</a></li>
-              <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
-              <li><a href="/settings">⚙️ Logged in as {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
+              <li><a href="/settings">👤 {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
               <li><a href="/logout">🔒 Logout</a></li>
             </ul>
           </div>
@@ -179,7 +176,7 @@
             <li><a href="/reader/all"><img src="/static/icons/home.svg" alt="Home" /></a></li>
             <li><a href="/search"><img src="/static/icons/search.svg" alt="Search" /></a></li>
             <li><a href="/reader/all"><img src="/static/icons/create.svg" alt="Write a Post" /></a></li>
-            <li><a href="/notifications"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
+            <li><a href="/reader/{{ channels[1]['uid'] }}"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
             <li><a href="#" onclick="subscribe_modal()"><img src="/static/icons/follow.svg" alt="Follow" /></a></li>
             <li><a href="/settings"><img src="/static/icons/settings.svg" alt="Settings" /></a></li>
           </ul>
