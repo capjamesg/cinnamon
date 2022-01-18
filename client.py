@@ -43,7 +43,7 @@ def read_article(id):
     jf2 = json.loads(article_req.json()["post"][0]["jf2"])
 
     return render_template("client/read_article.html",
-        title=f"{channel_name} | Cinnamon",
+        title=f"{channel_name}",
         channels=channel_req.json()["channels"],
         w=jf2,
         page_channel_uid=channel,
@@ -113,6 +113,8 @@ def microsub_reader(channel):
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
 
+    print(microsub_req.json()["paging"])
+
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     all_channels = channel_req.json()["channels"]
@@ -143,7 +145,7 @@ def microsub_reader(channel):
     )
 
     return render_template("client/reader.html",
-        title=f"Your {channel_name} Feed | Cinnamon",
+        title=f"{channel_name} Posts",
         results=microsub_req.json()["items"],
         channels=channel_req.json()["channels"],
         before=before_to_show,
@@ -385,7 +387,7 @@ def preview_feed():
         return redirect("/reader/all")
 
     return render_template("client/preview.html",
-        title="Preview Feed | Cinnamon",
+        title="Preview Feed",
         feed=feed_data,
         channel=channel_id,
         channel_name=channel_name,
@@ -467,7 +469,7 @@ def search_feed():
     if not query:
         channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-        return render_template("client/search.html", title="Search | Cinnamon", channels=channel_req.json()["channels"])
+        return render_template("client/search.html", title="Search", channels=channel_req.json()["channels"])
 
     if not channel:
         channel = "all"
@@ -485,7 +487,7 @@ def search_feed():
     else:
         channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-        return render_template("client/search.html", title="Search | Cinnamon", channels=channel_req.json()["channels"], results=microsub_req.json()["items"])
+        return render_template("client/search.html", title="Search Your Feed", channels=channel_req.json()["channels"], results=microsub_req.json()["items"])
 
 
 @client.route("/explore")
@@ -504,7 +506,7 @@ def explore_new_feeds():
     if not query:
         channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-        return render_template("client/discover.html", title="Explore | Cinnamon", channels=channel_req.json()["channels"])
+        return render_template("client/discover.html", title="Discover People", channels=channel_req.json()["channels"])
 
     data = {
         "action": "search",
@@ -529,9 +531,13 @@ def settings():
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     return render_template("client/settings.html",
-        title="Settings | Cinnamon",
+        title="Settings",
         channels=channel_req.json()["channels"]
     )
+
+@client.route("/manifest.json")
+def web_app_manifest():
+    return send_from_directory("static", "manifest.json")
 
 @client.route("/reader.js")
 def reader_js_file():

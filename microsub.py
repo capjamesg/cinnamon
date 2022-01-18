@@ -74,27 +74,6 @@ def home():
     else:
         return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
 
-@app.route("/lists")
-def dashboard():
-    auth_result = check_token(request.headers, session)
-
-    if auth_result == False:
-        return redirect("/login")
-
-    connection = sqlite3.connect("microsub.db")
-
-    with connection:
-        cursor = connection.cursor()
-
-        all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
-
-        feeds = requests.get(
-            f"{session.get('server_url')}?action=follow&channel={channel}",
-            headers=headers
-        ).json()
-
-        return render_template("dashboard.html", title="Microsub Dashboard", channels=all_channels)
-
 @app.route("/following", methods=["GET", "POST"])
 def feed_list():
     auth_result = check_token(request.headers, session)
@@ -274,57 +253,6 @@ def logout():
     session.pop("access_token")
 
     return redirect("/login")
-
-@app.route("/discover", methods=["POST"])
-def discover_auth_endpoint():
-    auth_result = check_token()
-
-    if auth_result == False:
-        return redirect("/login")
-
-    domain = request.form.get("me")
-
-    r = requests.get(domain)
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    authorization_endpoint = soup.find("link", rel="authorization_endpoint")
-
-    if authorization_endpoint is None:
-        flash("An IndieAuth authorization ndpoint could not be found on your website.")
-        return redirect("/login")
-
-    if not authorization_endpoint.get("href").startswith("https://") and not authorization_endpoint.get("href").startswith("http://"):
-        flash("Your IndieAuth authorization endpoint published on your site must be a full HTTP URL.")
-        return redirect("/login")
-
-    token_endpoint = soup.find("link", rel="token_endpoint")
-
-    if token_endpoint is None:
-        flash("An IndieAuth token ndpoint could not be found on your website.")
-        return redirect("/login")
-
-    if not token_endpoint.get("href").startswith("https://") and not token_endpoint.get("href").startswith("http://"):
-        flash("Your IndieAuth token endpoint published on your site must be a full HTTP URL.")
-        return redirect("/login")
-
-    auth_endpoint = authorization_endpoint["href"]
-
-    random_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
-
-    session["code_verifier"] = random_code
-    session["authorization_endpoint"] = auth_endpoint
-    session["token_endpoint"] = token_endpoint["href"]
-
-    sha256_code = hashlib.sha256(random_code.encode('utf-8')).hexdigest()
-
-    code_challenge = base64.b64encode(sha256_code.encode('utf-8')).decode('utf-8')
-
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
-
-    session["state"] = state
-
-    return redirect(auth_endpoint + "?client_id=" + CLIENT_ID + "&redirect_uri=" + CALLBACK_URL + "&scope=read follow mute block channels&response_type=code&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=" + state)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

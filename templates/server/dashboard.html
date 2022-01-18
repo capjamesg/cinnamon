@@ -3,18 +3,18 @@
 <section class="content_box">
     <h2>Lists</h2>
     <a href="#" onclick="trigger_modal('list-form')" class="subscribe_button" style="float: right;">Create a new list</a>
-    {% if channels %}
+    {% if feeds %}
       <p>Here are the channels in your feed:</p>
       <ul>
-      {% for i in range(0, channels | length) %}
+      {% for i in range(0, feeds | length) %}
       <li class="button_list">
-        <a href="/reader/{{ channels[i][1] }}">{{ channels[i][0] }}</a>
+        <a href="/reader/{{ feeds[i][1] }}">{{ feeds[i][0] }}</a>
         <div style="float: right; position: relative;">
         {% if i != 0 %}
-        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i-1][1] }}"><input type="submit" value="⬆️" class="reaction" aria-labelledby="Move Up"></form>
+        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ feeds[i][1] }}"><input type="hidden" name="channel" value="{{ feeds[i-1][1] }}"><input type="submit" value="⬆️" class="reaction" aria-labelledby="Move Up"></form>
         {% endif %}
-        {% if i < channels | length - 1 %}
-        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ channels[i][1] }}"><input type="hidden" name="channel" value="{{ channels[i+1][1] }}"><input type="submit" value="⬇️" class="reaction" aria-labelledby="Move Down"></form>
+        {% if i < feeds | length - 1 %}
+        <form action="/reorder" method="POST"><input type="hidden" name="channel" value="{{ feeds[i][1] }}"><input type="hidden" name="channel" value="{{ feeds[i+1][1] }}"><input type="submit" value="⬇️" class="reaction" aria-labelledby="Move Down"></form>
         {% endif %}
         </div>
       </li>
@@ -37,14 +37,4 @@
     </form>
   </div>
 </section>
-<!-- <section class="content_box">
-  <h2>Discover a Feed</h2>
-  <p>Use the form below to discover a feed URL.</p>
-  <p>You can subscribe to RSS, Microformats 2, and JSON Feed feeds.</p>
-  <form action="/discover" method="POST">
-    <label for="discover">Website Address:</label><br>
-    <input id="discover" type="url" name="url" placeholder="https://theguardian.com" /><br>
-    <input type="submit" value="Discover feed" />
-  </form>
-</section> -->
 {% endblock %}

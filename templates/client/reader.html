@@ -30,24 +30,24 @@
             {% include "client/feed_item.html" %}
         {% set count.value = count.value + 1 %}
         {% endfor %}
+        {% if after != "" or before != "" %}
+            <li style="display: flex;">
+                {% if before != "" %}
+                    <div style="width: 50%; text-align: center;">
+                        <p><a href="/reader/{{ page_channel_uid }}?before={{ before }}">See Older Posts</a></p>
+                    </div>
+                {% endif %}
+                {% if after != "" %}
+                <div style="width: 50%; text-align: center;">
+                    <p><a href="/reader/{{ page_channel_uid }}?after={{ after }}">See Newer Posts</a></p>
+                </div>
+                {% endif %}
+            </li>
+        {% endif %}
         </ul>
     {% else %}
     </ul>
     <p class="content_box">There are no posts in this channel. Check back later to see if any posts are added.</p>
-    {% endif %}
-    {% if after != "" or before != "" %}
-        <div class="bottom-navigation">
-            {% if before != "" %}
-                <div class="prev">
-                    <p><a href="/reader/{{ page_channel_uid }}?before={{ before }}">See Older Posts</a></p>
-                </div>
-            {% endif %}
-            {% if after != "" %}
-            <div class="next">
-                <p><a href="/reader/{{ page_channel_uid }}?after={{ after }}">See Newer Posts</a></p>
-            </div>
-            {% endif %}
-        </div>
     {% endif %}
 </section>
 <section id="podcast_overlay" class="podcast" style="display: none; border-radius: 10px;">

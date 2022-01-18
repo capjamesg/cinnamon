@@ -1,12 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="content_box">
-    <h1>People You Follow</h1>
-    <p>You follow {{ count }} people.</p>
-    <form method="get">
-        <input type="text" name="q" id="search" placeholder="Search for someone..." value="{{ q }}">
-        <input type="submit" value="Search">
+<section class="search_box main_content_box">
+    <h1>Discover People</h1>
+    <form action="/search" method="get">
+        <input type="text" name="q" id="search" placeholder="Chemex coffee recipe" value="{{ q }}">
+        <select name="channel" id="channel" aria-labelledby="Channel in which to search (optional)">
+            {% for c in channels %}
+                <option value="{{ c._id }}">{{ c.name }}</option>
+            {% endfor %}
+        </select>
     </form>
+    <footer class="search_list">
+        <ul>
+            <li><a href="/search">Your Feed</a></li>
+            <li><a href="/following">Following</a></li>
+            <li><a href="/explore">People</a></li>
+        </ul>
+    </footer>
     {% if feeds %}
         <ul id="results" class="feed">
             {% for feed in feeds %}
@@ -16,7 +26,8 @@
                         <img src="{{ feed.get("photo") }}" style="width: 50px; height: 50px; border-radius: 50%; float: left; margin-right: 10px;">
                     {% endif %}
                     {% if feed.get("name") != None %}
-                        <p><a href="{{ feed.get("url") }}">{{ feed.get("name") }}</a> (#{{ feed.get("channel") }})</p>
+                        <p><a href="{{ feed.get("url") }}">{{ feed.get("name") }}</a>
+                            (<a href="/reader/{{ feed.get("channel") }}">{{ feed.get("channel_name") }})</a></p>
                     {% else %}
                         <p><a href="{{ feed.get("url") }}">{{ feed.get("url") }}</a></p>
                     {% endif %}

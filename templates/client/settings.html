@@ -1,26 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="main_content_box">
-    <h1>Your user settings ⚙️</h1>
+    <h1>Your settings ⚙️</h1>
     <section>
-        <h2>User information 📝</h2>
-        <p>You are signed in as: <a href='{{ session.get("me") }}'>{{ session.get("me") }}</a></code>
-        <p>Your Microsub server is located at: <a href='{{ session.get("server_url") }}'>{{ session.get("server_url") }}</a></p>
-        <p>Your access token is:</p>
-        <code>{{ session.get("access_token") }}</code>
-        {% if session.get("scope") and session.get("scope").split(" ") | length > 0 %}
-            <p>The following scopes have been approved for your account:</p>
-            <ul>
-                {% for scope in session.get("scope").split(" ") %}
-                    <li>{{ scope }}</li>
-                {% endfor %}
-            </ul>
+        {% if session.get("h-card", {}).get("name") %}
+        <h2>Your name</h2>
+        <p>{{ session.get("h-card", {}).get("name") }}</p>
+        <h2>Your bio</h2>
+        <p>{{ session.get("h-card", {}).get("note") }}</p>
+        <h2>Your website</h2>
+        <p>{{ session.get("me") }}</p>
         {% else %}
-            <p>No scopes have been approved for your account.</p>
+            <h2>Your website</h2>
+            <p>{{ session.get("me") }}</p>
         {% endif %}
+        <details>
+            <summary>Advanced Options</summary>
+            <h2>Server Location</h2>
+            <p>Your Microsub server is located at: <a href='{{ session.get("server_url") }}'>{{ session.get("server_url") }}</a></p>
+            <h2>Scopes</h2>
+            {% if session.get("scope") and session.get("scope").split(" ") | length > 0 %}
+                <p>Your have granted permission for the following scopes: {{ session.get("scopes").replace(" ", ", ") }}</p>
+            {% else %}
+                <p>You have not granted any scopes.</p>
+            {% endif %}
+        </details>
     </section>
     <section>
-        <h2>Bookmarklet 🔖</h2>
+        <h2>Bookmarklets 🔖</h2>
 
         <p>You can use the following bookmarklets to subscribe to a feed or save an article for later reading:</p>
 

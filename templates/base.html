@@ -12,6 +12,8 @@
   
     <meta property="og:image" content="/static/feed.png">
     <meta name="twitter:image:src" content="/static/feed.png">
+
+    <link rel="manifest" href="/manifest.json">
   
     <meta name="twitter:card" content="summary">
 
@@ -25,9 +27,13 @@
 
     <link rel="apple-touch-icon" sizes="256x256" href="/static/icons/256.png">
 
+    <meta name="apple-touch-fullscreen" content="yes" />
+
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <meta name="apple-mobile-web-app-title" content="Cinnamon">
 
     <!-- Twitter Card data -->
     <meta name="twitter:card" content="summary_large_image">
@@ -47,7 +53,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <style id="darkmode" media="none">
-      .feed li, aside, .content_box, .main_content_box, .green_notification, .modal_content, #top_navigation, .bottom-navigation, html {
+      .feed li, aside, .content_box, .main_content_box, .green_notification, .search_list, .modal_content, details, summary, #top_navigation, .bottom-navigation, html {
         background-color: #1F2937;
         background: #1F2937 !important;
       }
@@ -67,7 +73,7 @@
       p, li, dt, dd, .indieweb_footer, input, label {
         color: white;
       }
-      input, textarea, .code, select, option, pre, code, .reaction {
+      input, textarea, .code, select, option, pre, code, .reaction, .reaction-no-link {
         background-color: #0c2548 !important;
         color: white;
       }
@@ -173,19 +179,19 @@
         {% endif %}
         {% block content %}
         {% endblock %}
-        {% if session.get("me") %}
-          <footer class="sticky_footer mobile">
-            <ul>
-              <li><a href="/reader/all"><img src="/static/icons/home.svg" alt="Home" /></a></li>
-              <li><a href="/search"><img src="/static/icons/search.svg" alt="Search" /></a></li>
-              <li><a href="/reader/all"><img src="/static/icons/create.svg" alt="Write a Post" /></a></li>
-              <li><a href="/reader/{{ channels[1]['uid'] }}"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
-              <li><a href="#" onclick="subscribe_modal()"><img src="/static/icons/follow.svg" alt="Follow" /></a></li>
-              <li><a href="/settings"><img src="/static/icons/settings.svg" alt="Settings" /></a></li>
-            </ul>
-          </footer>
-        {% endif %}
       </div>
+      {% if session.get("me") %}
+        <footer class="sticky_footer mobile">
+          <ul>
+            <li><a href="/reader/all"><img src="/static/icons/home.svg" alt="Home" /></a></li>
+            <li><a href="/search"><img src="/static/icons/search.svg" alt="Search" /></a></li>
+            <li><a href="/reader/all"><img src="/static/icons/create.svg" alt="Write a Post" /></a></li>
+            <li><a href="/reader/{{ channels[1]['uid'] }}"><img src="/static/icons/bell.svg" alt="Notifications" /></a></li>
+            <li><a href="#" onclick="subscribe_modal()"><img src="/static/icons/follow.svg" alt="Follow" /></a></li>
+            <li><a href="/settings"><img src="/static/icons/settings.svg" alt="Settings" /></a></li>
+          </ul>
+        </footer>
+      {% endif %}
       <a href="#main" class="accessibility_label">Go Back to the Top</a>
     </main>
   </body>

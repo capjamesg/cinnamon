@@ -28,11 +28,11 @@ def index():
     if is_authenticated:
         return redirect("/reader/all")
 
-    return render_template("index.html", title="Home | Cinnamon", channels=[])
+    return render_template("index.html", title="Home", channels=[])
 
 @main.route("/setup")
 def setup():
-    return render_template("setup.html", title="Setup | Cinnamon", channels=[])
+    return render_template("setup.html", title="Setup", channels=[])
 
 @main.route("/endpoint", methods=["GET", "POST"])
 def home():
@@ -109,20 +109,20 @@ def dashboard():
     if not auth_result:
         return redirect("/login")
 
+    headers = {
+        "Authorization": session["access_token"]
+    }
+
+    channels = requests.get(session.get("server_url") + f"?action=follow&channel=all", headers=headers).json()
+
     connection = sqlite3.connect("microsub.db")
 
     with connection:
         cursor = connection.cursor()
 
-        headers = {
-            "Authorization": session["access_token"]
-        }
+        feeds = cursor.execute("SELECT * FROM channels").fetchall()
 
-        feeds = requests.get(session.get("server_url") + f"?action=follow&channel=all", headers=headers).json()
-
-        all_channels = cursor.execute("SELECT * FROM channels ORDER BY position ASC;").fetchall()
-
-        return render_template("server/dashboard.html", title="Cinnamon", channels=all_channels, feeds=feeds)
+    return render_template("server/dashboard.html", title="Your Lists", channels=channels["items"], feeds=feeds)
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
@@ -323,12 +323,26 @@ def get_all_feeds():
         cursor = connection.cursor()
 
         if channel:
-            feeds = cursor.execute("SELECT * FROM following WHERE channel = ? ORDER BY id DESC", (channel,)).fetchall()
+            feeds = cursor.execute("""
+                SELECT f.channel, f.url, f.etag, f.photo, f.name, f.id, f.muted, f.blocked, c.channel AS channel_name
+                FROM following AS f, channels AS c
+                INNER JOIN channels ON c.uid = f.channel
+                GROUP BY f.id
+                WHERE channel = ? ORDER BY id DESC;
+            """, (channel,)).fetchall()
         else:
-            feeds = cursor.execute("SELECT * FROM following ORDER BY id DESC").fetchall()
+            feeds = cursor.execute("""
+                SELECT f.channel, f.url, f.etag, f.photo, f.name, f.id, f.muted, f.blocked, c.channel AS channel_name
+                FROM following AS f, channels AS c
+                INNER JOIN channels ON c.uid = f.channel
+                GROUP BY f.id
+                ORDER BY id DESC;
+            """).fetchall()
 
     # source: https://nickgeorge.net/programming/python-sqlite3-extract-to-dictionary/#writing_a_function
     unpacked = [{k: item[k] for k in item.keys()} for item in feeds]
+
+    print(unpacked)
 
     count = len(feeds)
 
@@ -339,7 +353,7 @@ def get_all_feeds():
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     return render_template("server/modify_channel.html",
-        title=f"People You Follow | Cinnamon",
+        title=f"People You Follow",
         feeds=unpacked,
         count=count,
         channels=channel_req.json()["channels"]

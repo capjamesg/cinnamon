@@ -95,6 +95,10 @@ This endpoint does not yet provide support for muting users. This feature is par
 
 This project is licensed under the [MIT license](LICENSE).
 
+## Acknowledgements
+
+The author of this project would like to thank the [Feather](https://github.com/feathericons/feather) open source icon set for creating an open repository of icons. This project uses a few icons from Feather in the mobile view.
+
 ## Maintainers
 
 - [capjamesg](https://github.com/capjamesg)

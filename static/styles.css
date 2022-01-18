@@ -17,6 +17,7 @@ html {
 	max-width: 50em;
 	margin: auto;
 	margin-top: 10px;
+	margin-bottom: 75px;
 }
 p, code, li {
 	font-size: 1.0625rem;
@@ -398,7 +399,7 @@ input[type="submit"] {
 	nav {
 		background-color: white;
 		padding: 10px;
-		border: 1px solid lightgray;
+		border-bottom: 1px solid lightgray;
 	}
 	#desktop_navigation {
 		display: none;

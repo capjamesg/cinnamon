@@ -53,6 +53,10 @@ def get_timeline():
     after = request.args.get("after")
     before = request.args.get("before")
 
+    print("s")
+    print(request.args)
+    print("s")
+
     connection = sqlite3.connect("microsub.db")
 
     with connection:
@@ -90,7 +94,7 @@ def get_timeline():
         # 8 = id
         before = item_list[-1][8]
         after = ""
-    elif len(item_list) <= 20 and len(item_list) != 0:
+    elif len(item_list) <= 21 and len(item_list) != 0:
         before = item_list[0][8]
         after = item_list[-1][8]
     else:
