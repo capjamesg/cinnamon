@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+
     <title>{% if title %}{{ title }}{% else %}Cinnamon{% endif %}</title>
 
     <meta name="description" content="Cinnamon lets you keep track of posts on the web and post content to your website.">
@@ -92,7 +93,7 @@
       <nav id="top_navigation">
         {% if session.get("me") %}
           {% if channel_name %}
-            <p><a href="/reader/all" id="page_title">Cinnamon</a> ({{ channel_name }} Posts)</p>
+            <h2 style="text-align: center;">{{ channel_name }} Posts</h2>
           {% else %}
             <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
           {% endif %}
@@ -109,10 +110,7 @@
           <li><a href="/settings">👤 {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">🔒 Logout</a></li>
         </ul>
-        <ul id="mobile_navigation">
-          <li><a href="/lists">📚 Lists</a></li>
-          <li><a onclick="show_settings()">Menu</a></li>
-        </ul>
+        <p id="mobile_navigation"><img src="https://jamesg.blog/assets/coffeeshop.jpg" height="40" width="40" onclick="show_settings()" /></p>
         {% else %}
         <ul>
           <li><a href="/setup">Setup</a></li>
@@ -172,6 +170,7 @@
             <h2>Settings</h2>
             <ul>
               <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
+              <li><a href="/lists">📚 Lists</a></li>
               <li><a href="/settings">👤 {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
               <li><a href="/logout">🔒 Logout</a></li>
             </ul>

@@ -87,7 +87,6 @@ button a:hover, .button_link:hover {
 nav, footer ul {
 	display: flex;
 	background: white;
-	box-shadow: 0px 4px lightgrey;
 	padding-left: 25px;
 	padding-right: 25px;
 }
@@ -338,7 +337,7 @@ input[type="submit"] {
 #mobile_navigation, .mobile_close, .mobile {
 	display: none;
 }
-@media only screen and (max-width: 850px) {
+@media only screen and (max-width: 900px) {
 	article img, .blogList img {
 		width: 100% !important;
 	}
@@ -398,7 +397,7 @@ input[type="submit"] {
 	}
 	nav {
 		background-color: white;
-		padding: 10px;
+		padding: 0;
 		border-bottom: 1px solid lightgray;
 	}
 	#desktop_navigation {
@@ -546,6 +545,7 @@ footer a:focus {
 	background-color: white;
 	border-top: 2px solid lightgrey;
 	text-align: center;
+	padding-bottom: 10px;
 }
 .search_list ul {
 	margin: 0;
@@ -613,7 +613,7 @@ hr {
 }
 details, summary {
 	max-width: 100%;
-	width: 100%;
+	display: inline-block;
 	box-sizing: border-box;
 }
 .dragover, .data_message {

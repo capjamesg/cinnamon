@@ -113,8 +113,6 @@ def microsub_reader(channel):
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
 
-    print(microsub_req.json()["paging"])
-
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
     all_channels = channel_req.json()["channels"]

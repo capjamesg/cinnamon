@@ -342,8 +342,6 @@ def get_all_feeds():
     # source: https://nickgeorge.net/programming/python-sqlite3-extract-to-dictionary/#writing_a_function
     unpacked = [{k: item[k] for k in item.keys()} for item in feeds]
 
-    print(unpacked)
-
     count = len(feeds)
 
     headers = {
