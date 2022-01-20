@@ -6,14 +6,18 @@
         {% if channels[1]['uid'] != channel_id %}
             <li style="text-align: right;">
                 <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
-                <p class="reaction_set" style="float: left;">
-                    <input type="file" id="post_image" style="display: none;">
-                    <label for="post_image" class="reaction">📷</label>
-                    <span onclick="add_rsvp_text()" class="reaction">📅</span>
-                    <span onclick="add_review_text()" class="reaction">⭐</span>
-                </p>
-                (<span id="character_count">0</span>)
-                <p id="data_message"></p>
+                <div class="post_container_footer" style="display: flex;">
+                    <p class="reaction_set flex_left_home" style="margin-top: 0; width: initial;">
+                        <input type="file" id="post_image" style="display: none;">
+                        <label for="post_image" class="reaction">📷</label>
+                        <span onclick="add_rsvp_text()" class="reaction">📅</span>
+                        <span onclick="add_review_text()" class="reaction">⭐</span>
+                    </p>
+                    <div class="flex_right_home">
+                        (<span id="character_count">0</span>)
+                        <p id="data_message"></p>
+                    </div>
+                </div>
                 <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
             </li>
         {% endif %}

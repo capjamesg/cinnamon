@@ -51,7 +51,11 @@
                     for (var i = 0; i < as_json["items"].length; i++) {
                         result_item = `<li>
                             <h3><a href="${as_json["items"][i]["url"]}">${as_json["items"][i]["title"]}</a></h3>
-                            <p>${as_json["items"][i]["author"] ? "Published by " + as_json["items"][i]["author"]["name"] + " on " : ""} ${as_json["items"][i]["published"].split("T").slice(0, 0)}</p>
+                            <p>${as_json["items"][i]["author"] ? "Published by " + as_json["items"][i]["author"]["name"] + " on " : ""} ${
+                                as_json["items"][i]["published"].slice(6, 8) + "-" +
+                                as_json["items"][i]["published"].slice(4, 6) + "-" +
+                                as_json["items"][i]["published"].slice(0, 4)
+                            }</p>
                             <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
                             <p class="reaction_set">
                                 {% if "create" in session.get("scope") and session.get('micropub_url') %}

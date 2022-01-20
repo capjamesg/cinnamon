@@ -206,7 +206,7 @@ def react_to_post():
 
         content = request.form.get("content")
 
-        content += '<a href="https://brid.gy/publish/twitter?bridgy_omit_link=true"></a>'
+        content += '<a href="https://brid.gy/publish/twitter"></a>'
 
         hashtags = re.findall(r"#(\w+)", content)
         hashtags.append("Note")
@@ -409,7 +409,7 @@ def make_micropub_media_request():
         files={"file": (file.filename, file.read(), "image/jpeg")},
         headers=headers)
 
-    if photo_r.status_code != 201:
+    if photo_r.status_code != 201 and photo_r.status_code != 200:
         return "error"
 
     return jsonify({"result": photo_r.headers.get("Location", "")}), 200

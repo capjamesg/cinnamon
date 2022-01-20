@@ -53,10 +53,6 @@ def get_timeline():
     after = request.args.get("after")
     before = request.args.get("before")
 
-    print("s")
-    print(request.args)
-    print("s")
-
     connection = sqlite3.connect("microsub.db")
 
     with connection:
@@ -567,7 +563,6 @@ def remove_entry():
 
     if request.form.getlist("entry[]"):
         for entry in request.form.getlist("entry[]"):
-            print(entry)
             with connection:
                 cursor = connection.cursor()
                 cursor.execute("UPDATE timeline SET hidden = 1 WHERE uid = ?", (entry, ))
