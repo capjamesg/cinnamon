@@ -642,6 +642,6 @@ audio {
 	height: 50px;
 }
 .unread {
-	box-shadow: 3px 3px lightgreen;
+	box-shadow: 7px 7px lightgreen;
 	border: 2px solid grey;
 }

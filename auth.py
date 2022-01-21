@@ -36,7 +36,7 @@ def indieauth_callback_handler_view():
 
     session["me"] = response.get("me")
     session["access_token"] = response.get("access_token")
-    session["scope"] = response.get("scope")
+    session["scopes"] = response.get("scopes")
 
     session.permanent = True
 

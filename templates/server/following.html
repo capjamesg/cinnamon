@@ -34,13 +34,13 @@
                 </div>
                 <div style="flex: 1; text-align: right;" class="following_item">
                     <a onclick="send_unfollow('{{ feed.get("url") }}', '{{ feed[0] }}')" class="reaction">Unfollow ❌</a>
-                    {% if feed.get("muted") == 0 and "mute" in session.get("scope") %}
+                    {% if feed.get("muted") == 0 and "mute" in session.get("scopes") %}
                     <form action="/mute" method="POST"><input type="hidden" name="channel" value="{{ feed.get("url") }}">
                         <input type="hidden" name="url" value="{{ feed.get("url") }}">
                         <input type="hidden" name="action" value="mute">
                         <input type="submit" value="Mute" class="reaction">
                     </form>
-                    {% elif feed.get("muted") != 0 and "block" in session.get("scope") %}
+                    {% elif feed.get("muted") != 0 and "block" in session.get("scopes") %}
                     <form action="/mute" method="POST">
                         <input type="hidden" name="channel" value="{{ feed.get("url") }}">
                         <input type="hidden" name="url" value="{{ feed.get("url") }}">
@@ -48,14 +48,14 @@
                         <input type="submit" value="Unmute" class="reaction">
                     </form>
                     {% endif %}
-                    {% if feed.get("blocked") == 0 and "block" in session.get("scope") %}
+                    {% if feed.get("blocked") == 0 and "block" in session.get("scopes") %}
                     <form action="/block" method="POST">
                         <input type="hidden" name="channel" value="{{ feed.get("url") }}">
                         <input type="hidden" name="url" value="{{ feed.get("url") }}">
                         <input type="hidden" name="action" value="block">
                         <input type="submit" value="Block" class="reaction">
                     </form>
-                    {% elif feed.get("blocked") != 0 and "block" in session.get("scope") %}
+                    {% elif feed.get("blocked") != 0 and "block" in session.get("scopes") %}
                     <form action="/block" method="POST"><input type="hidden" name="channel" value="{{ feed.get("url") }}">
                         <input type="hidden" name="url" value="{{ feed.get("url") }}">
                         <input type="hidden" name="action" value="unblock">

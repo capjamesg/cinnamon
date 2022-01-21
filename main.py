@@ -350,7 +350,7 @@ def get_all_feeds():
 
     channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
 
-    return render_template("server/modify_channel.html",
+    return render_template("server/following.html",
         title=f"People You Follow",
         feeds=unpacked,
         count=count,
@@ -366,7 +366,7 @@ def mute_view():
 
     action = request.form.get("action")
 
-    if "mute" not in session["scope"]:
+    if "mute" not in session["scopes"]:
         flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
         return redirect(f"/reader/{request.form.get('channel')}")
 
@@ -402,7 +402,7 @@ def block_view():
 
     action = request.form.get("action")
 
-    if "block" not in session["scope"]:
+    if "block" not in session["scopes"]:
         flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
         return redirect(f"/reader/{request.form.get('channel')}")
 

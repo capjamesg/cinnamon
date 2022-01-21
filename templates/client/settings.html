@@ -19,7 +19,7 @@
             <h2>Server Location</h2>
             <p>Your Microsub server is located at: <a href='{{ session.get("server_url") }}'>{{ session.get("server_url") }}</a></p>
             <h2>Scopes</h2>
-            {% if session.get("scope") and session.get("scope").split(" ") | length > 0 %}
+            {% if session.get("scopes") and session.get("scopes").split(" ") | length > 0 %}
                 <p>Your have granted permission for the following scopes: {{ session.get("scopes").replace(" ", ", ") }}</p>
             {% else %}
                 <p>You have not granted any scopes.</p>
