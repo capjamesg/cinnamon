@@ -115,6 +115,7 @@
     }
 
     form.addEventListener('dragover', handleDragOver) 
+    form.addEventListener('dragleave', handleDragLeave)
 
     function handleDragOver(e) {
         e.preventDefault()
@@ -129,8 +130,6 @@
 
         form.classList.add('dragover')
     }
-
-    form.addEventListener('dragleave', handleDragLeave)
     
     function handleDragLeave(e) {
         e.preventDefault()
@@ -139,7 +138,7 @@
         var data_message = document.getElementById("data_message");
 
         data_message.innerHTML = "";
-        data_message.className = "";
+        data_message.classList = "";
         
         form.classList.remove('dragover')
     }
@@ -151,7 +150,7 @@
         let files = dt.files
 
         handleFiles(files)
-        handleDragLeave()
+        handleDragLeave(e)
     }
 
     function handleFiles(files) {
@@ -169,18 +168,7 @@
         })
         .then(response => response.json())
         .then(function(response) {
-            var uploaded_files = document.createElement("p");
-
-            uploaded_files.innerHTML = "Uploaded " + response["result"];
-            uploaded_files.classList.add("success");
             form.value += "<img class='u-photo' src='" + response["result"] + "' alt='' />";
-
-            form.after(uploaded_files);
-
-            // after 10 seconds, remove the success message
-            setTimeout(function() {
-                uploaded_files.remove();
-            }, 10000);
 
             send_notification("<p>Your photo was successfully uploaded.</p>")
         })

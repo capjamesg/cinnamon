@@ -309,6 +309,10 @@ input[type="submit"] {
 	display: inline;
 }
 
+#settings {
+	display: none;
+}
+
 @media print {
 	html {
 		background-color: white;
@@ -356,6 +360,14 @@ input[type="submit"] {
 		background-color: white;
 		box-sizing: border-box;
 		display: none;
+		text-align: center;
+	}
+	#settings a {
+		width: 100%;
+		display: block;
+		border: 1px solid lightgrey;
+		padding: 30px;
+		box-sizing: border-box;
 	}
 	.inner_content_box {
 		width: 100% !important;;
