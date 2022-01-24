@@ -28,7 +28,7 @@ def search_for_content():
         cursor = connection.cursor()
 
         if channel == "all":
-            result = cursor.execute("SELECT jf2 FROM timeline WHERE jf2 LIKE ?  ORDER BY date DESC;", (f"%{query}%", )).fetchall()
+            result = cursor.execute("SELECT jf2 FROM timeline WHERE jf2 LIKE ? ORDER BY date DESC;", (f"%{query}%", )).fetchall()
         else:
             result = cursor.execute("SELECT jf2 FROM timeline WHERE jf2 LIKE ? AND channel = ? ORDER BY date DESC;", (f"%{query}%", channel)).fetchall()
 
@@ -277,7 +277,7 @@ def get_channels():
     with connection:
         cursor = connection.cursor()
 
-        cursor.execute("SELECT uid, channel FROM channels ORDER BY position ASC;")
+        cursor.execute("SELECT uid, channel FROM channels ORDER BY position DESC;")
 
         result = change_to_json(cursor)
 

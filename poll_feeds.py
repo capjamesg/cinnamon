@@ -104,6 +104,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
     if "xml" in content_type or content_type == "binary/octet-stream":
         feed = feedparser.parse(url)
+        print(feed.entries)
         print("entries found: " + str(len(feed.entries)))
         logging.debug("entries found: " + str(len(feed.entries)))
 
@@ -278,7 +279,7 @@ def poll_feeds():
             channel_uids = []
             tasks = []
 
-            subscriptions = [["https://jvt.me", "", "", ""]]
+            subscriptions = [["https://webmention.jamesg.blog/rss?key=capjamesgwebmentionendpoint555", "", "", ""]]
 
             for s in subscriptions:
                 if s[0] != None:

@@ -2,7 +2,7 @@
     {% if w.get("title") %}
     <h3 id="{{ w['_id'] }}-heading"><a href='{{ w["url"] }}' target="_blank">{{ w["title"] }}</a></h3>
     {% endif %}
-    {% if channels[1]['uid'] != channel_id %}
+    {% if channels[0]['uid'] != channel_id %}
         {% if w.get("photo") and w.get("video") and (w["video"][0]["url"].startswith("https://youtube.com") or w["video"][0]["url"].startswith("https://www.youtube.com")) %}
             <a href="{{ w["video"][0]["url"] }}" class="embedded_video" onclick="show_video('{{ w["video"][0]["url"] }}', '{{ w['_id'] }}');" id="{{ w['_id'] }}"><img src='{{ w["photo"] }}' alt='{{ w["name"] }} header photo' /></a>
             <p>Click the image above to show the video.</p>
@@ -50,10 +50,10 @@
     <p id="{{ w['_id'] }}"><span id="{{ w['_id'] }}-start">{{ w["content"]["html"] | safe }}</span></p>
     <hr>
     {% endif %}
-    {% if channels[1]['uid'] == channel_id %}
+    {% if channels[0]['uid'] == channel_id %}
         <p>({{ w["published"] | strftime }})</p>
     {% endif %}
-    {% if channels[1]['uid'] != channel_id %}
+    {% if channels[0]['uid'] != channel_id %}
     <p class="reaction_set">
         {% if "create" in session.get("scopes") and session.get('micropub_url') %}
             <a onclick="event.preventDefault(); send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of={{ w['url'] }}" class="reaction {% if w.get("reactions", {}).get("like-of") == '' %}reacted{% endif %}" id="{{ w['_id'] }}-like-of">❤️</a>
