@@ -72,11 +72,35 @@ def create_app():
 
     @app.errorhandler(405)
     def method_not_allowed(e):
-        return render_template("404.html", title="Method not allowed", error=405, channels=[]), 405
+        auth_result = verify(request.headers, session)
+
+        if auth_result:
+            headers = {
+                "Authorization": session["access_token"]
+            }
+
+            channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+            all_channels = channel_req.json()["channels"]
+        else:
+            all_channels = []
+        return render_template("404.html", title="Method not allowed", error=405, channels=all_channels), 405
 
     @app.errorhandler(500)
     def server_error(e):
-        return render_template("404.html", title="Server error", error=500, channels=[]), 500
+        auth_result = verify(request.headers, session)
+
+        if auth_result:
+            headers = {
+                "Authorization": session["access_token"]
+            }
+
+            channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+            all_channels = channel_req.json()["channels"]
+        else:
+            all_channels = []
+        return render_template("404.html", title="Server error", error=500, channels=all_channels), 500
 
     @app.route("/robots.txt")
     def robots():
