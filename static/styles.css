@@ -95,6 +95,10 @@ nav, footer ul {
 	border-radius: 10px;
 	padding: 5px;
 }
+.subscribe_button a:focus {
+	text-decoration: none;
+	border: none;
+}
 nav ul li {
 	display: inline-block;
 	padding-left: 10px;

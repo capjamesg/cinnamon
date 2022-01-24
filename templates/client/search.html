@@ -58,7 +58,7 @@
                             }</p>
                             <p>${as_json["items"][i]["content"]["text"].split(" ").slice(0, 75).join(" ")}</p>
                             <p class="reaction_set">
-                                {% if "create" in session.get("scopes") and session.get('micropub_url') %}
+                                {% if "create" in session.get("scopes", "") and session.get('micropub_url') %}
                                     <a onclick="event.preventDefault(); send_reaction('like-of', 'like', '${as_json["items"][i]["url"]}',
                                     '${as_json["items"][i]["_id"]}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of=${as_json["items"][i]["url"]}" class="reaction">❤️</a>
                                     <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '${as_json["items"][i]["url"]}', '${as_json["items"][i]["_id"]}')"\
