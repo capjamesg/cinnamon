@@ -277,7 +277,7 @@ def get_channels():
     with connection:
         cursor = connection.cursor()
 
-        cursor.execute("SELECT uid, channel FROM channels ORDER BY position DESC;")
+        cursor.execute("SELECT uid, channel FROM channels ORDER BY position ASC;")
 
         result = change_to_json(cursor)
 
