@@ -94,8 +94,10 @@
         {% if session.get("me") %}
           {% if channel_name %}
             <h2 style="text-align: center;">{{ channel_name }} Posts</h2>
+          {% elif title %}
+            <h2 style="text-align: center;">{{ title }}</h2>
           {% else %}
-            <p><a href="/reader/all" id="page_title">Cinnamon</a></p>
+            <h2><a href="/reader/all" id="page_title">Cinnamon</a></h2>
           {% endif %}
         {% else %}
           <p><a href="/">Cinnamon</a></p>
@@ -106,7 +108,7 @@
           <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
           <li><a href="/lists">📚 Lists</a></li>
           <li><a href="/search">🔎 Search</a></li>
-          <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[0]['unread'] }})</a></li>
+          <li><a href="/reader/{{ channels[1]['uid'] }}">🔔 Notifications ({{ channels[1]['unread'] }})</a></li>
           <li><a href="/settings">👤 {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">🔒 Logout</a></li>
         </ul>

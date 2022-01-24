@@ -9,10 +9,10 @@
         <h2>Your bio</h2>
         <p>{{ session.get("h-card", {}).get("note") }}</p>
         <h2>Your website</h2>
-        <p>{{ session.get("me") }}</p>
+        <p>You are signed in as {{ session.get("me") }}.</p>
         {% else %}
             <h2>Your website</h2>
-            <p>{{ session.get("me") }}</p>
+            <p>You are signed in as {{ session.get("me") }}.</p>
         {% endif %}
         <details>
             <summary>Advanced Options</summary>

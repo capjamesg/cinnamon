@@ -1,4 +1,6 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, request, session
+from check_token import verify
+import requests
 from dateutil import parser
 from datetime import timedelta
 from config import SENTRY_DSN, SENTRY_SERVER_NAME
@@ -53,7 +55,20 @@ def create_app():
 
     @app.errorhandler(404)
     def page_not_found(e):
-        return render_template("404.html", title="Page not found", error=404, channels=[]), 404
+        auth_result = verify(request.headers, session)
+
+        if auth_result:
+            headers = {
+                "Authorization": session["access_token"]
+            }
+
+            channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+            all_channels = channel_req.json()["channels"]
+        else:
+            all_channels = []
+
+        return render_template("404.html", title="Page not found", error=404, channels=all_channels), 404
 
     @app.errorhandler(405)
     def method_not_allowed(e):

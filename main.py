@@ -113,16 +113,18 @@ def dashboard():
         "Authorization": session["access_token"]
     }
 
-    channels = requests.get(session.get("server_url") + f"?action=follow&channel=all", headers=headers).json()
+    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+
+    all_channels = channel_req.json()["channels"]
 
     connection = sqlite3.connect("microsub.db")
 
     with connection:
         cursor = connection.cursor()
 
-        feeds = cursor.execute("SELECT * FROM channels").fetchall()
+        feeds = cursor.execute("SELECT * FROM channels ORDER by position ASC;").fetchall()
 
-    return render_template("server/dashboard.html", title="Your Lists", channels=channels["items"], feeds=feeds)
+    return render_template("server/dashboard.html", title="Your Lists", channels=all_channels, feeds=feeds)
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
