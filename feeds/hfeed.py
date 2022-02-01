@@ -1,14 +1,22 @@
-import random
-import string
 import datetime
 import json
-from dateutil.parser import parse
-from bs4 import BeautifulSoup
-import indieweb_utils
+import random
+import string
 
-def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed_icon=None):
+import indieweb_utils
+from bs4 import BeautifulSoup
+from dateutil.parser import parse
+
+
+def process_hfeed(
+    child, hcard, channel_uid, url, feed_id, feed_title=None, feed_icon=None
+):
     jf2 = {
-        "url": indieweb_utils.canonicalize_url(child["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+        "url": indieweb_utils.canonicalize_url(
+            child["properties"]["url"][0],
+            url.split("/")[2],
+            child["properties"]["url"][0],
+        ),
     }
 
     if child["properties"].get("content"):
@@ -20,16 +28,24 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         jf2["author"] = {
             "type": "card",
             "name": hcard[0]["properties"]["name"][0],
-            "url": indieweb_utils.canonicalize_url(hcard[0]["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+            "url": indieweb_utils.canonicalize_url(
+                hcard[0]["properties"]["url"][0],
+                url.split("/")[2],
+                child["properties"]["url"][0],
+            ),
         }
-        
+
         # if hcard[0]["properties"].get("photo"):
         #     jf2["photo"] = indieweb_utils.canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
-    elif child["properties"].get("author") is not None and isinstance(child["properties"].get("author"), dict):
+    elif child["properties"].get("author") is not None and isinstance(
+        child["properties"].get("author"), dict
+    ):
         if type(child["properties"].get("author")[0]["properties"]) == str:
             h_card = [{"properties": {"name": child["properties"].get("author")[0]}}]
         elif child["properties"].get("author")[0]["properties"].get("url"):
-            h_card = indieweb_utils.discover_author(child["properties"].get("author")[0]["properties"].get("url")[0])
+            h_card = indieweb_utils.discover_author(
+                child["properties"].get("author")[0]["properties"].get("url")[0]
+            )
         else:
             h_card = []
 
@@ -37,16 +53,26 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
             jf2["author"] = {
                 "type": "card",
                 "name": h_card["properties"]["name"][0],
-                "url": indieweb_utils.canonicalize_url(h_card["properties"]["url"][0], url.split("/")[2], child["properties"]["url"][0]),
+                "url": indieweb_utils.canonicalize_url(
+                    h_card["properties"]["url"][0],
+                    url.split("/")[2],
+                    child["properties"]["url"][0],
+                ),
             }
 
             if h_card["properties"].get("photo"):
-                jf2["photo"] = indieweb_utils.canonicalize_url(h_card["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+                jf2["photo"] = indieweb_utils.canonicalize_url(
+                    h_card["properties"]["photo"][0],
+                    url.split("/")[2],
+                    child["properties"]["url"][0],
+                )
     elif feed_title != None:
         jf2["author"] = {
             "type": "card",
             "name": feed_title,
-            "url": indieweb_utils.canonicalize_url(url, url.split("/")[2], child["properties"]["url"][0])
+            "url": indieweb_utils.canonicalize_url(
+                url, url.split("/")[2], child["properties"]["url"][0]
+            ),
         }
 
         if feed_icon != None:
@@ -56,10 +82,18 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
         return
 
     if child["properties"].get("photo"):
-        jf2["photo"] = indieweb_utils.canonicalize_url(child["properties"].get("photo")[0], url.split("/")[2], child["properties"]["url"][0]) 
+        jf2["photo"] = indieweb_utils.canonicalize_url(
+            child["properties"].get("photo")[0],
+            url.split("/")[2],
+            child["properties"]["url"][0],
+        )
 
     if child["properties"].get("video"):
-        video_url = indieweb_utils.canonicalize_url(child["properties"].get("video")[0], url.split("/")[2], child["properties"]["url"][0]) 
+        video_url = indieweb_utils.canonicalize_url(
+            child["properties"].get("video")[0],
+            url.split("/")[2],
+            child["properties"]["url"][0],
+        )
         jf2["video"] = [{"content_type": "", "url": video_url}]
 
     if child["properties"].get("category"):
@@ -75,18 +109,24 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
     if child["properties"].get("content"):
         jf2["content"] = {
             "html": child["properties"].get("content")[0]["html"],
-            "text": BeautifulSoup(child["properties"].get("content")[0]["value"], "lxml").get_text(separator="\n")
+            "text": BeautifulSoup(
+                child["properties"].get("content")[0]["value"], "lxml"
+            ).get_text(separator="\n"),
         }
     elif child["properties"].get("summary"):
         jf2["content"] = {
-            "text": BeautifulSoup(child["properties"].get("summary")[0], "lxml").get_text(separator="\n"),
-            "html": child["properties"].get("summary")[0]
+            "text": BeautifulSoup(
+                child["properties"].get("summary")[0], "lxml"
+            ).get_text(separator="\n"),
+            "html": child["properties"].get("summary")[0],
         }
     # this is non standard but supported by jvt.me, whose bookmarks I would like to see properly in my reader
     elif child["properties"].get("bridgy-twitter-content"):
         jf2["content"] = {
-            "text": BeautifulSoup(child["properties"].get("bridgy-twitter-content")[0], "lxml").get_text(separator="\n"),
-            "html": child["properties"].get("bridgy-twitter-content")[0]
+            "text": BeautifulSoup(
+                child["properties"].get("bridgy-twitter-content")[0], "lxml"
+            ).get_text(separator="\n"),
+            "html": child["properties"].get("bridgy-twitter-content")[0],
         }
 
     wm_properties = ["in-reply-to", "like-of", "bookmark-of", "repost-of"]
@@ -109,7 +149,9 @@ def process_hfeed(child, hcard, channel_uid, url, feed_id, feed_title=None, feed
     else:
         date = datetime.datetime.now().strftime("%Y%m%d")
 
-    ten_random_letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+    ten_random_letters = "".join(
+        random.choice(string.ascii_lowercase) for _ in range(10)
+    )
 
     jf2["published"] = date
 

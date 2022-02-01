@@ -1,7 +1,9 @@
 import datetime
-from dateutil.parser import parse
-from bs4 import BeautifulSoup
+
 import indieweb_utils
+from bs4 import BeautifulSoup
+from dateutil.parser import parse
+
 
 def process_json_feed(item, feed):
     result = {
@@ -11,21 +13,18 @@ def process_json_feed(item, feed):
     result["url"] = item.get("url")
 
     if feed.get("author") and not item.get("author"):
-        result["author"] = {
-            "type": "card",
-            "name": feed.get("author").get("name")
-        }
+        result["author"] = {"type": "card", "name": feed.get("author").get("name")}
         if feed.get("home_page_url"):
             result["author"]["url"] = indieweb_utils.canonicalize_url(
-                feed.get("home_page_url"), 
+                feed.get("home_page_url"),
                 item.get("url").split("/")[2],
-                feed.get("home_page_url")
+                feed.get("home_page_url"),
             )
         else:
             result["author"]["url"] = indieweb_utils.canonicalize_url(
                 feed.get("feed_url"),
                 item.get("url").split("/")[2],
-                feed.get("feed_url")
+                feed.get("feed_url"),
             )
     elif item.get("author") != None and item["author"].get("url"):
         result["author"] = {
@@ -34,8 +33,8 @@ def process_json_feed(item, feed):
             "url": indieweb_utils.canonicalize_url(
                 item["author"].get("url"),
                 item["author"].get("url").split("/")[2],
-                item["author"].get("url")
-            )
+                item["author"].get("url"),
+            ),
         }
 
         if item["author"].get("avatar"):
@@ -47,8 +46,8 @@ def process_json_feed(item, feed):
             "url": indieweb_utils.canonicalize_url(
                 item["author"].get("url"),
                 item["author"].get("url").split("/")[2],
-                item["author"].get("url")
-            )
+                item["author"].get("url"),
+            ),
         }
 
     if item.get("image"):
@@ -59,10 +58,14 @@ def process_json_feed(item, feed):
     if item.get("attachments"):
         for i in item.get("attachments"):
             if "audio" in i.get("mime_type"):
-                result["audio"] = [{"content_type": i.get("mime_type"), "url": i.get("url")}]
+                result["audio"] = [
+                    {"content_type": i.get("mime_type"), "url": i.get("url")}
+                ]
                 break
             elif "video" in i.get("mime_type"):
-                result["video"] = [{"content_type": i.get("mime_type"), "url": i.get("url")}]
+                result["video"] = [
+                    {"content_type": i.get("mime_type"), "url": i.get("url")}
+                ]
                 break
 
     if item.get("published"):
@@ -91,7 +94,9 @@ def process_json_feed(item, feed):
     if item.get("title"):
         result["title"] = item.get("title")
     else:
-        result["title"] = f"Post by {result['author'].get('name', item.get('url').split('/')[2])}"
+        result[
+            "title"
+        ] = f"Post by {result['author'].get('name', item.get('url').split('/')[2])}"
 
     if item.get("url"):
         result["url"] = item.get("url")

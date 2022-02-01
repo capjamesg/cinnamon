@@ -1,5 +1,7 @@
-from config import TOKEN_ENDPOINT, ME
 import requests
+
+from config import ME, TOKEN_ENDPOINT
+
 
 def verify(headers, session):
     if headers.get("Authorization") != None:
@@ -9,9 +11,13 @@ def verify(headers, session):
     else:
         return False
 
-    check_token = requests.get(TOKEN_ENDPOINT, headers={"Authorization": "Bearer " + access_token})
+    check_token = requests.get(
+        TOKEN_ENDPOINT, headers={"Authorization": "Bearer " + access_token}
+    )
 
-    if check_token.status_code != 200 or (check_token.json().get("me") and check_token.json()["me"] != ME):
+    if check_token.status_code != 200 or (
+        check_token.json().get("me") and check_token.json()["me"] != ME
+    ):
         return False
 
     return True

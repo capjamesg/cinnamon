@@ -1,10 +1,12 @@
-from flask import Flask, render_template, send_from_directory, request, session
-from check_token import verify
+import os
+from datetime import timedelta
+
 import requests
 from dateutil import parser
-from datetime import timedelta
+from flask import Flask, render_template, request, send_from_directory, session
+
+from check_token import verify
 from config import SENTRY_DSN, SENTRY_SERVER_NAME
-import os
 
 # set up sentry for error handling
 if SENTRY_DSN != "":
@@ -15,15 +17,16 @@ if SENTRY_DSN != "":
         dsn=SENTRY_DSN,
         integrations=[FlaskIntegration()],
         traces_sample_rate=1.0,
-        server_name=SENTRY_SERVER_NAME
+        server_name=SENTRY_SERVER_NAME,
     )
+
 
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = os.urandom(32)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///microsub.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config["SECRET_KEY"] = os.urandom(32)
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///microsub.db"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # read config.py file
     app.config.from_pyfile(os.path.join(".", "config.py"), silent=False)
@@ -46,61 +49,76 @@ def create_app():
 
     # filter used to parse dates
     # source: https://stackoverflow.com/questions/4830535/how-do-i-format-a-date-in-jinja2
-    @app.template_filter('strftime')
+    @app.template_filter("strftime")
     def _jinja2_filter_datetime(date, fmt=None):
         date = parser.parse(date)
         native = date.replace(tzinfo=None)
-        format= '%b %d, %Y'
-        return native.strftime(format) 
+        format = "%b %d, %Y"
+        return native.strftime(format)
 
     @app.errorhandler(404)
     def page_not_found(e):
         auth_result = verify(request.headers, session)
 
         if auth_result:
-            headers = {
-                "Authorization": session["access_token"]
-            }
+            headers = {"Authorization": session["access_token"]}
 
-            channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+            channel_req = requests.get(
+                session.get("server_url") + "?action=channels", headers=headers
+            )
 
             all_channels = channel_req.json()["channels"]
         else:
             all_channels = []
 
-        return render_template("404.html", title="Page not found", error=404, channels=all_channels), 404
+        return (
+            render_template(
+                "404.html", title="Page not found", error=404, channels=all_channels
+            ),
+            404,
+        )
 
     @app.errorhandler(405)
     def method_not_allowed(e):
         auth_result = verify(request.headers, session)
 
         if auth_result:
-            headers = {
-                "Authorization": session["access_token"]
-            }
+            headers = {"Authorization": session["access_token"]}
 
-            channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+            channel_req = requests.get(
+                session.get("server_url") + "?action=channels", headers=headers
+            )
 
             all_channels = channel_req.json()["channels"]
         else:
             all_channels = []
-        return render_template("404.html", title="Method not allowed", error=405, channels=all_channels), 405
+        return (
+            render_template(
+                "404.html", title="Method not allowed", error=405, channels=all_channels
+            ),
+            405,
+        )
 
     @app.errorhandler(500)
     def server_error(e):
         auth_result = verify(request.headers, session)
 
         if auth_result:
-            headers = {
-                "Authorization": session["access_token"]
-            }
+            headers = {"Authorization": session["access_token"]}
 
-            channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+            channel_req = requests.get(
+                session.get("server_url") + "?action=channels", headers=headers
+            )
 
             all_channels = channel_req.json()["channels"]
         else:
             all_channels = []
-        return render_template("404.html", title="Server error", error=500, channels=all_channels), 500
+        return (
+            render_template(
+                "404.html", title="Server error", error=500, channels=all_channels
+            ),
+            500,
+        )
 
     @app.route("/robots.txt")
     def robots():
@@ -118,5 +136,6 @@ def create_app():
     # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5], profile_dir='./profile')
 
     return app
+
 
 create_app()

@@ -1,25 +1,27 @@
 import sqlite3
 
 import requests
-from flask import Blueprint, request, jsonify, session, redirect, flash, render_template, abort
-from check_token import verify as check_token
-from actions import *
+from flask import (Blueprint, abort, flash, jsonify, redirect, render_template,
+                   request, session)
 
-main = Blueprint('main', __name__, template_folder='templates')
+from actions import *
+from check_token import verify as check_token
+
+main = Blueprint("main", __name__, template_folder="templates")
+
 
 def microsub_api_request(post_data, success_message):
     request = requests.post(
         session.get("server_url"),
         data=post_data,
-        headers={
-            'Authorization': 'Bearer ' + session["access_token"]
-        }
+        headers={"Authorization": "Bearer " + session["access_token"]},
     )
 
     if request.status_code == 200:
         flash(success_message)
     else:
         flash(request.json()["error"])
+
 
 @main.route("/")
 def index():
@@ -30,9 +32,11 @@ def index():
 
     return render_template("index.html", title="Home", channels=[])
 
+
 @main.route("/setup")
 def setup():
     return render_template("setup.html", title="Setup", channels=[])
+
 
 @main.route("/endpoint", methods=["GET", "POST"])
 def home():
@@ -54,7 +58,7 @@ def home():
 
     if not action:
         return jsonify({"error": "No action specified."}), 400
-    
+
     if action == "timeline" and request.method == "GET" and not identifier:
         return get_timeline()
     elif action == "timeline" and request.method == "GET" and identifier:
@@ -99,8 +103,17 @@ def home():
             return delete_channel()
 
         return create_channel()
-    
-    return jsonify({"error": "invalid_request", "error_description": "The action and method provided are not valid."}), 400
+
+    return (
+        jsonify(
+            {
+                "error": "invalid_request",
+                "error_description": "The action and method provided are not valid.",
+            }
+        ),
+        400,
+    )
+
 
 @main.route("/lists")
 def dashboard():
@@ -109,11 +122,11 @@ def dashboard():
     if not auth_result:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+    channel_req = requests.get(
+        session.get("server_url") + "?action=channels", headers=headers
+    )
 
     all_channels = channel_req.json()["channels"]
 
@@ -122,9 +135,14 @@ def dashboard():
     with connection:
         cursor = connection.cursor()
 
-        feeds = cursor.execute("SELECT * FROM channels ORDER by position ASC;").fetchall()
+        feeds = cursor.execute(
+            "SELECT * FROM channels ORDER by position ASC;"
+        ).fetchall()
 
-    return render_template("server/dashboard.html", title="Your Lists", channels=all_channels, feeds=feeds)
+    return render_template(
+        "server/dashboard.html", title="Your Lists", channels=all_channels, feeds=feeds
+    )
+
 
 @main.route("/reorder", methods=["POST"])
 def reorder_channels_view():
@@ -137,17 +155,15 @@ def reorder_channels_view():
         req = {
             "action": "channels",
             "method": "order",
-            "channels": request.form.getlist("channel")
+            "channels": request.form.getlist("channel"),
         }
 
-        microsub_api_request(
-            req,
-            "Your channels have been reordered."
-        )
+        microsub_api_request(req, "Your channels have been reordered.")
 
         return redirect("/lists")
     else:
         return redirect("/lists")
+
 
 @main.route("/create-channel", methods=["POST"])
 def create_channel_view():
@@ -157,17 +173,14 @@ def create_channel_view():
         return redirect("/login")
 
     if request.form.get("name"):
-        req = {
-            "action": "channels",
-            "name": request.form.get("name")
-        }
+        req = {"action": "channels", "name": request.form.get("name")}
 
         microsub_api_request(
-            req,
-            f"You have created a new channel called {request.form.get('name')}."
+            req, f"You have created a new channel called {request.form.get('name')}."
         )
-    
+
     return redirect("/lists")
+
 
 @main.route("/delete-channel", methods=["POST"])
 def delete_channel_view():
@@ -180,17 +193,15 @@ def delete_channel_view():
         req = {
             "action": "channels",
             "channel": request.form.get("channel"),
-            "method": "delete"
+            "method": "delete",
         }
 
-        microsub_api_request(
-            req,
-            f"The specified channel has been deleted."
-        )
+        microsub_api_request(req, f"The specified channel has been deleted.")
 
         return redirect("/lists")
-    
+
     return redirect("/lists")
+
 
 @main.route("/unfollow", methods=["POST"])
 def unfollow_view():
@@ -203,15 +214,13 @@ def unfollow_view():
         req = {
             "action": "unfollow",
             "channel": request.form.get("channel"),
-            "url": request.form.get("url")
+            "url": request.form.get("url"),
         }
 
-        microsub_api_request(
-            req,
-            f"Your unfollow was successful."
-        )
-    
+        microsub_api_request(req, f"Your unfollow was successful.")
+
     return redirect("/following")
+
 
 def discover_web_page_feeds(url):
     if not url.startswith("http://") and not url.startswith("https://"):
@@ -234,9 +243,13 @@ def discover_web_page_feeds(url):
     feeds = []
 
     if soup.find("link", rel="alternate", type="application/atom+xml"):
-        feeds.append(soup.find("link", rel="alternate", type="application/atom+xml").get("href"))
+        feeds.append(
+            soup.find("link", rel="alternate", type="application/atom+xml").get("href")
+        )
     if soup.find("link", rel="alternate", type="application/rss+xml"):
-        feeds.append(soup.find("link", rel="alternate", type="application/rss+xml").get("href"))
+        feeds.append(
+            soup.find("link", rel="alternate", type="application/rss+xml").get("href")
+        )
     if soup.find("link", rel="feed", type="text/html"):
         # used for mircoformats rel=feed discovery
         feeds.append(soup.find("link", rel="feed", type="text/html").get("href"))
@@ -254,7 +267,8 @@ def discover_web_page_feeds(url):
             feeds[feed] = "https:" + f
 
     return feeds
-        
+
+
 @main.route("/discover-feed")
 def discover_feed():
     auth_result = check_token(request.headers, session)
@@ -269,8 +283,9 @@ def discover_feed():
     if len(feeds) == 0:
         flash("No feed could be found attached to the web page you submitted.")
         return redirect("/following")
-    
+
     return redirect("/preview?url={}".format(feeds[0]))
+
 
 @main.route("/following/search", methods=["POST"])
 def search_for_feed():
@@ -283,11 +298,14 @@ def search_for_feed():
     connection.row_factory = sqlite3.Row
 
     query = request.args.get("query")
-    
+
     with connection:
         cursor = connection.cursor()
 
-        feeds = cursor.execute("SELECT * FROM following WHERE name LIKE ? ORDER BY id DESC", (f"%{query}%", )).fetchall()
+        feeds = cursor.execute(
+            "SELECT * FROM following WHERE name LIKE ? ORDER BY id DESC",
+            (f"%{query}%",),
+        ).fetchall()
 
     unpacked = [{k: item[k] for k in item.keys()} for item in feeds]
 
@@ -313,8 +331,7 @@ def get_all_feeds():
         }
 
         microsub_api_request(
-            req,
-            f"The channel was successfully renamed to {request.form.get('name')}"
+            req, f"The channel was successfully renamed to {request.form.get('name')}"
         )
 
         return redirect(f"/reader/all")
@@ -325,39 +342,46 @@ def get_all_feeds():
         cursor = connection.cursor()
 
         if channel:
-            feeds = cursor.execute("""
+            feeds = cursor.execute(
+                """
                 SELECT f.channel, f.url, f.etag, f.photo, f.name, f.id, f.muted, f.blocked, c.channel AS channel_name
                 FROM following AS f, channels AS c
                 INNER JOIN channels ON c.uid = f.channel
                 GROUP BY f.id
                 WHERE channel = ? ORDER BY id DESC;
-            """, (channel,)).fetchall()
+            """,
+                (channel,),
+            ).fetchall()
         else:
-            feeds = cursor.execute("""
+            feeds = cursor.execute(
+                """
                 SELECT f.channel, f.url, f.etag, f.photo, f.name, f.id, f.muted, f.blocked, c.channel AS channel_name
                 FROM following AS f, channels AS c
                 INNER JOIN channels ON c.uid = f.channel
                 GROUP BY f.id
                 ORDER BY id DESC;
-            """).fetchall()
+            """
+            ).fetchall()
 
     # source: https://nickgeorge.net/programming/python-sqlite3-extract-to-dictionary/#writing_a_function
     unpacked = [{k: item[k] for k in item.keys()} for item in feeds]
 
     count = len(feeds)
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+    channel_req = requests.get(
+        session.get("server_url") + "?action=channels", headers=headers
+    )
 
-    return render_template("server/following.html",
+    return render_template(
+        "server/following.html",
         title=f"People You Follow",
         feeds=unpacked,
         count=count,
-        channels=channel_req.json()["channels"]
+        channels=channel_req.json()["channels"],
     )
+
 
 @main.route("/mute", methods=["POST"])
 def mute_view():
@@ -369,7 +393,9 @@ def mute_view():
     action = request.form.get("action")
 
     if "mute" not in session["scopes"]:
-        flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
+        flash(
+            "You have not granted permission to block feeds. Please log in again and grant permission to block feeds."
+        )
         return redirect(f"/reader/{request.form.get('channel')}")
 
     if action != "mute" and action != "unmute":
@@ -380,10 +406,14 @@ def mute_view():
         req = {
             "action": action,
             "channel": request.form.get("channel"),
-            "url": request.form.get("url")
+            "url": request.form.get("url"),
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
+        r = requests.post(
+            session.get("server_url"),
+            data=req,
+            headers={"Authorization": session.get("access_token")},
+        )
 
         if r.status_code == 200:
             if action == "mute":
@@ -392,8 +422,9 @@ def mute_view():
                 flash(f"You have unmuted {r.json()['url']}.")
         else:
             flash(r.json()["error"])
-    
+
     return redirect(f"/channel/{request.form.get('channel')}")
+
 
 @main.route("/block", methods=["POST"])
 def block_view():
@@ -405,7 +436,9 @@ def block_view():
     action = request.form.get("action")
 
     if "block" not in session["scopes"]:
-        flash("You have not granted permission to block feeds. Please log in again and grant permission to block feeds.")
+        flash(
+            "You have not granted permission to block feeds. Please log in again and grant permission to block feeds."
+        )
         return redirect(f"/reader/{request.form.get('channel')}")
 
     if action not in ("block", "unblock"):
@@ -416,10 +449,14 @@ def block_view():
         req = {
             "action": action,
             "channel": request.form.get("channel"),
-            "url": request.form.get("url")
+            "url": request.form.get("url"),
         }
 
-        r = requests.post(session.get("server_url"), data=req, headers={"Authorization": session.get("access_token")})
+        r = requests.post(
+            session.get("server_url"),
+            data=req,
+            headers={"Authorization": session.get("access_token")},
+        )
 
         if r.status_code == 200:
             if action == "block":
@@ -428,8 +465,9 @@ def block_view():
                 flash(f"You have unblocked {r.json()['url']}.")
         else:
             flash(r.json()["error"])
-    
+
     return redirect(f"/channel/{request.form.get('channel')}")
+
 
 @main.route("/websub/<uid>", methods=["POST"])
 def save_new_post_from_websub(uid):
@@ -437,9 +475,12 @@ def save_new_post_from_websub(uid):
 
     with connection:
         cursor = connection.cursor()
-        
+
         # check if subscription exists
-        subscription = cursor.execute("SELECT url, channel FROM websub_subscriptions WHERE uid = ? AND approved = 1", (uid,)).fetchone()
+        subscription = cursor.execute(
+            "SELECT url, channel FROM websub_subscriptions WHERE uid = ? AND approved = 1",
+            (uid,),
+        ).fetchone()
 
         if not subscription:
             return jsonify({"error": "Subscription does not exist."}), 400
@@ -447,7 +488,9 @@ def save_new_post_from_websub(uid):
         url = subscription[0]
         channel = subscription[1]
 
-        feed_id = cursor.execute("SELECT id FROM following WHERE url = ?", (url,)).fetchone()[0]
+        feed_id = cursor.execute(
+            "SELECT id FROM following WHERE url = ?", (url,)
+        ).fetchone()[0]
 
         # retrieve feed
         try:
@@ -455,8 +498,8 @@ def save_new_post_from_websub(uid):
         except:
             return jsonify({"error": "invalid url"}), 400
 
-        if r.headers.get('content-type'):
-            content_type = r.headers['content-type']
+        if r.headers.get("content-type"):
+            content_type = r.headers["content-type"]
         else:
             content_type = ""
 
@@ -482,9 +525,13 @@ def save_new_post_from_websub(uid):
         else:
             mf2_raw = mf2py.parse(r.text)
 
-            hcard = [item for item in mf2_raw['items'] if item['type'][0] == 'h-card']
+            hcard = [item for item in mf2_raw["items"] if item["type"][0] == "h-card"]
 
-            h_feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] == 'h-feed']
+            h_feed = [
+                item
+                for item in mf2_raw["items"]
+                if item["type"] and item["type"][0] == "h-feed"
+            ]
 
             feed_title = None
             feed_icon = None
@@ -503,13 +550,19 @@ def save_new_post_from_websub(uid):
             else:
                 # get all non h-card items
                 # this will let the program parse non h-entry feeds such as h-event feeds
-                feed = [item for item in mf2_raw['items'] if item['type'] and item['type'][0] != 'h-card']
+                feed = [
+                    item
+                    for item in mf2_raw["items"]
+                    if item["type"] and item["type"][0] != "h-card"
+                ]
 
             # this should use actual published dates
             # for now, we are just using the current time
 
             for child in feed[:5]:
-                result = hfeed.process_hfeed(child, hcard, channel, url, feed_id, feed_title)
+                result = hfeed.process_hfeed(
+                    child, hcard, channel, url, feed_id, feed_title
+                )
 
                 items_to_return.append(result)
 
@@ -523,8 +576,10 @@ def save_new_post_from_websub(uid):
         for record in items_to_return:
             published = record.get("published")
 
-            cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
-                (channel,
+            cursor.execute(
+                """INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+                (
+                    channel,
                     json.dumps(record),
                     record["published"],
                     0,
@@ -532,12 +587,14 @@ def save_new_post_from_websub(uid):
                     record["url"],
                     0,
                     feed_id,
-                    last_id
-                ))
+                    last_id,
+                ),
+            )
 
             last_id += 1
 
     return jsonify({"success": "Entry added to feed."}), 200
+
 
 @main.route("/websub_callback")
 def verify_websub_subscription():
@@ -559,20 +616,27 @@ def verify_websub_subscription():
             cursor = connection.cursor()
             check_subscription = cursor.execute(
                 "SELECT * FROM websub_subscriptions WHERE url = ? AND random_string = ?",
-                    (
-                        request.args.get("hub.topic"),
-                        request.args.get("hub.challenge"),
-                    )
+                (
+                    request.args.get("hub.topic"),
+                    request.args.get("hub.challenge"),
+                ),
             ).fetchone()
 
             if not check_subscription:
                 return jsonify({"error": "Subscription does not exist."}), 400
 
-            cursor.execute("UPDATE websub_subscriptions SET approved = ? WHERE url = ?", (1, request.args.get("hub.topic"), ))
+            cursor.execute(
+                "UPDATE websub_subscriptions SET approved = ? WHERE url = ?",
+                (
+                    1,
+                    request.args.get("hub.topic"),
+                ),
+            )
 
         return request.args.get("hub.challenge"), 200
-    
+
     return jsonify({"error": "No challenge found."}), 400
+
 
 if __name__ == "__main__":
     main.run()

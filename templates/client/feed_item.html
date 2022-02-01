@@ -1,5 +1,5 @@
 <li {% if w["_is_read"] == False %}class="unread"{% endif %}>
-    {% if w.get("title") %}
+    {% if w.get("title") and channels[1]['uid'] != channel_id %}
     <h3 id="{{ w['_id'] }}-heading"><a href='{{ w["url"] }}' target="_blank">{{ w["title"] }}</a></h3>
     {% endif %}
     {% if channels[1]['uid'] != channel_id %}
@@ -53,13 +53,15 @@
     {% if channels[1]['uid'] == channel_id %}
         <p>({{ w["published"] | strftime }})</p>
     {% endif %}
-    {% if channels[1]['uid'] != channel_id %}
     <p class="reaction_set">
-        {% if "create" in session.get("scopes") and session.get('micropub_url') %}
-            <a onclick="event.preventDefault(); send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of={{ w['url'] }}" class="reaction {% if w.get("reactions", {}).get("like-of") == '' %}reacted{% endif %}" id="{{ w['_id'] }}-like-of">❤️</a>
-            <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction {% if w.get("reactions", {}).get("bookmark-of") == '' %}reacted{% endif %}" id="{{ w['_id'] }}-bookmark-of">🔖</a>
-            <a onclick="event.preventDefault(); toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">💬</a>
+        {% if channels[1]['uid'] != channel_id or "replied to" in w.get("content", {}).get("html") or "mentioned in" in w.get("content", {}).get("html") %}
+            {% if "create" in session.get("scopes", "") and session.get('micropub_url') %}
+                <a onclick="event.preventDefault(); send_reaction('like-of', 'like', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=like&like-of={{ w['url'] }}" class="reaction {% if w.get("reactions", {}).get("like-of") == '' %}reacted{% endif %}" id="{{ w['_id'] }}-like-of">❤️</a>
+                <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '{{ w['url'] }}', '{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of={{ w['url'] }}" class="reaction {% if w.get("reactions", {}).get("bookmark-of") == '' %}reacted{% endif %}" id="{{ w['_id'] }}-bookmark-of">🔖</a>
+                <a onclick="event.preventDefault(); toggle_textbox('{{ w['_id'] }}')" href="{{ session.get('micropub_url') }}/post?in-reply-to={{ w['url'] }}" class="reaction">💬</a>
+            {% endif %}
         {% endif %}
+        {% if channels[1]['uid'] != channel_id %}
         <a href="/reader/{{ page_channel_uid }}/delete?entry_id={{ w['_id'] }}" class="reaction">🗑️</a>
 
         {% if show_all_content != True and not w['_id'].startswith("http") %}
@@ -88,7 +90,7 @@
             </p>
             {% endfor %}
         {% endif %}
+        {% endif %}
         </p>
-    {% endif %}
     </li>
 </li>

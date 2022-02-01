@@ -5,7 +5,8 @@ connection = sqlite3.connect("microsub.db")
 with connection:
     cursor = connection.cursor()
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS following(
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS following(
         channel text,
         url text,
         etag text,
@@ -15,16 +16,20 @@ with connection:
         muted integer,
         blocked integer
     )
-    """)
+    """
+    )
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS channels(
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS channels(
         channel text,
         uid text,
         position text
     )
-    """)
+    """
+    )
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS timeline(
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS timeline(
         channel text,
         jf2 text,
         date integer,
@@ -36,14 +41,17 @@ with connection:
         id integer primary key not null,
         poll_cadence text
     )
-    """)
+    """
+    )
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS websub_subscriptions(
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS websub_subscriptions(
         url text,
         uid text,
         channel text,
         approved integer
-    """)
+    """
+    )
 
     print("microsub.db has been seeded.")
     print("You are now ready to run the Microsub server.")

@@ -1,16 +1,21 @@
-from flask import Blueprint, request, session, redirect, flash, render_template, send_from_directory
-from check_token import verify as check_token
-from feeds import read_later
-import requests
-from actions import *
-from config import *
 import re
 
-client = Blueprint('client', __name__)
+import requests
+from flask import (Blueprint, flash, redirect, render_template, request,
+                   send_from_directory, session)
+
+from actions import *
+from check_token import verify as check_token
+from config import *
+from feeds import read_later
+
+client = Blueprint("client", __name__)
+
 
 @client.route("/reader")
 def reader_redirect():
     return redirect("/reader/all")
+
 
 @client.route("/read/<id>")
 def read_article(id):
@@ -19,19 +24,23 @@ def read_article(id):
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
-    article_req = requests.get(session.get("server_url") + "?action=timeline&id=" + id, headers=headers)
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+    article_req = requests.get(
+        session.get("server_url") + "?action=timeline&id=" + id, headers=headers
+    )
+    channel_req = requests.get(
+        session.get("server_url") + "?action=channels", headers=headers
+    )
 
     if article_req.status_code != 200:
         return redirect("/reader/all")
 
     channel = article_req.json()["post"][0]["channel"]
 
-    feeds = requests.get(session.get("server_url") + f"?action=follow&channel={channel}", headers=headers).json()
+    feeds = requests.get(
+        session.get("server_url") + f"?action=follow&channel={channel}", headers=headers
+    ).json()
 
     channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel]
 
@@ -42,15 +51,17 @@ def read_article(id):
 
     jf2 = json.loads(article_req.json()["post"][0]["jf2"])
 
-    return render_template("client/read_article.html",
+    return render_template(
+        "client/read_article.html",
         title=f"{channel_name}",
         channels=channel_req.json()["channels"],
         w=jf2,
         page_channel_uid=channel,
         feeds=feeds,
         channel_name=channel_name,
-        show_all_content=True
+        show_all_content=True,
     )
+
 
 @client.route("/read-later")
 def read_later_view():
@@ -71,6 +82,7 @@ def read_later_view():
 
     return redirect("/reader/read-later")
 
+
 @client.route("/reader/<channel>")
 def microsub_reader(channel):
     auth_result = check_token(request.headers, session)
@@ -78,9 +90,7 @@ def microsub_reader(channel):
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     before = None
     after = None
@@ -90,30 +100,31 @@ def microsub_reader(channel):
 
         microsub_req = requests.get(
             f"{session.get('server_url')}?action=timeline&channel={channel}&before={before}",
-            headers=headers
+            headers=headers,
         )
     elif request.args.get("after"):
         after = request.args.get("after")
 
         microsub_req = requests.get(
             f"{session.get('server_url')}?action=timeline&channel={channel}&after={after}",
-            headers=headers
+            headers=headers,
         )
     else:
         microsub_req = requests.get(
             f"{session.get('server_url')}?action=timeline&channel={channel}",
-            headers=headers
+            headers=headers,
         )
 
     feeds = requests.get(
-        f"{session.get('server_url')}?action=follow&channel={channel}",
-        headers=headers
+        f"{session.get('server_url')}?action=follow&channel={channel}", headers=headers
     ).json()
 
     before_to_show = microsub_req.json()["paging"]["before"]
     after_to_show = microsub_req.json()["paging"]["after"]
 
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+    channel_req = requests.get(
+        session.get("server_url") + "?action=channels", headers=headers
+    )
 
     all_channels = channel_req.json()["channels"]
 
@@ -137,12 +148,13 @@ def microsub_reader(channel):
             "action": "timeline",
             "channel": channel,
             "method": "mark_read",
-            "last_read_entry": last_num
+            "last_read_entry": last_num,
         },
-        headers=headers
+        headers=headers,
     )
 
-    return render_template("client/reader.html",
+    return render_template(
+        "client/reader.html",
         title=f"{channel_name} Posts",
         results=microsub_req.json()["items"],
         channels=channel_req.json()["channels"],
@@ -154,8 +166,9 @@ def microsub_reader(channel):
         channel_name=channel_name,
         show_all_content=False,
         last_id=last_num,
-        channel_id=channel
+        channel_id=channel,
     )
+
 
 @client.route("/react", methods=["POST"])
 def react_to_post():
@@ -176,19 +189,12 @@ def react_to_post():
         parsed = BeautifulSoup(content, "lxml")
 
         if "p-rating" in content:
-            request_to_make = {
-                "h": "review",
-                "properties": {
-                    "content": [content]
-                }
-            }
+            request_to_make = {"h": "review", "properties": {"content": [content]}}
         else:
             request_to_make = {
                 "h": "entry",
                 "in-reply-to": [request.form.get("in-reply-to")],
-                "properties": {
-                    "content": [content]
-                }
+                "properties": {"content": [content]},
             }
 
         name = parsed.find("span", {"class": "p-name"})
@@ -210,33 +216,30 @@ def react_to_post():
 
         hashtags = re.findall(r"#(\w+)", content)
         hashtags.append("Note")
-        
+
         request_to_make = {
             "type": ["h-entry"],
-            "properties": {
-                "content": [content],
-                "category": hashtags
-            }
+            "properties": {"content": [content], "category": hashtags},
         }
     else:
         request_to_make = {
             "h": "entry",
             "properties": {
-                request.form.get("reaction"): [{
-                    request.form.get("reaction"): request.form.get("url")
-                }],
-                "category": [request.form.get("reaction")]
-            }
+                request.form.get("reaction"): [
+                    {request.form.get("reaction"): request.form.get("url")}
+                ],
+                "category": [request.form.get("reaction")],
+            },
         }
 
-    r = requests.post(session.get("micropub_url"), json=request_to_make, headers=headers)
+    r = requests.post(
+        session.get("micropub_url"), json=request_to_make, headers=headers
+    )
 
     if r.status_code != 201:
         return "error"
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     if is_reply == "true":
         data_to_send = {
@@ -244,23 +247,20 @@ def react_to_post():
             "reaction": "reply",
             "uid": request.form.get("uid"),
             "content": request.form.get("content"),
-            "url": r.headers.get("Location", "t")
+            "url": r.headers.get("Location", "t"),
         }
     else:
         data_to_send = {
             "action": "react",
             "reaction": request.form.get("reaction"),
             "uid": request.form.get("uid"),
-            "url": r.headers.get("Location", "t")
+            "url": r.headers.get("Location", "t"),
         }
 
-    requests.post(
-        session.get("server_url"),
-        data=data_to_send,
-        headers=headers
-    )
+    requests.post(session.get("server_url"), data=data_to_send, headers=headers)
 
     return r.headers.get("Location", "")
+
 
 @client.route("/read", methods=["POST"])
 def mark_channel_as_read():
@@ -269,9 +269,7 @@ def mark_channel_as_read():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     channel = request.form.get("channel")
     status = request.form.get("status")
@@ -283,9 +281,9 @@ def mark_channel_as_read():
             "action": "timeline",
             "channel": channel,
             "method": status,
-            "last_read_entry": last_read_entry
+            "last_read_entry": last_read_entry,
         },
-        headers=headers
+        headers=headers,
     )
 
     if last_read_entry == "mark_read":
@@ -294,6 +292,7 @@ def mark_channel_as_read():
         flash("Posts in this channel were successfully marked as unread.")
 
     return redirect(f"/reader/{channel}")
+
 
 @client.route("/reader/<channel>/delete")
 def delete_entry_in_channel(channel):
@@ -304,15 +303,13 @@ def delete_entry_in_channel(channel):
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     data = {
         "action": "timeline",
         "method": "remove",
         "channel": channel,
-        "entry": entry_id
+        "entry": entry_id,
     }
 
     r = requests.post(session.get("server_url"), data=data, headers=headers)
@@ -324,6 +321,7 @@ def delete_entry_in_channel(channel):
 
     return redirect(f"/reader/{channel}")
 
+
 @client.route("/preview")
 def preview_feed():
     auth_result = check_token(request.headers, session)
@@ -331,9 +329,7 @@ def preview_feed():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     url = request.args.get("url")
     channel_id = request.args.get("channel")
@@ -352,15 +348,12 @@ def preview_feed():
             "title": url,
             "url": url,
         },
-        "items": []
+        "items": [],
     }
 
     try:
         microsub_req = requests.post(
-            session.get("server_url"),
-            data=data,
-            headers=headers,
-            timeout=5
+            session.get("server_url"), data=data, headers=headers, timeout=5
         )
 
         feed_data = microsub_req.json()
@@ -372,10 +365,14 @@ def preview_feed():
     except requests.exceptions.Timeout:
         flash("The feed preview request timed out.")
 
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+    channel_req = requests.get(
+        session.get("server_url") + "?action=channels", headers=headers
+    )
 
     if channel_id:
-        channel_name = [c for c in channel_req.json()["channels"] if c["uid"] == channel_id][0]["name"]
+        channel_name = [
+            c for c in channel_req.json()["channels"] if c["uid"] == channel_id
+        ][0]["name"]
     else:
         channel_name = "All"
         channel_id = "all"
@@ -384,13 +381,15 @@ def preview_feed():
         flash("The channel to which you tried to add a feed does not exist.")
         return redirect("/reader/all")
 
-    return render_template("client/preview.html",
+    return render_template(
+        "client/preview.html",
         title="Preview Feed",
         feed=feed_data,
         channel=channel_id,
         channel_name=channel_name,
-        channels=channel_req.json()["channels"]
+        channels=channel_req.json()["channels"],
     )
+
 
 @client.route("/media", methods=["POST"])
 def make_micropub_media_request():
@@ -399,20 +398,21 @@ def make_micropub_media_request():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": "Bearer " + session["access_token"]
-    }
+    headers = {"Authorization": "Bearer " + session["access_token"]}
 
     file = request.files["file"]
 
-    photo_r = requests.post(MEDIA_ENDPOINT,
+    photo_r = requests.post(
+        MEDIA_ENDPOINT,
         files={"file": (file.filename, file.read(), "image/jpeg")},
-        headers=headers)
+        headers=headers,
+    )
 
     if photo_r.status_code != 201 and photo_r.status_code != 200:
         return "error"
 
     return jsonify({"result": photo_r.headers.get("Location", "")}), 200
+
 
 @client.route("/retrieve")
 def retrieve_new_entries():
@@ -421,9 +421,7 @@ def retrieve_new_entries():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     last_id = request.args.get("last_id")
 
@@ -437,7 +435,7 @@ def retrieve_new_entries():
 
     microsub_req = requests.get(
         f"{session.get('server_url')}?action=timeline&channel={channel}",
-        headers=headers
+        headers=headers,
     )
 
     json_data = microsub_req.json()
@@ -449,6 +447,7 @@ def retrieve_new_entries():
 
     return jsonify({"last_id": last_num})
 
+
 @client.route("/search")
 def search_feed():
     auth_result = check_token(request.headers, session)
@@ -456,36 +455,43 @@ def search_feed():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     query = request.args.get("query")
     channel = request.args.get("channel")
     format = request.args.get("format")
 
     if not query:
-        channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+        channel_req = requests.get(
+            session.get("server_url") + "?action=channels", headers=headers
+        )
 
-        return render_template("client/search.html", title="Search", channels=channel_req.json()["channels"])
+        return render_template(
+            "client/search.html",
+            title="Search",
+            channels=channel_req.json()["channels"],
+        )
 
     if not channel:
         channel = "all"
 
-    data = {
-        "action": "search",
-        "query": query,
-        "channel": channel
-    }
+    data = {"action": "search", "query": query, "channel": channel}
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
     if format == "json":
         return jsonify(microsub_req.json())
     else:
-        channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+        channel_req = requests.get(
+            session.get("server_url") + "?action=channels", headers=headers
+        )
 
-        return render_template("client/search.html", title="Search Your Feed", channels=channel_req.json()["channels"], results=microsub_req.json()["items"])
+        return render_template(
+            "client/search.html",
+            title="Search Your Feed",
+            channels=channel_req.json()["channels"],
+            results=microsub_req.json()["items"],
+        )
 
 
 @client.route("/explore")
@@ -495,25 +501,27 @@ def explore_new_feeds():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
     query = request.args.get("query")
 
     if not query:
-        channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
+        channel_req = requests.get(
+            session.get("server_url") + "?action=channels", headers=headers
+        )
 
-        return render_template("client/discover.html", title="Discover People", channels=channel_req.json()["channels"])
+        return render_template(
+            "client/discover.html",
+            title="Discover People",
+            channels=channel_req.json()["channels"],
+        )
 
-    data = {
-        "action": "search",
-        "query": query
-    }
+    data = {"action": "search", "query": query}
 
     microsub_req = requests.post(session.get("server_url"), data=data, headers=headers)
 
     return jsonify(microsub_req.json()["items"])
+
 
 @client.route("/settings")
 def settings():
@@ -522,20 +530,23 @@ def settings():
     if auth_result == False:
         return redirect("/login")
 
-    headers = {
-        "Authorization": session["access_token"]
-    }
+    headers = {"Authorization": session["access_token"]}
 
-    channel_req = requests.get(session.get("server_url") + "?action=channels", headers=headers)
-
-    return render_template("client/settings.html",
-        title="Settings",
-        channels=channel_req.json()["channels"]
+    channel_req = requests.get(
+        session.get("server_url") + "?action=channels", headers=headers
     )
+
+    return render_template(
+        "client/settings.html",
+        title="Settings",
+        channels=channel_req.json()["channels"],
+    )
+
 
 @client.route("/manifest.json")
 def web_app_manifest():
     return send_from_directory("static", "manifest.json")
+
 
 @client.route("/reader.js")
 def reader_js_file():

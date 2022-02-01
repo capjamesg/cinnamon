@@ -1,19 +1,21 @@
-from bs4 import BeautifulSoup
 import datetime
-import sqlite3
-import requests
-import indieweb_utils
 import json
+import sqlite3
+
+import indieweb_utils
+import requests
+from bs4 import BeautifulSoup
+
 
 def read_later(url):
     try:
         r = requests.get(url, timeout=5, allow_redirects=True)
     except:
         return None
-    
+
     if r.status_code != 200:
         return None
-    
+
     soup = BeautifulSoup(r.text, "lxml")
 
     if soup.find(".h-entry"):
@@ -29,12 +31,9 @@ def read_later(url):
         "result": {
             "url": url,
             "type": "summary",
-            "content": {
-                "text": content,
-                "html": content
-            },
+            "content": {"text": content, "html": content},
             "title": soup.title.text,
-            "published": date
+            "published": date,
         }
     }
 
@@ -42,7 +41,9 @@ def read_later(url):
     og_image = soup.find("meta", property="og:image")
 
     if og_image:
-        record["photo"] = indieweb_utils.canonicalize_url(og_image["content"], url.split("/")[2], og_image["content"])
+        record["photo"] = indieweb_utils.canonicalize_url(
+            og_image["content"], url.split("/")[2], og_image["content"]
+        )
 
     if not record.get("photo"):
         # we will remove header and nav tags so that we are more likely to find a "featured image" for the post
@@ -56,12 +57,14 @@ def read_later(url):
 
         # get all images
         all_images = soup.find_all("img")
-        
+
         if all_images and len(all_images) > 0 and all_images[0].get("src"):
             all_images = [i for i in all_images if "u-photo" not in i.get("class", [])]
 
         if len(all_images) > 0:
-            record["photo"] = indieweb_utils.canonicalize_url(all_images[0]["src"], url.split("/")[2], all_images[0]["src"])
+            record["photo"] = indieweb_utils.canonicalize_url(
+                all_images[0]["src"], url.split("/")[2], all_images[0]["src"]
+            )
 
     database = sqlite3.connect("microsub.db")
 
@@ -77,9 +80,12 @@ def read_later(url):
 
         last_id += 1
 
-        feed_id = cursor.execute("SELECT id FROM following WHERE channel = 'read-later';").fetchone()[0]
+        feed_id = cursor.execute(
+            "SELECT id FROM following WHERE channel = 'read-later';"
+        ).fetchone()[0]
 
-        cursor.execute("""INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+        cursor.execute(
+            """INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
             (
                 "read-later",
                 json.dumps(record["result"]),
@@ -89,8 +95,8 @@ def read_later(url):
                 record["result"]["url"],
                 0,
                 feed_id,
-                last_id
-            )
+                last_id,
+            ),
         )
 
     return url

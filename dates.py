@@ -3,6 +3,7 @@ import datetime
 # get average of dates
 # not currently in use but may be used later
 
+
 def find_poll_cadence(dates):
     average_interval = []
 
@@ -10,7 +11,7 @@ def find_poll_cadence(dates):
         if d == 0:
             last_date = dates[d]
         else:
-            last_date = dates[d-1]
+            last_date = dates[d - 1]
 
         current_date = dates[d]
         # convert to datetime
