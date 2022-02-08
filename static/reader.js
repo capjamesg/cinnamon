@@ -162,7 +162,19 @@ function post_note() {
     } else {
         var url = "/react?is_reply=true"
 
-        console.log(form.innerText)
+        var content = form.innerText;
+
+        var rsvp = document.getElementById("rsvp");
+
+        if (rsvp) {
+            content += '<span class="p-rsvp">' + rsvp.value + '</span> ';
+        }
+
+        var rating = document.getElementById("rating");
+
+        if (rating) {
+            content += '<span class="p-rating">' + rating.value + '</span> ';
+        }
 
         var post_body = new URLSearchParams({
             "h": "entry",

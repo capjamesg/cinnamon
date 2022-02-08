@@ -9,8 +9,6 @@
                 <p id="photos"></p>
                 <input aria-labelledby="In reply to URL" type="text" id="reply_to" placeholder="In reply to" style="display: none;" />
                 <div class="post_form rating_form" id="rating_form">
-                    <label for="media_name">Media Name:</label>
-                    <input type="text" id="media_name" placeholder="Media Name" /><br>
                     <label for="rating">Rating:</label>
                     <input type="number" id="rating" placeholder="Rating" />
                 </div>
@@ -21,8 +19,6 @@
                         <option value="maybe">Maybe</option>
                         <option value="no">No</option>
                     </select><br>
-                    <label for="rsvp_in_reply_to">Event Name:</label><br>
-                    <input type="text" id="rsvp_in_reply_to" placeholder="Event name" />
                 </div>
                 <div class="post_container_footer" style="display: flex;">
                     <p class="reaction_set flex_left_home" style="margin-top: 0; width: initial;">
@@ -207,6 +203,7 @@
     function insert_hashtag(hashtag) {
         // delete all text after last @ sign
         var last_hashtag = form.innerHTML.lastIndexOf("#");
+        console.log(form.innerHTML.substring(0, last_hashtag))
         form.innerHTML = form.innerHTML.substring(0, last_hashtag);
         form.innerHTML += "#" + hashtag;
         // hide hashtag list
@@ -245,11 +242,17 @@
         if (e.keyCode == 51) {
             is_writing_hashtag = true;
             is_writing_contact = false;
+
+            // show data_message
+            data_message.style.display = "block";
         }
         
         if (e.keyCode == 50) {
             is_writing_contact = true;
             is_writing_hashtag = false;
+
+            // show data_message
+            data_message.style.display = "block";
         }
 
         if (e.keyCode == 32) {
@@ -355,9 +358,10 @@
 
                 new_data_contents += "</ul>";
 
-                console.log(new_data_contents)
+                data_message.innerHTML = new_data_contents;
+                data_message.classList.add("data_message_scroll");
 
-                form.innerHTML += new_data_contents;
+                form.after(data_message);
             }
         }
 
