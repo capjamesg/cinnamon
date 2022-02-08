@@ -1,3 +1,4 @@
+import os
 import re
 
 import requests
@@ -7,6 +8,7 @@ from flask import (Blueprint, flash, redirect, render_template, request,
 from actions import *
 from check_token import verify as check_token
 from config import *
+from config import TWITTER_BEARER_TOKEN
 from feeds import read_later
 
 client = Blueprint("client", __name__)
@@ -142,6 +144,23 @@ def microsub_reader(channel):
     else:
         last_num = ""
 
+    if session.get("micropub_url"):
+        # contacts = requests.get(
+        #     session.get("micropub_url") + "?q=contacts", headers=headers
+        # ).json()
+        with open("/Users/james/projects/jamesg.blog/person_tags.json", "r") as f:
+            contacts = json.load(f)
+        with open("/Users/james/projects/microsub/hashtags.txt", "r") as f:
+            hashtags = f.read().split("\n")
+    else:
+        with open("/Users/james/projects/jamesg.blog/person_tags.json", "r") as f:
+            contacts = json.load(f)
+        with open("/Users/james/projects/microsub/hashtags.txt", "r") as f:
+            hashtags = f.read().split("\n")
+
+    # make all keys lowercase
+    contacts = {k.lower(): v for k, v in contacts.items()}
+
     requests.post(
         session.get("server_url"),
         data={
@@ -167,6 +186,8 @@ def microsub_reader(channel):
         show_all_content=False,
         last_id=last_num,
         channel_id=channel,
+        contacts=contacts,
+        hashtags=hashtags,
     )
 
 
@@ -400,18 +421,47 @@ def make_micropub_media_request():
 
     headers = {"Authorization": "Bearer " + session["access_token"]}
 
+    # file = request.files["file"]
+
+    # photo_r = requests.post(
+    #     MEDIA_ENDPOINT,
+    #     files={"file": (file.filename, file.read(), "image/jpeg")},
+    #     headers=headers,
+    # )
+
+    # if photo_r.status_code != 201 and photo_r.status_code != 200:
+    #     return "error"
+
     file = request.files["file"]
 
-    photo_r = requests.post(
-        MEDIA_ENDPOINT,
-        files={"file": (file.filename, file.read(), "image/jpeg")},
-        headers=headers,
-    )
+    if file is None:
+        return jsonify({"message": "Please send a file."}), 400
 
-    if photo_r.status_code != 201 and photo_r.status_code != 200:
-        return "error"
+    # get file extension
+    if "." in file.filename:
+        ext = file.filename.split(".")[-1]
+    else:
+        return jsonify({"message": "Please send a file with an extension."}), 400
 
-    return jsonify({"result": photo_r.headers.get("Location", "")}), 200
+    ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
+    UPLOAD_FOLDER = "static/"
+
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"message": "Please send a valid image file."}), 400
+
+    filename = "".join(random.sample(string.ascii_letters, 5)) + "." + ext
+
+    # save image as file then open with PIL for resizing
+
+    file.save(os.path.join(UPLOAD_FOLDER, filename))
+
+    # if ext in (".jpg", ".jpeg"):
+    #     image_file_local = Image.open(os.path.join(UPLOAD_FOLDER, filename))
+    #     image_file_local = ImageOps.exif_transpose(image_file_local)
+    #     image_file_local.thumbnail((1200, 750))
+    #     image_file_local.save(os.path.join(UPLOAD_FOLDER, filename))
+
+    return jsonify({"result": f"/static/{filename}"}), 200
 
 
 @client.route("/retrieve")
@@ -446,6 +496,20 @@ def retrieve_new_entries():
         last_num = ""
 
     return jsonify({"last_id": last_num})
+
+
+@client.route("/context", methods=["POST"])
+def make__context_request():
+    url = request.json.get("url")
+
+    if not url:
+        return jsonify({"message": "url is required"}), 400
+
+    _, h_entry, _ = indieweb_utils.get_reply_context(
+        url, twitter_bearer_token=TWITTER_BEARER_TOKEN
+    )
+
+    return h_entry
 
 
 @client.route("/search")

@@ -131,7 +131,6 @@
           </form>
         </div>
       </section>
-      <script src="/reader.js"></script>
       <script>
         if (localStorage.getItem('darkmode') == "true") {
           document.getElementById('darkmode').media = "all";
@@ -181,6 +180,7 @@
         {% block content %}
         {% endblock %}
       </div>
+      <script src="/reader.js"></script>
       {% if session.get("me") %}
         <footer class="sticky_footer mobile">
           <ul>

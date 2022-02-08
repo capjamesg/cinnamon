@@ -147,15 +147,34 @@ function send_notification(notification_text) {
 function post_note() {
     // send form-encoded response to micropub endpoint
     var form = document.getElementById("content");
-    
-    fetch("/react?is_reply=note", {
-        method: 'POST',
-        body: new URLSearchParams(
+
+    var in_reply_to = document.getElementById("reply_to");
+
+    if (in_reply_to.value == "") {
+        var url = "/react?is_reply=note";
+
+        var post_body = new URLSearchParams(
             {
                 "h": "entry",
-                "content": form.value
+                "content": form.innerText
             }
         )
+    } else {
+        var url = "/react?is_reply=true"
+
+        console.log(form.innerText)
+
+        var post_body = new URLSearchParams({
+            "h": "entry",
+            "in-reply-to": in_reply_to.value,
+            "content": form.innerText,
+            "uid": in_reply_to.value
+        });
+    }
+    
+    fetch(url, {
+        method: 'POST',
+        body: post_body,
     }).then(function(response) {
         if (response.ok) {
             send_notification("<p>Your post has been created.</p>");

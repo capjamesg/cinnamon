@@ -5,20 +5,39 @@
     <ul id="feed_list">
         {% if channels[1]['uid'] != channel_id %}
             <li style="text-align: right;">
-                <textarea rows="8" placeholder="Express yourself..." aria-labelledby="Post content" id="content" name="content"></textarea>
+                <div aria-labelledby="Post content" id="content" name="content" contenteditable="true" placeholder="Express yourself..." role="textbox"></div>
+                <p id="photos"></p>
+                <input aria-labelledby="In reply to URL" type="text" id="reply_to" placeholder="In reply to" style="display: none;" />
+                <div class="post_form rating_form" id="rating_form">
+                    <label for="media_name">Media Name:</label>
+                    <input type="text" id="media_name" placeholder="Media Name" /><br>
+                    <label for="rating">Rating:</label>
+                    <input type="number" id="rating" placeholder="Rating" />
+                </div>
+                <div class="post_form rsvp_form" id="rsvp_form">
+                    <label for="rsvp">RSVP:</label><br>
+                    <select id="rsvp">
+                        <option value="yes">Yes</option>
+                        <option value="maybe">Maybe</option>
+                        <option value="no">No</option>
+                    </select><br>
+                    <label for="rsvp_in_reply_to">Event Name:</label><br>
+                    <input type="text" id="rsvp_in_reply_to" placeholder="Event name" />
+                </div>
                 <div class="post_container_footer" style="display: flex;">
                     <p class="reaction_set flex_left_home" style="margin-top: 0; width: initial;">
                         <input type="file" id="post_image" style="display: none;">
                         <label for="post_image" class="reaction">📷</label>
                         <span onclick="add_rsvp_text()" class="reaction">📅</span>
                         <span onclick="add_review_text()" class="reaction">⭐</span>
+                        <span onclick="add_reply()" class="reaction">↩️</span>
                     </p>
                     <div class="flex_right_home">
                         (<span id="character_count">0</span>)
-                        <p id="data_message"></p>
+                        <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note(all_uploaded_photos)">Post</button>
                     </div>
+                    <p id="data_message"></p>
                 </div>
-                <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note()">Post</button>
             </li>
         {% endif %}
     {% if results | length > 0 %}
@@ -89,12 +108,57 @@
     </div>
 </section>
 <script>
+    var char_count = 0;
+    var last_char = null;
+    var xhr = new XMLHttpRequest();
+    var all_uploaded_photos = "";
+
+    xhr.open('GET', '/static/emojis.json');
+
+    xhr.send();
+    var emoji_names = [];
+    var emojis = [];
+    var is_reply = false;
+
+    function hide_all_forms() {
+        var forms = ["#rating_form", "#rsvp_form"];
+        for (var i = 0; i < forms.length; i++) {
+            // hide each form
+            var form_item = document.querySelector(forms[i]);
+            form_item.style.display = "none";
+        }
+    }
+
+    function add_reply() {
+        hide_all_forms()
+        // invert is_reply
+        if (is_reply) {
+            document.getElementById("reply_to").style.display = "inline";
+            document.getElementById("reply_to").focus();
+        } else {
+            document.getElementById("reply_to").style.display = "none";
+            document.getElementById("reply_to").value = "";
+        }
+        is_reply = !is_reply;
+    }
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            emoji_req = JSON.parse(xhr.responseText);
+            // split json into two lists
+            for (var i in emoji_req) {
+                emojis.push(i);
+                emoji_names.push(emoji_req[i].toLowerCase().replace(" ", "_"));
+            }
+        }
+    };
+
     var form = document.getElementById("content");
 
     var character_count_element = document.getElementById("character_count");
 
     form.onkeydown = function(e) {
-        character_count_element.innerHTML = form.value.length;
+        character_count_element.innerHTML = form.innerHTML.length;
     }
 
     var post_image = document.getElementById("post_image");
@@ -129,6 +193,313 @@
         form.after(data_message);
 
         form.classList.add('dragover')
+    }
+
+    // define contact tags list
+    var people_tags = {{ contacts | safe }};
+    var hashtags = {{ hashtags | safe }};
+
+    var names = Object.keys(people_tags);
+    
+    var is_writing_contact = false;
+    var is_writing_hashtag = false;
+
+    function insert_hashtag(hashtag) {
+        // delete all text after last @ sign
+        var last_hashtag = form.innerHTML.lastIndexOf("#");
+        form.innerHTML = form.innerHTML.substring(0, last_hashtag);
+        form.innerHTML += "#" + hashtag;
+        // hide hashtag list
+        document.getElementById("data_message").style.display = "none";
+        document.getElementById("in_editor_tooltip").style.display = "none";
+
+        form.focus();
+        // select all the content in the element
+        document.execCommand('selectAll', false, null);
+        // collapse selection to the end
+        document.getSelection().collapseToEnd();
+    }
+
+    function insert_person_tag(tag) {
+        // delete all text after last # sign
+        var last_at_sign = form.innerHTML.lastIndexOf("@");
+        form.innerHTML = form.innerHTML.substring(0, last_at_sign);
+        form.innerHTML += "@" + tag;
+        form.innerHTML += tag;
+        document.getElementById("data_message").style.display = "none";
+        document.getElementById("in_editor_tooltip").style.display = "none";
+
+        form.focus();
+        // select all the content in the element
+        document.execCommand('selectAll', false, null);
+        // collapse selection to the end
+        document.getSelection().collapseToEnd();
+    }
+
+    // listen for @ in form
+    form.addEventListener("keydown", function(e) {
+        var data_message = document.getElementById("data_message");
+        data_message.style.textAlign = "left";
+
+        // if keycode is #
+        if (e.keyCode == 51) {
+            is_writing_hashtag = true;
+            is_writing_contact = false;
+        }
+        
+        if (e.keyCode == 50) {
+            is_writing_contact = true;
+            is_writing_hashtag = false;
+        }
+
+        if (e.keyCode == 32) {
+            if (is_writing_hashtag) {
+                // get last hashtag and make it blue
+                var hashtag = form.innerHTML.split("#")[form.innerHTML.split("#").length - 1];
+
+                form.innerHTML = form.innerHTML.replace("#" + hashtag, "<span style='color:blue'>#" + hashtag + "</span> ");
+            }
+
+            if (is_writing_contact) {
+                // get last contact and make it blue
+                var contact = form.innerHTML.split("@")[form.innerHTML.split("@").length - 1];
+
+                form.innerHTML = form.innerHTML.replace("@" + contact, "<span style='color:blue'>@" + contact + "</span> ");
+            }
+
+            // if last word started with http:// or https:// and . in url
+            if (form.innerHTML.split(" ")[form.innerHTML.split(" ").length - 1].split(".")[0].split("http://").length > 1
+                || form.innerHTML.split(" ")[form.innerHTML.split(" ").length - 1].split(".")[0].split("https://").length > 1) {
+                // get last word and make it blue
+                var url = form.innerHTML.split(" ")[form.innerHTML.split(" ").length - 1];
+
+                form.innerHTML = form.innerHTML.replace(url, "<span style='color:blue'>" + url + "</span> ");
+
+                // make http request to get context
+                fetch("/context", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                }).then(function(response) {
+                    return response.json();
+                }).then(function(data) {
+                    var context_box = document.createElement("div");
+
+                    context_box.className = "context_box";
+
+                    context_box.innerHTML = `
+                    <a href="${data.url}" target="_blank">
+                        <img src="${data.image} alt="Featured image" />
+                        <h4>${data.author.name}</h4>
+                        <p>${data.content.html}</p>
+                    </a>
+                    `;
+
+                    form.append(context_box);
+                });
+            }
+
+            // the following three lines of code ensures focus is preserved at the end of the line
+            // the code was taken from https://stackoverflow.com/questions/1125292/how-to-move-cursor-to-end-of-contenteditable-entity
+            // specifically, Juank's comment
+            form.focus();
+            // select all the content in the element
+            document.execCommand('selectAll', false, null);
+            // collapse selection to the end
+            document.getSelection().collapseToEnd();
+
+            is_writing_contact = false;
+            is_writing_hashtag = false;
+
+            data_message.innerHTML = "";
+            data_message.classList.remove("data_message");
+        }
+
+        console.log(is_writing_hashtag)
+
+        if (is_writing_hashtag) {
+            data_message.classList.remove("data_message");
+            var hashtags_to_show = [];
+
+            // position of last #
+            var last_hashtag = form.innerHTML.lastIndexOf("#");
+            // text after last_hashtag
+            var text_after_hashtag = form.innerHTML.substring(last_hashtag + 1).replace("<br>", "");
+
+            for (var i = 0; i < hashtags.length; i++) {
+                if (hashtags[i].toLowerCase().startsWith(text_after_hashtag)) {
+                    hashtags_to_show.push(hashtags[i]);
+                }
+            }
+
+            var to_show_5 = hashtags_to_show.slice(0, 5);
+
+            if (to_show_5.length > 0) {
+                var data_message = document.getElementById("data_message");
+
+                var new_data_contents = "<ul class='data_message data_message_scroll' id='in_editor_tooltip' contenteditable='false'>";
+
+                for (var i = 0; i < to_show_5.length; i++) {
+                    new_data_contents += `
+                        <li>
+                            <a href="#" onclick="insert_hashtag('${to_show_5[i]}')">
+                                #${to_show_5[i]}
+                            </a>
+                        </li>
+                    `;
+                }
+
+                new_data_contents += "</ul>";
+
+                console.log(new_data_contents)
+
+                form.innerHTML += new_data_contents;
+            }
+        }
+
+        if (is_writing_contact) {
+            data_message.classList.remove("data_message");
+            var to_show = [];
+
+            // get all text after @
+            var text_after_at = form.innerHTML.split("@")[form.innerHTML.split("@").length - 1].replace("<br>", "")
+
+            for (var i = 0; i < names.length; i++) {
+                if (names[i].toLowerCase().startsWith(text_after_at.toLowerCase())) {
+                    var to_add = people_tags[names[i].toLowerCase()];
+
+                    to_add["username"] = names[i];
+
+                    to_show.push(to_add);
+                }
+            }
+
+            // get first five contacts
+            var to_show_5 = to_show.slice(0, 5);
+
+            if (to_show_5.length > 0) {
+                var data_message = document.getElementById("data_message");
+
+                var new_data_contents = "<ul>";
+
+                for (var i = 0; i < to_show_5.length; i++) {
+                    new_data_contents += `
+                        <li>
+                            <a onclick="insert_person_tag('${to_show_5[i]["username"]}')">
+                                <img src="${to_show_5[i].favicon}" alt="${to_show_5[i].full_name} profile image">
+                                <p>${to_show_5[i].full_name} (${to_show_5[i].username})</p>
+                            </a>
+                        </li>
+                    `;
+                }
+
+                new_data_contents += "</ul>";
+
+                data_message.innerHTML = new_data_contents;
+                data_message.classList.add("data_message_scroll");
+
+                form.after(data_message);
+            }
+        }
+
+        if (!is_writing_contact && !is_writing_hashtag) {
+            var data_message = document.getElementById("data_message");
+
+            data_message.innerHTML = "";
+
+            form.after(data_message);
+        }
+
+        if (e.keyCode == 16 && form.innerHTML.includes(":")) {
+            last_char = e.keyCode;
+        } else if (e.keyCode == 221) {
+            last_char = e.keyCode;
+        }
+
+        if (last_char == 16) {
+            var possible_emojis = document.getElementById("data_message");
+            var last_index = form.innerHTML.lastIndexOf(":");
+            // get substring from last index to end
+            var user_input_emoji_name = form.innerHTML.substring(form.innerHTML.lastIndexOf(":") + 1, form.innerHTML.length);
+
+            if (user_input_emoji_name.length + 1 > 3) {
+                var valid_emojis_to_show = emoji_names.map(function(emoji_name) {
+                    if (emoji_name.startsWith(user_input_emoji_name)) {
+                        return emoji_name + " (" + emojis[emoji_names.indexOf(emoji_name)] + ")"
+                    }
+                });
+
+                valid_emojis_to_show = valid_emojis_to_show.filter(item => item != undefined);
+
+                possible_emojis.style.textAlign = "left";
+
+                for (var i in valid_emojis_to_show) {
+                    possible_emojis.innerHTML += "<p>" + valid_emojis_to_show[i] + "</p>";
+                }
+            }
+            
+            if (e.keyCode == 32 && !is_writing_hashtag && !is_writing_contact) {
+                // if value in emoji
+                // get last index of :
+                var last_index = form.innerHTML.lastIndexOf(":");
+                // get substring from last index to end
+                var user_emoji_name = form.innerHTML.substring(last_index + 1);
+                
+                var valid_emojis_to_show = emoji_names.map(function(emoji_name, index) {
+                    if (emoji_name.startsWith(user_emoji_name)) {
+                        return emojis[index];
+                    }
+                });
+
+                valid_emojis_to_show = valid_emojis_to_show.filter(item => item != undefined);
+
+                var exact_match = valid_emojis_to_show.filter(item => item == user_emoji_name);
+
+                if (exact_match.length == 1) {
+                    form.innerHTML = form.innerHTML += exact_match[0];
+                    form.innerHTML = form.innerHTML.replace(":" + exact_match, "");
+                    var possible_emojis = document.getElementById("data_message");
+                    possible_emojis.innerHTML = "";
+                }
+                
+                if (valid_emojis_to_show.length > 0) {
+                    form.innerHTML = form.innerHTML += valid_emojis_to_show[0];
+                    form.innerHTML = form.innerHTML.replace(":" + user_emoji_name, "");
+                    var possible_emojis = document.getElementById("data_message");
+                    possible_emojis.innerHTML = "";
+                }
+            }
+        } else if (last_char == 221) {
+            var last_index = form.innerHTML.lastIndexOf("[]");
+            // get substring from last index to end
+            var link = form.innerHTML.substring(last_index + 2, form.innerHTML.length);
+
+            if (e.keyCode == 32 && !is_writing_hashtag && !is_writing_contact) {
+                form.innerHTML = form.innerHTML.replace("[]" + link, "<a href='https://" + link + "'>" + link + "</a>");
+            }
+        } else if (last_char == 32) {
+            last_char = null;
+        }
+    });
+
+    function opaqueImage(image_url) {
+        var image = document.getElementById(image_url);
+        image.style.opacity = "0.5";
+    }
+
+    function removeOpaqueImageStyle(image_url) {
+        var image = document.getElementById(image_url);
+        image.style.opacity = "1";
+    }
+
+    function removeImage(image_url) {
+        var image = document.getElementById(image_url);
+        image.remove();
+        all_uploaded_photos = all_uploaded_photos.replace("<img class='u-photo' src='" + image_url + "' alt='' />", "");
     }
     
     function handleDragLeave(e) {
@@ -168,7 +539,22 @@
         })
         .then(response => response.json())
         .then(function(response) {
-            form.value += "<img class='u-photo' src='" + response["result"] + "' alt='' />";
+            var photos = document.getElementById("photos");
+
+            var url = response["result"];
+
+            var new_photo = document.createElement("img");
+            new_photo.classList = "u-photo";
+            new_photo.src = url;
+            new_photo.id = url;
+            new_photo.setAttribute("onclick", "removeImage('" + url + "')");
+            new_photo.setAttribute("onmouseover", "opaqueImage('" + url + "')");
+            new_photo.setAttribute("onmouseout", "removeOpaqueImageStyle('" + url + "')");
+
+            all_uploaded_photos += "<img class='u-photo' src='" + url + "' alt='' />";
+
+            // add image
+            photos.appendChild(new_photo);
 
             send_notification("<p>Your photo was successfully uploaded.</p>")
         })
@@ -206,11 +592,28 @@
     setInterval(get_reader_data, 60000);
 
     function add_rsvp_text() {
-        form.value += "I am RSVP'ing <span class='p-rsvp'>yes</span> to <a href='' class='in-reply-to'>Event</a>.";
+        var rsvp_form = document.getElementById("rsvp_form");
+
+        console.log(rsvp_form.style.display)
+        
+        if (rsvp_form.style.display == "none") {
+            hide_all_forms();
+            rsvp_form.style.display = "block";
+        } else {
+            hide_all_forms();
+        }
     }
 
     function add_review_text() {
-        form.value += "Review of <span class='p-name'>Review</span>. <span class='p-rating'>5</span>/5.";
+        hide_all_forms()
+        var rating_form = document.getElementById("rating_form");
+        
+        if (rating_form.style.display == "none") {
+            hide_all_forms();
+            rating_form.style.display = "block";
+        } else {
+            hide_all_forms();
+        }
     }
 </script>
 

@@ -170,7 +170,7 @@ details {
 	display: inline;
 	border: 3px dashed orange;
 }
-textarea {
+textarea, #content {
 	width: 100%;
 }
 input[type="submit"] {
@@ -231,7 +231,7 @@ a:focus {
 	border-bottom: 2px dotted black;
 }
 
-input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, textarea:focus, input[type="text"]:focus, input[type="username"]:focus, input[type="password"]:focus {
+input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus, textarea:focus, #content:focus, input[type="text"]:focus, input[type="username"]:focus, input[type="password"]:focus {
 	outline: 3px solid royalblue;
 }
 
@@ -269,7 +269,7 @@ a:hover {
 	color: #0000CD;
 }
 
-input[type="text"], input[type="username"], input[type="password"], input[type="url"] {
+input[type="text"], select, input[type="username"], input[type="number"], input[type="password"], input[type="url"] {
     padding: 10px;
     border-radius: 10px;
     margin-bottom: 10px;
@@ -351,6 +351,9 @@ input[type="submit"] {
 		font-style: italic;
 	} 
 }
+select {
+	width: 100%;
+}
 #mobile_navigation, .mobile_close, .mobile {
 	display: none;
 }
@@ -406,7 +409,7 @@ input[type="submit"] {
 	.reaction_set {
 		text-align: center;
 	}
-	button, input, select, textarea {
+	button, input, select, textarea, #content {
 		width: 100% !important;
 		box-sizing: border-box;
 	}
@@ -506,13 +509,67 @@ ol {
 	text-align: center;
 	background-color: white;
 }
-textarea {
+.context_box {
+	text-align: left;
+	border: 1px solid lightgrey;
+	padding: 10px;
+}
+.context_box img {
+	float: left;
+	margin-right: 10px;
+}
+#reply_to, .post_form {
+	width: 100%;
+	box-sizing: border-box;
+}
+.rating_form, .post_form {
+	text-align: left;
+}
+.rating_form {
+	display: none;
+}
+.rsvp_form {
+	display: none;
+}
+.rating_form input, .rsvp_form input {
+	width: 100%;
+	box-sizing: border-box;
+}
+[contenteditable=true]:empty:not(:focus):before{
+	content: attr(placeholder);
+	color: grey;
+  }
+
+[placeholder]:empty:focus::before {
+    content: "";
+}
+#in_editor_tooltip {
+	background-color: white !important;
+}
+.data_message_scroll {
+	height: 200px;
+	overflow: hidden;
+	overflow-y: scroll;
+	z-index: 1;
+	position: fixed;
+	border: 2px solid lightgrey;
+	border-radius: 10px;
+}
+#data_message li {
+	border: none;
+	box-shadow: none;
+	border-bottom: 1px solid lightgrey;
+	margin-bottom: 0;
+}
+textarea, #content {
 	padding: 10px;
     border-radius: 10px;
+	border: 2px solid lightgrey;
     margin-bottom: 10px;
     display: inline-block;
     text-align: left;
     min-width: 50%;
+	min-height: 200px;
     font-size: 1.0625rem;
 	box-sizing: border-box;
 }
