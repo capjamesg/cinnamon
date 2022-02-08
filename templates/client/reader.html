@@ -5,6 +5,21 @@
     <ul id="feed_list">
         {% if channels[1]['uid'] != channel_id %}
             <li style="text-align: right;">
+                <div class="post_container_footer" style="display: flex;">
+                    <p class="reaction_set flex_left_home" style="margin-top: 0; width: initial;">
+                        <input type="file" id="post_image" style="display: none;">
+                        <label for="post_image" class="reaction">📷</label>
+                        <span onclick="add_rsvp_text()" class="reaction">📅</span>
+                        <span onclick="add_review_text()" class="reaction">⭐</span>
+                        <span onclick="add_reply()" class="reaction">↩️</span>
+                        <span onclick="show_gif_search_bar()" class="reaction">🎥</span>
+                    </p>
+                    <div class="flex_right_home">
+                        (<span id="character_count">0</span>)
+                        <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note(all_uploaded_photos)">Post</button>
+                    </div>
+                    <p id="data_message"></p>
+                </div>
                 <div aria-labelledby="Post content" id="content" name="content" contenteditable="true" placeholder="Express yourself..." role="textbox"></div>
                 <p id="photos"></p>
                 <input aria-labelledby="In reply to URL" type="text" id="reply_to" placeholder="In reply to" style="display: none;" />
@@ -21,20 +36,8 @@
                         <option value="no">No</option>
                     </select><br>
                 </div>
-                <div class="post_container_footer" style="display: flex;">
-                    <p class="reaction_set flex_left_home" style="margin-top: 0; width: initial;">
-                        <input type="file" id="post_image" style="display: none;">
-                        <label for="post_image" class="reaction">📷</label>
-                        <span onclick="add_rsvp_text()" class="reaction">📅</span>
-                        <span onclick="add_review_text()" class="reaction">⭐</span>
-                        <span onclick="add_reply()" class="reaction">↩️</span>
-                    </p>
-                    <div class="flex_right_home">
-                        (<span id="character_count">0</span>)
-                        <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note(all_uploaded_photos)">Post</button>
-                    </div>
-                    <p id="data_message"></p>
-                </div>
+                <input aria-labelledby="Search for a GIF" type="text" id="gif_search_bar" placeholder="Search for a GIF" style="display: none;" />
+                <p id="gif_list"></p>
             </li>
         {% endif %}
     {% if results | length > 0 %}
@@ -69,14 +72,6 @@
     </ul>
     <p class="content_box">There are no posts in this channel. Check back later to see if any posts are added.</p>
     {% endif %}
-</section>
-<section id="podcast_overlay" class="podcast" style="display: none; border-radius: 10px;">
-    <p id="podcast_info"></p>
-    <audio id="focused_audio"></audio>
-    <div id="podcast_controls">
-        <button id="podcast_play" class="podcast_controls" onclick="play_podcast()">Play</button>
-        <button id="podcast_pause" class="podcast_controls" onclick="pause_podcast()">Pause</button>
-    </div>
 </section>
 </div>
 <section class="content_box modal" style="display: none;" id="channel_settings">
@@ -204,6 +199,7 @@
     var is_writing_hashtag = false;
 
     var all_images = "";
+    var showing_emojis = [];
 
     function insert_hashtag(hashtag) {
         // delete all text after last @ sign
@@ -239,6 +235,65 @@
         document.getSelection().collapseToEnd();
 
         showing_person_tags = [];
+    }
+    
+    var gif_search_box = document.getElementById("gif_search_bar");
+
+    gif_search_box.addEventListener("keyup", function(e) {
+        if (e.keyCode === 32) {
+            add_gif();
+        }
+    });
+
+    function add_gif() {
+        var gif_api_url = "https://api.gfycat.com/v1/gfycats/search?search_text=" + gif_search_box.value;
+        
+        fetch(gif_api_url)
+            .then(function(response) {
+                return response.json();
+            }).then(function(data) {
+                var gifs = data.gfycats.slice(0, 10);
+                var gif_list = document.getElementById("gif_list");
+                gif_list.innerHTML = "";
+                for (var i = 0; i < gifs.length; i++) {
+                    var gif_item = document.createElement("div");
+                    gif_item.className = "gif_item";
+                    gif_item.innerHTML = "<img src='" + gifs[i].gif100px + "' style='margin-left: 20px;'>";
+                    gif_item.onclick = function() {
+                        var gif_url = this.querySelector("img").src;
+                        form.innerHTML += "<img src='" + gif_url + "'>";
+                        document.getElementById("data_message").style.display = "none";
+                        gif_list.innerHTML = "";
+                        // hide search box
+                        gif_search_box.style.display = "none";
+                        form.focus();
+                        // select all the content in the element
+                        document.execCommand('selectAll', false, null);
+                        // collapse selection to the end
+                        document.getSelection().collapseToEnd();
+                    }
+                    gif_list.appendChild(gif_item);
+                }
+            });
+    }
+
+    function insert_emoji(tag) {
+        // delete all text after last # sign
+        var last_at_sign = form.innerHTML.lastIndexOf("!");
+        form.innerHTML = form.innerHTML.substring(0, last_at_sign);
+        form.innerHTML += tag;
+        document.getElementById("data_message").style.display = "none";
+        // document.getElementById("in_editor_tooltip").style.display = "none";
+
+        form.focus();
+        // select all the content in the element
+        document.execCommand('selectAll', false, null);
+        // collapse selection to the end
+        document.getSelection().collapseToEnd();
+
+        showing_emojis = [];
+
+        last_char = null;
     }
 
     // listen for @ in form
@@ -448,9 +503,16 @@
             var first_hashtag = showing_hash_tags[0];
 
             insert_hashtag(first_hashtag);
+        } else if (last_char == 16 && e.keyCode == 9) {
+            e.preventDefault();
+
+            // get first hashtag
+            var first_emoji = showing_emojis[0];
+
+            insert_emoji(first_emoji);
         }
 
-        if (e.keyCode == 16 && form.innerHTML.includes(":")) {
+        if (e.keyCode == 16 && form.innerHTML.includes("!")) {
             last_char = e.keyCode;
         } else if (e.keyCode == 221) {
             last_char = e.keyCode;
@@ -458,30 +520,52 @@
 
         if (last_char == 16) {
             var possible_emojis = document.getElementById("data_message");
-            var last_index = form.innerHTML.lastIndexOf(":");
+            var last_index = form.innerHTML.lastIndexOf("!");
             // get substring from last index to end
-            var user_input_emoji_name = form.innerHTML.substring(form.innerHTML.lastIndexOf(":") + 1, form.innerHTML.length);
+            var user_input_emoji_name = form.innerHTML.substring(last_index + 1).replace("<br>", "");
+            
+            var to_show = [];
 
-            if (user_input_emoji_name.length + 1 > 3) {
+            if (user_input_emoji_name.length + 1 > 2) {
                 var valid_emojis_to_show = emoji_names.map(function(emoji_name) {
                     if (emoji_name.startsWith(user_input_emoji_name)) {
+                        to_show.push(emojis[emoji_names.indexOf(emoji_name)]);
                         return emoji_name + " (" + emojis[emoji_names.indexOf(emoji_name)] + ")"
                     }
                 });
 
                 valid_emojis_to_show = valid_emojis_to_show.filter(item => item != undefined);
+                
+                showing_emojis = to_show;
 
                 possible_emojis.style.textAlign = "left";
 
+                var emoji_html = "<ul id='in_editor_tooltip'>";
+
                 for (var i in valid_emojis_to_show) {
-                    possible_emojis.innerHTML += "<p>" + valid_emojis_to_show[i] + "</p>";
+                    emoji_html += `
+                        <li>
+                            <a href="#" onclick="insert_emoji('${valid_emojis_to_show[i].split(" ").slice(1).join(" ")}')">
+                                ${valid_emojis_to_show[i]}
+                            </a>
+                        </li>
+                    `;
                 }
+
+                emoji_html += "</ul>";
+                possible_emojis.innerHTML = emoji_html;
+                possible_emojis.classList.add("data_message_scroll");
+
+                // display: block
+                possible_emojis.style.display = "block";
+
+                form.after(possible_emojis);
             }
             
             if (e.keyCode == 32 && !is_writing_hashtag && !is_writing_contact) {
                 // if value in emoji
                 // get last index of :
-                var last_index = form.innerHTML.lastIndexOf(":");
+                var last_index = form.innerHTML.lastIndexOf("!");
                 // get substring from last index to end
                 var user_emoji_name = form.innerHTML.substring(last_index + 1);
                 
@@ -497,14 +581,14 @@
 
                 if (exact_match.length == 1) {
                     form.innerHTML = form.innerHTML += exact_match[0];
-                    form.innerHTML = form.innerHTML.replace(":" + exact_match, "");
+                    form.innerHTML = form.innerHTML.replace("!" + exact_match, "");
                     var possible_emojis = document.getElementById("data_message");
                     possible_emojis.innerHTML = "";
                 }
                 
                 if (valid_emojis_to_show.length > 0) {
                     form.innerHTML = form.innerHTML += valid_emojis_to_show[0];
-                    form.innerHTML = form.innerHTML.replace(":" + user_emoji_name, "");
+                    form.innerHTML = form.innerHTML.replace("!" + user_emoji_name, "");
                     var possible_emojis = document.getElementById("data_message");
                     possible_emojis.innerHTML = "";
                 }
@@ -635,6 +719,17 @@
         if (rsvp_form.style.display == "none") {
             hide_all_forms();
             rsvp_form.style.display = "block";
+        } else {
+            hide_all_forms();
+        }
+    }
+
+    function show_gif_search_bar() {
+        var gif_search_bar = document.getElementById("gif_search_bar");
+
+        if (gif_search_bar.style.display == "none") {
+            hide_all_forms();
+            gif_search_bar.style.display = "block";
         } else {
             hide_all_forms();
         }

@@ -148,14 +148,19 @@ def microsub_reader(channel):
         # contacts = requests.get(
         #     session.get("micropub_url") + "?q=contacts", headers=headers
         # ).json()
-        with open("/Users/james/projects/jamesg.blog/person_tags.json", "r") as f:
+        # hashtags = requests.get(
+        #     session.get("micropub_url") + "?q=category", headers=headers
+        # ).json()
+        # contacts = contacts["contacts"]
+        # hashtags = hashtags["categories"]
+        with open("person_tags.json", "r") as f:
             contacts = json.load(f)
-        with open("/Users/james/projects/microsub/hashtags.txt", "r") as f:
+        with open("hashtags.txt", "r") as f:
             hashtags = f.read().split("\n")
     else:
-        with open("/Users/james/projects/jamesg.blog/person_tags.json", "r") as f:
+        with open("person_tags.json", "r") as f:
             contacts = json.load(f)
-        with open("/Users/james/projects/microsub/hashtags.txt", "r") as f:
+        with open("hashtags.txt", "r") as f:
             hashtags = f.read().split("\n")
 
     # make all keys lowercase

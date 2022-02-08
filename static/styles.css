@@ -1,6 +1,6 @@
 html, body, header, figure {
 	margin: 0;
-	overflow: hidden;
+	overflow-x: hidden;
 }
 * {
 	max-width: 100%;
