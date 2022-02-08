@@ -277,6 +277,8 @@ input[type="text"], select, input[type="username"], input[type="number"], input[
     display: inline-block;
     text-align: left;
     min-width: 50%;
+	width: 100%;
+	box-sizing: border-box;
     font-size: 1.0625rem;
 }
 input[type="submit"] {

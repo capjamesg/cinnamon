@@ -159,10 +159,15 @@ function post_note(all_uploaded_photos) {
         return;
     }
 
+    var content = form.innerHTML;
+
+    // remove all html tags that are not p, br, or img
+    content = content.replace(/<(?!p|br|img).*?>/g, "");
+
+    content += all_uploaded_photos
+
     if (in_reply_to.value || rsvp.value || rating.value) {
         var url = "/react?is_reply=true"
-
-        var content = form.innerText;
 
         if (rsvp) {
             content += '<span class="p-rsvp">' + rsvp.value + '</span> ';
@@ -175,7 +180,7 @@ function post_note(all_uploaded_photos) {
         var post_body = new URLSearchParams({
             "h": "entry",
             "in-reply-to": in_reply_to.value,
-            "content": content += all_uploaded_photos,
+            "content": content,
             "uid": in_reply_to.value
         });
     } else {
@@ -184,7 +189,7 @@ function post_note(all_uploaded_photos) {
         var post_body = new URLSearchParams(
             {
                 "h": "entry",
-                "content": form.innerText += all_uploaded_photos
+                "content": content
             }
         )
     }

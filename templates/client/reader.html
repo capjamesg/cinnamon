@@ -110,12 +110,11 @@
     xhr.send();
     var emoji_names = [];
     var emojis = [];
-    var is_reply = false;
     var showing_person_tags = [];
     var showing_hash_tags = [];
 
     function hide_all_forms() {
-        var forms = ["#rating_form", "#rsvp_form"];
+        var forms = ["#rating_form", "#rsvp_form", "#gif_search_bar", "#reply_to"];
         for (var i = 0; i < forms.length; i++) {
             // hide each form
             var form_item = document.querySelector(forms[i]);
@@ -124,16 +123,15 @@
     }
 
     function add_reply() {
-        hide_all_forms()
-        // invert is_reply
-        if (is_reply) {
+        var reply_to_form = document.querySelector("#reply_to");
+
+        if (reply_to_form.style.display == "none") {
+            hide_all_forms()
             document.getElementById("reply_to").style.display = "inline";
-            document.getElementById("reply_to").focus();
         } else {
             document.getElementById("reply_to").style.display = "none";
-            document.getElementById("reply_to").value = "";
+            hide_all_forms()
         }
-        is_reply = !is_reply;
     }
 
     xhr.onload = function() {
@@ -142,7 +140,7 @@
             // split json into two lists
             for (var i in emoji_req) {
                 emojis.push(i);
-                emoji_names.push(emoji_req[i].toLowerCase().replace(" ", "_"));
+                emoji_names.push(emoji_req[i]);
             }
         }
     };
@@ -254,11 +252,14 @@
             }).then(function(data) {
                 var gifs = data.gfycats.slice(0, 10);
                 var gif_list = document.getElementById("gif_list");
+                // turn list into a flex item
+                gif_list.style.display = "flex";
+                gif_list.style.flexWrap = "wrap";
                 gif_list.innerHTML = "";
                 for (var i = 0; i < gifs.length; i++) {
                     var gif_item = document.createElement("div");
                     gif_item.className = "gif_item";
-                    gif_item.innerHTML = "<img src='" + gifs[i].gif100px + "' style='margin-left: 20px;'>";
+                    gif_item.innerHTML = "<img src='" + gifs[i].gif100px + "' style='margin-left: 20px; width: 100px;'>";
                     gif_item.onclick = function() {
                         var gif_url = this.querySelector("img").src;
                         form.innerHTML += "<img src='" + gif_url + "'>";
@@ -318,6 +319,19 @@
             data_message.style.display = "block";
         }
 
+        // if :) or :D in form
+        if (form.innerHTML.includes(":)")) {
+            is_writing_contact = false;
+            is_writing_hashtag = false;
+
+            form.innerHTML = form.innerHTML.replace(":)", "🙂");
+        } else if (form.innerHTML.includes(":D")) {
+            is_writing_contact = false;
+            is_writing_hashtag = false;
+
+            form.innerHTML = form.innerHTML.replace(":D", "😂");
+        }
+
         if (e.keyCode == 32) {
             // remove all brs
             form.innerHTML = form.innerHTML.replace(/<br>/g, "");
@@ -339,38 +353,46 @@
             if (form.innerHTML.split(" ")[form.innerHTML.split(" ").length - 1].split(".")[0].split("http://").length > 1
                 || form.innerHTML.split(" ")[form.innerHTML.split(" ").length - 1].split(".")[0].split("https://").length > 1) {
                 // get last word and make it blue
-                var url = form.innerHTML.split(" ")[form.innerHTML.split(" ").length - 1];
+                var url = form.innerHTML.split(" http")[-1];
 
-                form.innerHTML = form.innerHTML.replace(url, "<span style='color:blue'>" + url + "</span> ");
+                // get index of url
+                var url_index = form.innerHTML.lastIndexOf(url);
+                var previous_char = form.innerHTML.substring(url_index - 1, url_index);
+                
+                if (previous_char != '"') {
+                    form.innerHTML = form.innerHTML.replace(url, "<span style='color:blue'>" + url + "</span> ");
+                } else {
+                    form.innerHTML = form.innerHTML.replace(url, "<span style='color:blue'>" + url + "</span> ");
 
-                // make http request to get context
-                fetch("/context", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        url: url
-                    })
-                }).then(function(response) {
-                    return response.json();
-                }).then(function(data) {
-                    var context_box = document.createElement("div");
+                    // make http request to get context
+                    fetch("/context", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            url: url
+                        })
+                    }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+                        var context_box = document.createElement("div");
 
-                    all_images += `<img src="${data.image} alt="Featured image" />`;
+                        all_images += `<img src="${data.image} alt="Featured image" />`;
 
-                    context_box.className = "context_box";
+                        context_box.className = "context_box";
 
-                    context_box.innerHTML = `
-                    <a href="${data.url}" target="_blank">
-                        <img src="${data.image} alt="Featured image" />
-                        <h4>${data.author.name}</h4>
-                        <p>${data.content.html}</p>
-                    </a>
-                    `;
+                        context_box.innerHTML = `
+                        <a href="${data.url}" target="_blank">
+                            <img src="${data.image} alt="Featured image" />
+                            <h4>${data.author.name}</h4>
+                            <p>${data.content.html}</p>
+                        </a>
+                        `;
 
-                    form.append(context_box);
-                });
+                        form.append(context_box);
+                    });
+                }
             }
 
             // the following three lines of code ensures focus is preserved at the end of the line
@@ -526,11 +548,14 @@
             
             var to_show = [];
 
+            console.log(user_input_emoji_name)
+
             if (user_input_emoji_name.length + 1 > 2) {
                 var valid_emojis_to_show = emoji_names.map(function(emoji_name) {
                     if (emoji_name.startsWith(user_input_emoji_name)) {
-                        to_show.push(emojis[emoji_names.indexOf(emoji_name)]);
-                        return emoji_name + " (" + emojis[emoji_names.indexOf(emoji_name)] + ")"
+                        var name_item = emojis[emoji_names.indexOf(emoji_name)];
+                        to_show.push(name_item);
+                        return emoji_name + " (" + name_item + ")"
                     }
                 });
 
