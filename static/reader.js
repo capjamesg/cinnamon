@@ -144,33 +144,29 @@ function send_notification(notification_text) {
     }, 5000);
 }
 
-function post_note() {
+function post_note(all_uploaded_photos) {
     // send form-encoded response to micropub endpoint
     var form = document.getElementById("content");
 
     var in_reply_to = document.getElementById("reply_to");
 
-    if (in_reply_to.value == "") {
-        var url = "/react?is_reply=note";
+    var rsvp = document.getElementById("rsvp");
 
-        var post_body = new URLSearchParams(
-            {
-                "h": "entry",
-                "content": form.innerText
-            }
-        )
-    } else {
+    var rating = document.getElementById("rating");
+
+    if (form.innerText.length < 10) {
+        send_notification("<p>Your note must be at least 10 characters long.</p>");
+        return;
+    }
+
+    if (in_reply_to.value || rsvp.value || rating.value) {
         var url = "/react?is_reply=true"
 
         var content = form.innerText;
 
-        var rsvp = document.getElementById("rsvp");
-
         if (rsvp) {
             content += '<span class="p-rsvp">' + rsvp.value + '</span> ';
         }
-
-        var rating = document.getElementById("rating");
 
         if (rating) {
             content += '<span class="p-rating">' + rating.value + '</span> ';
@@ -179,9 +175,18 @@ function post_note() {
         var post_body = new URLSearchParams({
             "h": "entry",
             "in-reply-to": in_reply_to.value,
-            "content": form.innerText,
+            "content": content += all_uploaded_photos,
             "uid": in_reply_to.value
         });
+    } else {
+        var url = "/react?is_reply=note";
+
+        var post_body = new URLSearchParams(
+            {
+                "h": "entry",
+                "content": form.innerText += all_uploaded_photos
+            }
+        )
     }
     
     fetch(url, {

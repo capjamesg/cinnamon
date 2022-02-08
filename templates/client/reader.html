@@ -15,6 +15,7 @@
                 <div class="post_form rsvp_form" id="rsvp_form">
                     <label for="rsvp">RSVP:</label><br>
                     <select id="rsvp">
+                        <option value="" selected>Select</option>
                         <option value="yes">Yes</option>
                         <option value="maybe">Maybe</option>
                         <option value="no">No</option>
@@ -115,6 +116,8 @@
     var emoji_names = [];
     var emojis = [];
     var is_reply = false;
+    var showing_person_tags = [];
+    var showing_hash_tags = [];
 
     function hide_all_forms() {
         var forms = ["#rating_form", "#rsvp_form"];
@@ -154,7 +157,7 @@
     var character_count_element = document.getElementById("character_count");
 
     form.onkeydown = function(e) {
-        character_count_element.innerHTML = form.innerHTML.length;
+        character_count_element.innerHTML = form.innerText.replace("<br>", "").length;
     }
 
     var post_image = document.getElementById("post_image");
@@ -200,10 +203,12 @@
     var is_writing_contact = false;
     var is_writing_hashtag = false;
 
+    var all_images = "";
+
     function insert_hashtag(hashtag) {
         // delete all text after last @ sign
         var last_hashtag = form.innerHTML.lastIndexOf("#");
-        console.log(form.innerHTML.substring(0, last_hashtag))
+        
         form.innerHTML = form.innerHTML.substring(0, last_hashtag);
         form.innerHTML += "#" + hashtag;
         // hide hashtag list
@@ -215,6 +220,8 @@
         document.execCommand('selectAll', false, null);
         // collapse selection to the end
         document.getSelection().collapseToEnd();
+
+        showing_hash_tags = [];
     }
 
     function insert_person_tag(tag) {
@@ -222,7 +229,6 @@
         var last_at_sign = form.innerHTML.lastIndexOf("@");
         form.innerHTML = form.innerHTML.substring(0, last_at_sign);
         form.innerHTML += "@" + tag;
-        form.innerHTML += tag;
         document.getElementById("data_message").style.display = "none";
         document.getElementById("in_editor_tooltip").style.display = "none";
 
@@ -231,6 +237,8 @@
         document.execCommand('selectAll', false, null);
         // collapse selection to the end
         document.getSelection().collapseToEnd();
+
+        showing_person_tags = [];
     }
 
     // listen for @ in form
@@ -256,6 +264,8 @@
         }
 
         if (e.keyCode == 32) {
+            // remove all brs
+            form.innerHTML = form.innerHTML.replace(/<br>/g, "");
             if (is_writing_hashtag) {
                 // get last hashtag and make it blue
                 var hashtag = form.innerHTML.split("#")[form.innerHTML.split("#").length - 1];
@@ -292,6 +302,8 @@
                 }).then(function(data) {
                     var context_box = document.createElement("div");
 
+                    all_images += `<img src="${data.image} alt="Featured image" />`;
+
                     context_box.className = "context_box";
 
                     context_box.innerHTML = `
@@ -321,8 +333,6 @@
             data_message.innerHTML = "";
             data_message.classList.remove("data_message");
         }
-
-        console.log(is_writing_hashtag)
 
         if (is_writing_hashtag) {
             data_message.classList.remove("data_message");
@@ -361,6 +371,8 @@
                 data_message.innerHTML = new_data_contents;
                 data_message.classList.add("data_message_scroll");
 
+                showing_hash_tags = to_show_5;
+
                 form.after(data_message);
             }
         }
@@ -388,20 +400,24 @@
             if (to_show_5.length > 0) {
                 var data_message = document.getElementById("data_message");
 
-                var new_data_contents = "<ul>";
+                var new_data_contents = "<ul id='in_editor_tooltip'>";
 
                 for (var i = 0; i < to_show_5.length; i++) {
                     new_data_contents += `
                         <li>
                             <a onclick="insert_person_tag('${to_show_5[i]["username"]}')">
-                                <img src="${to_show_5[i].favicon}" alt="${to_show_5[i].full_name} profile image">
-                                <p>${to_show_5[i].full_name} (${to_show_5[i].username})</p>
+                                <p>
+                                    ${to_show_5[i].favicon ? `<img src="${to_show_5[i].favicon}" alt="${to_show_5[i].username}'s profile image" style='height: 50px; width: 50px' />` : ""}
+                                    ${to_show_5[i].full_name} (${to_show_5[i].username})
+                                </p>
                             </a>
                         </li>
                     `;
                 }
 
                 new_data_contents += "</ul>";
+
+                showing_person_tags = to_show_5;
 
                 data_message.innerHTML = new_data_contents;
                 data_message.classList.add("data_message_scroll");
@@ -416,6 +432,22 @@
             data_message.innerHTML = "";
 
             form.after(data_message);
+        }
+        
+        if (is_writing_contact && e.keyCode == 9) {
+            e.preventDefault();
+
+            // get first person tag
+            var first_person_tag = showing_person_tags[0];
+
+            insert_person_tag(first_person_tag.username);
+        } else if (is_writing_hashtag && e.keyCode == 9) {
+            e.preventDefault();
+
+            // get first hashtag
+            var first_hashtag = showing_hash_tags[0];
+
+            insert_hashtag(first_hashtag);
         }
 
         if (e.keyCode == 16 && form.innerHTML.includes(":")) {

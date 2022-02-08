@@ -1,5 +1,6 @@
 html, body, header, figure {
 	margin: 0;
+	overflow: hidden;
 }
 * {
 	max-width: 100%;
@@ -547,7 +548,7 @@ ol {
 	background-color: white !important;
 }
 .data_message_scroll {
-	height: 200px;
+	max-height: 200px;
 	overflow: hidden;
 	overflow-y: scroll;
 	z-index: 1;
