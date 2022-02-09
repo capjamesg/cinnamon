@@ -45,7 +45,7 @@
     <meta property="og:url" content="{{ config.get('URL') }}">
     <meta property="og:site_name" content="Cinnamon">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
 
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
 
@@ -180,7 +180,7 @@
         {% block content %}
         {% endblock %}
       </div>
-      <script src="/reader.js"></script>
+      <script src="/static/js/reader.js"></script>
       {% if session.get("me") %}
         <footer class="sticky_footer mobile">
           <ul>

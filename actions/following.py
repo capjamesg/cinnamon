@@ -5,11 +5,10 @@ import string
 import indieweb_utils
 import requests
 from bs4 import BeautifulSoup
-from flask import escape, jsonify, request
+from flask import jsonify, request
 from urllib.parse import urlparse as parse_url
 
-from config import URL
-
+from config import CLIENT_ID
 
 def get_follow(channel: str, request: dict) -> dict:
     connection = sqlite3.connect("microsub.db")
@@ -44,7 +43,7 @@ def create_follow(request: request) -> dict:
     with connection:
         cursor = connection.cursor()
 
-        url = escape(request.form.get("url").strip())
+        url = request.form.get("url").strip()
 
         # check if following
         cursor.execute(
@@ -177,7 +176,7 @@ def subscribe_to_websub_hub(
         data={
             "hub.mode": "subscribe",
             "hub.topic": url,
-            "hub.callback": URL.strip("/") + "/websub_callback",
+            "hub.callback": CLIENT_ID.strip("/") + "/websub_callback",
         },
     )
 

@@ -4,7 +4,7 @@ import requests
 from flask import Blueprint, jsonify, redirect, render_template, request, session
 
 from authentication.check_token import verify as check_token
-from main import microsub_api_request
+from .main import microsub_api_request
 
 server_views = Blueprint("server_views", __name__, template_folder="templates")
 

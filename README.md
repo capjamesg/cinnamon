@@ -1,6 +1,6 @@
-# Microsub
+# Cinnamon Social Reader
 
-This repository contains the code that powers my personal Microsub client and server.
+This repository contains the code that powers my personal Microsub social reader called Cinnamon.
 
 [Microsub](https://indieweb.org/Microsub) is an IndieWeb specification currently in development that separates the tasks of processing feeds and presenting feeds so that servers and feed readers can be developed independently but work together.
 
@@ -13,6 +13,9 @@ The Microsub server currently supports:
 - Subscribing to a feed
 - Unsubscribing from a feed
 - Marking entries in a feed view as read
+- Creating a post via Micropub
+- Reacting to posts via Micropub
+- Among other features
 
 This project is in active development. The entire Microsub specification is not yet incorporated into this project.
 
@@ -20,17 +23,17 @@ This project is in active development. The entire Microsub specification is not 
 
 ### Subscription Management (Server)
 
-![Microsub channel list](screenshot.png)
+![Microsub channel list](screenshots/screenshot.png)
 
 ### Feed Reader (Client)
 
-![Microsub feed](static/feed.png)
+![Microsub feed](screenshots/feed.png)
 
 ## Getting Started
 
 You can install and configure this Microsub server using Docker or manually.
 
-## Docker Setup
+### Docker Setup
 
 To set up this project with Docker, first install Docker on your local machine.
 
@@ -40,6 +43,10 @@ Next, run the following command:
 
 This will build the microsub image using the Dockerfile in the root directory of this project.
 
+Next, copy the config_example.py file into the config.py file and change the values to match your server:
+
+    cp config_example.py config.py
+
 The Dockerfile automates the project setup process.
 
 Next, run:
@@ -48,52 +55,107 @@ Next, run:
 
 This will run the microsub server on port 5000.
 
-## Mnaual Setup
+### Manual Setup
 
 To use this Microsub server for yourself, please run the following command:
 
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
 
 This command will install the dependencies you need to run the Microsub server.
+
+Next, copy the config_example.py file into the config.py file and change the values to match your server:
+
+    cp config_example.py config.py
 
 Next, you need to set up the database for the server. You can do this using the following command:
 
     python3 seed.py
 
-Now that you have set up the datasbase, you are ready to run the Microsub server.
+Now that you have set up the database, you are ready to run the Microsub server.
 
 Execute this command to run the server:
 
-    python3 microsub.py
-
-## Dependencies
-
-This project relies on the following libraries:
-
-- BeautifulSoup (bs4)
-- mf2py
-- feedparser
-- flask-indieauth
+    python3 wsgi.py
 
 ## File Definitions
 
 Here is the structure of this project:
 
-- static/ - Static assets
-- templates/ - HTML / Jinja2 templates for the project
-- config.py - Contains configuration variables required to run the proejct
-- actions.py - Contains the functions that execute actions described in the Microsub specification
-- indieauth.py - Copied from [Marty McGuire's Flask IndieAuth project](https://github.com/martymcguire/Flask-IndieAuth/blob/master/flask_indieauth.py) with a small modification to support browser authentication via an IndieAuth token stored in session[]. Most credit goes to him for the code in the file.
-- microsub.py - The web server code
-- poll_feeds.py - Polls RSS and microformats h-feeds and retrieves data to add to a user timeline
+    ── Dockerfile
+    ├── LICENSE.md
+    ├── README.md
+    ├── actions # implementations of the actions defined in the Microsub specification
+    │   ├── change_to_json.py
+    │   ├── channels.py
+    │   ├── following.py
+    │   ├── preview.py
+    │   ├── react.py
+    │   ├── search.py
+    │   ├── timeline.py
+    │   └── user_ops.py
+    ├── authentication # functions to handle authentication and authorization
+    │   ├── auth.py
+    │   └── check_token.py
+    ├── client # views used to read and manage feeds
+    │   └── client_views.py
+    ├── config.py # configuration file required for the project to run
+    ├── feeds # code to transform three different types of feed into a jf2 object, consumed by the server
+    │   ├── hfeed.py
+    │   ├── json_feed.py
+    │   ├── read_later.py
+    │   └── xml_feed.py
+    ├── legacy # old code not currently in use
+    │   └── dates.py
+    ├── logs
+    ├── main.py # the main microsub server that responds to queries at /microsub
+    ├── poll_feeds.py
+    ├── requirements.txt
+    ├── requirements_dev.txt
+    ├── seed.py
+    ├── server # code that powers feed management and the back-end server
+    │   ├── server_views.py
+    │   └── websub.py
+    ├── static # all static files used in the project
+    │   ├── css
+    │   │   └── styles.css
+    │   ├── emojis.json
+    │   ├── favicon.ico
+    │   ├── icons
+    │   ├── images
+    │   │   └── wood.avif
+    │   ├── js
+    │   │   ├── editor.js # js to load the post editor form
+    │   │   └── reader.js # js to enhance reading capabilities, including reactions
+    │   ├── manifest.json
+    │   └── robots.txt
+    ├── templates # all the HTML templates for the project
+    │   ├── 404.html
+    │   ├── auth.html
+    │   ├── base.html
+    │   ├── client # HTML used by the client
+    │   │   ├── discover.html
+    │   │   ├── feed_item.html
+    │   │   ├── preview.html
+    │   │   ├── read_article.html
+    │   │   ├── reader.html
+    │   │   ├── search.html
+    │   │   └── settings.html
+    │   ├── index.html
+    │   ├── server # HTML used by the server management client
+    │   │   ├── dashboard.html
+    │   │   └── following.html
+    │   ├── setup.html
+    │   └── show_error.html
+    ├── tox.ini
+    └── wsgi.py
 
-## Muted Users Support
+This tree was generated using the following command:
 
-This endpoint does not yet provide support for muting users. This feature is partially implemented in the codebase but not yet stable.
+    tree -I '*.pyc|*.png|*.svg|*.log|__*'
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE).
+This project is licensed under an [MIT license](LICENSE).
 
 ## Acknowledgements
 

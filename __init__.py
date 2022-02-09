@@ -35,10 +35,7 @@ def handle_error(request, session, error_code):
     else:
         all_channels = []
 
-    if error_code == 404:
-        template = "404.html"
-    else:
-        template = "500.html"
+    template = "404.html"
 
     return (
         render_template(
@@ -62,7 +59,7 @@ def create_app():
     app.permanent_session_lifetime = timedelta(days=120)
 
     # blueprint for non-auth parts of app
-    from main import main as main_blueprint
+    from server.main import main as main_blueprint
 
     app.register_blueprint(main_blueprint)
 
@@ -114,10 +111,6 @@ def create_app():
     @app.route("/manifest.json")
     def web_app_manifest():
         return send_from_directory("static", "manifest.json")
-
-    @app.route("/reader.js")
-    def reader_js_file():
-        return send_from_directory("static", "reader.js")
 
     @app.route("/assets/<path:path>")
     def assets(path):

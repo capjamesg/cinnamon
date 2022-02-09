@@ -2,6 +2,7 @@ import base64
 import hashlib
 import random
 import string
+import requests
 
 import indieweb_utils
 from flask import Blueprint, flash, redirect, render_template, request, session
@@ -42,6 +43,16 @@ def indieauth_callback_handler_view():
     session["scopes"] = response.get("scope", "")
 
     session.permanent = True
+
+    # get media endpoint url
+    try:
+        req = requests.get(
+            session.get("token_endpoint"),
+            headers={"Authorization": "Bearer " + session.get("access_token")},
+        )
+        session["media_endpoint"] = req.json().get("media_endpoint")
+    except requests.exceptions.RequestException:
+        session["media_endpoint"] = None
 
     return redirect("/")
 

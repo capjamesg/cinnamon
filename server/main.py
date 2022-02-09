@@ -137,12 +137,8 @@ def home():
     if not action:
         return jsonify({"error": "No action specified."}), 400
 
-    if request.method == "GET":
-        print('cc')
-        process_get_request(request, action, identifier, channel)
-    elif request.method == "POST":
-        print('sdsdsd')
-        process_post_request(request, action, method)
+    process_get_request(request, action, identifier, channel)
+    process_post_request(request, action, method)
 
     return (
         jsonify(

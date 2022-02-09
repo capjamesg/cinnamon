@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session
 
 from authentication.check_token import verify as check_token
-from config import MEDIA_ENDPOINT, TWITTER_BEARER_TOKEN
+from config import TWITTER_BEARER_TOKEN
 from feeds import read_later
 
 client = Blueprint("client", __name__)
@@ -426,7 +426,7 @@ def make_micropub_media_request():
     file = request.files["file"]
 
     photo_r = requests.post(
-        MEDIA_ENDPOINT,
+        session.get("media_endpoint"),
         files={"file": (file.filename, file.read(), "image/jpeg")},
         headers=headers,
     )
