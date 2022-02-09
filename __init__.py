@@ -108,6 +108,10 @@ def create_app():
     def favicon():
         return send_from_directory(app.static_folder, "favicon.ico")
 
+    @app.route("/emojis.json")
+    def emojis():
+        return send_from_directory("static", "emojis.json")
+
     @app.route("/manifest.json")
     def web_app_manifest():
         return send_from_directory("static", "manifest.json")

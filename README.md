@@ -21,13 +21,13 @@ This project is in active development. The entire Microsub specification is not 
 
 ## Screenshots
 
-### Subscription Management (Server)
+## Desktop
 
-![Microsub channel list](screenshots/screenshot.png)
+![Microsub desktop feed](screenshots/feed.png)
 
-### Feed Reader (Client)
+## Mobile
 
-![Microsub feed](screenshots/feed.png)
+![Microsub mobile feed](screenshots/feed.png)
 
 ## Getting Started
 
