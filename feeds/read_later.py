@@ -5,6 +5,7 @@ import sqlite3
 import indieweb_utils
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse as parse_url
 
 
 def save_read_later_to_database(record: dict) -> None:
@@ -45,6 +46,8 @@ def save_read_later_to_database(record: dict) -> None:
 def get_read_later_photo(record: dict, soup: BeautifulSoup, url: str) -> dict:
     # we will remove header and nav tags so that we are more likely to find a "featured image" for the post
     # remove <header> tags
+    parsed_url = parse_url(url)
+
     for header in soup.find_all("header"):
         header.decompose()
 
@@ -60,7 +63,7 @@ def get_read_later_photo(record: dict, soup: BeautifulSoup, url: str) -> dict:
 
     if len(all_images) > 0:
         record["photo"] = indieweb_utils.canonicalize_url(
-            all_images[0]["src"], url.split("/")[2], all_images[0]["src"]
+            all_images[0]["src"], parsed_url.netloc, all_images[0]["src"]
         )
 
 
@@ -73,6 +76,8 @@ def read_later(url: str) -> None:
     :return: None
     :rtype: None
     """
+    parsed_url = parse_url(url)
+    
     try:
         r = requests.get(url, timeout=5, allow_redirects=True)
     except requests.exceptions.RequestException:
@@ -107,7 +112,7 @@ def read_later(url: str) -> None:
 
     if og_image:
         record["photo"] = indieweb_utils.canonicalize_url(
-            og_image["content"], url.split("/")[2], og_image["content"]
+            og_image["content"], parsed_url.netloc, og_image["content"]
         )
 
     if not record.get("photo"):

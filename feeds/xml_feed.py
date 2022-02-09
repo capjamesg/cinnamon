@@ -1,8 +1,10 @@
 import datetime
+from unicodedata import name
 
 import indieweb_utils
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse as parse_url
 
 
 def get_published_date(entry: dict) -> str:
@@ -95,9 +97,12 @@ def process_media_content(entry: dict, result: dict, link: str) -> dict:
         if media.get("url") is None:
             continue
 
-        if media.get("url").startswith("https://www.youtube.com") or media.get(
-            "url"
-        ).startswith("http://www.youtube.com"):
+        parsed_url = parse_url(media.get("url"))
+
+        # get domain name
+        domain = parsed_url.netloc
+
+        if domain == "youtube.com":
             new_url = media["url"].replace("/v/", "/embed/")
             media["url"] = new_url
 
@@ -124,6 +129,7 @@ def process_media_content(entry: dict, result: dict, link: str) -> dict:
 def get_featured_photo(result: dict, url: str, parse_post: BeautifulSoup) -> dict:
     # we will remove header and nav tags so that we are more likely to find a "featured image" for the post
     # remove <header> tags
+    parsed_url = parse_url(url)
     for header in parse_post.find_all("header"):
         header.decompose()
 
@@ -139,7 +145,7 @@ def get_featured_photo(result: dict, url: str, parse_post: BeautifulSoup) -> dic
 
     if len(all_images) > 0:
         result["photo"] = indieweb_utils.canonicalize_url(
-            all_images[0]["src"], url.split("/")[2], all_images[0]["src"]
+            all_images[0]["src"], parsed_url.netloc, all_images[0]["src"]
         )
 
     return result
@@ -158,6 +164,8 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
     :return: The processed entry.
     :rtype: dict
     """
+    parsed_url = parse_url(url)
+
     if entry.get("author"):
         author = {"type": "card", "name": entry.author, "url": entry.author_detail}
     elif feed.get("author"):
@@ -191,7 +199,7 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
 
     if favicon:
         author["photo"] = indieweb_utils.canonicalize_url(
-            favicon["href"], url.split("/")[2], favicon["href"]
+            favicon["href"], parsed_url.netloc, favicon["href"]
         )
 
     content = get_content(entry)

@@ -511,7 +511,7 @@ def make__context_request():
         url, twitter_bearer_token=TWITTER_BEARER_TOKEN
     )
 
-    return h_entry
+    return jsonify(h_entry), 200
 
 
 @client.route("/search")

@@ -6,6 +6,7 @@ import indieweb_utils
 import requests
 from bs4 import BeautifulSoup
 from flask import escape, jsonify, request
+from urllib.parse import urlparse as parse_url
 
 from config import URL
 
@@ -63,10 +64,8 @@ def create_follow(request: request) -> dict:
         title = url
         favicon = ""
 
-        # get favicon
-
         home_page_request = requests.get(
-            url.split("/")[0] + "//" + url.split("/")[2]
+            indieweb_utils.canonicalize_url(url, url)
         ).text
 
         home_page = BeautifulSoup(home_page_request, "lxml")
@@ -108,9 +107,11 @@ def create_follow(request: request) -> dict:
 def get_feed_icon(home_page: BeautifulSoup, url: str) -> str:
     favicon = home_page.find("link", rel="shortcut icon")
 
+    url_domain = parse_url(url).netloc
+
     if favicon:
         favicon = indieweb_utils.canonicalize_url(
-            favicon.get("href"), url.split("/")[2], url
+            favicon.get("href"), url_domain, url
         )
     else:
         favicon = ""
@@ -120,7 +121,7 @@ def get_feed_icon(home_page: BeautifulSoup, url: str) -> str:
 
         if favicon:
             favicon = indieweb_utils.canonicalize_url(
-                favicon.get("href"), url.split("/")[2], url
+                favicon.get("href"), url_domain, url
             )
 
     if favicon:

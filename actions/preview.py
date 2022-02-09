@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from flask import jsonify, request
 
 from feeds import hfeed, json_feed, xml_feed
+from urllib.parse import urlparse as parse_url
 
 
 def process_h_feed_preview(
@@ -83,8 +84,9 @@ def preview(request: request) -> dict:
     feed = {"url": url, "feed_type": content_type}
 
     # get homepage favicon
-    url_domain = url.split("/")[2]
-    url_protocol = url.split("/")[0]
+    parsed_url = parse_url(url)
+    url_protocol = parsed_url.scheme
+    url_domain = parsed_url.netloc
 
     url_to_check = url_protocol + "//" + url_domain
 

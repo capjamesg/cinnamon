@@ -3,30 +3,35 @@ import datetime
 import indieweb_utils
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
+from urllib.parse import urlparse as parse_url
 
 
 def process_json_feed_author(item: dict, feed: dict, result: dict) -> dict:
+    domain_name = parse_url(item.get("url")).netloc
+
     if feed.get("author") and not item.get("author"):
         result["author"] = {"type": "card", "name": feed.get("author").get("name")}
         if feed.get("home_page_url"):
             result["author"]["url"] = indieweb_utils.canonicalize_url(
                 feed.get("home_page_url"),
-                item.get("url").split("/")[2],
+                domain_name,
                 feed.get("home_page_url"),
             )
         else:
             result["author"]["url"] = indieweb_utils.canonicalize_url(
                 feed.get("feed_url"),
-                item.get("url").split("/")[2],
+                domain_name,
                 feed.get("feed_url"),
             )
     elif item.get("author") is not None and item["author"].get("url"):
+        author_url_domain = parse_url(item["author"].get("url")).netloc
+
         result["author"] = {
             "type": "card",
             "name": item.get("author").get("name"),
             "url": indieweb_utils.canonicalize_url(
                 item["author"].get("url"),
-                item["author"].get("url").split("/")[2],
+                author_url_domain,
                 item["author"].get("url"),
             ),
         }
@@ -34,12 +39,14 @@ def process_json_feed_author(item: dict, feed: dict, result: dict) -> dict:
         if item["author"].get("avatar"):
             result["author"]["photo"] = item["author"].get("avatar")
     else:
+        author_url_domain = parse_url(item["author"].get("url")).netloc
+
         result["author"] = {
             "type": "card",
             "name": feed.get("title"),
             "url": indieweb_utils.canonicalize_url(
                 item["author"].get("url"),
-                item["author"].get("url").split("/")[2],
+                author_url_domain,
                 item["author"].get("url"),
             ),
         }
@@ -64,10 +71,11 @@ def process_attachments(item: dict, result: dict) -> dict:
 
 
 def process_json_feed(item: dict, feed: dict) -> dict:
+    parsed_url = parse_url(item.get("url"))
     result = {
         "type": "entry",
         "url": indieweb_utils.canonicalize_url(
-            item.get("url"), item.get("url").split("/")[2], item.get("url")
+            item.get("url"), parsed_url.netloc, item.get("url")
         ),
     }
 

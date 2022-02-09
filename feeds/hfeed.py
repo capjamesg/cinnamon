@@ -6,18 +6,21 @@ import string
 import indieweb_utils
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
+from urllib.parse import urlparse as parse_url
 
 
 def process_hfeed_author(
     jf2: dict, url: str, child: dict, hcard: dict, feed_title: str, feed_icon: str
 ) -> dict:
+    domain_name = parse_url(url).netloc
+
     if hcard:
         jf2["author"] = {
             "type": "card",
             "name": hcard[0]["properties"]["name"][0],
             "url": indieweb_utils.canonicalize_url(
                 hcard[0]["properties"]["url"][0],
-                url.split("/")[2],
+                domain_name,
                 child["properties"]["url"][0],
             ),
         }
@@ -25,7 +28,7 @@ def process_hfeed_author(
         if hcard[0]["properties"].get("photo"):
             jf2["photo"] = indieweb_utils.canonicalize_url(
                 hcard[0]["properties"]["photo"][0],
-                url.split("/")[2],
+                domain_name,
                 child["properties"]["url"][0],
             )
 
@@ -47,7 +50,7 @@ def process_hfeed_author(
                 "name": h_card["properties"]["name"][0],
                 "url": indieweb_utils.canonicalize_url(
                     h_card["properties"]["url"][0],
-                    url.split("/")[2],
+                    domain_name,
                     child["properties"]["url"][0],
                 ),
             }
@@ -55,7 +58,7 @@ def process_hfeed_author(
             if h_card["properties"].get("photo"):
                 jf2["photo"] = indieweb_utils.canonicalize_url(
                     h_card["properties"]["photo"][0],
-                    url.split("/")[2],
+                    domain_name,
                     child["properties"]["url"][0],
                 )
     elif feed_title is not None:
@@ -63,7 +66,7 @@ def process_hfeed_author(
             "type": "card",
             "name": feed_title,
             "url": indieweb_utils.canonicalize_url(
-                url, url.split("/")[2], child["properties"]["url"][0]
+                url, domain_name, child["properties"]["url"][0]
             ),
         }
 
@@ -102,10 +105,13 @@ def get_name_and_content(child: dict, jf2: dict, url: str) -> dict:
 def process_hfeed(
     child, hcard, channel_uid, url, feed_id, feed_title=None, feed_icon=None
 ):
+    parsed_url = parse_url(url)
+    domain_name = parsed_url.netloc
+
     jf2 = {
         "url": indieweb_utils.canonicalize_url(
             child["properties"]["url"][0],
-            url.split("/")[2],
+            domain_name,
             child["properties"]["url"][0],
         ),
     }
@@ -123,14 +129,14 @@ def process_hfeed(
     if child["properties"].get("photo"):
         jf2["photo"] = indieweb_utils.canonicalize_url(
             child["properties"].get("photo")[0],
-            url.split("/")[2],
+            domain_name,
             child["properties"]["url"][0],
         )
 
     if child["properties"].get("video"):
         video_url = indieweb_utils.canonicalize_url(
             child["properties"].get("video")[0],
-            url.split("/")[2],
+            domain_name,
             child["properties"]["url"][0],
         )
         jf2["video"] = [{"content_type": "", "url": video_url}]
