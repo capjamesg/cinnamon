@@ -23,11 +23,11 @@ This project is in active development. The entire Microsub specification is not 
 
 ## Desktop
 
-![Microsub desktop feed](screenshots/feed.png)
+![Microsub desktop feed](screenshots/desktop.png)
 
 ## Mobile
 
-![Microsub mobile feed](screenshots/feed.png)
+![Microsub mobile feed](screenshots/mobile.png)
 
 ## Getting Started
 
