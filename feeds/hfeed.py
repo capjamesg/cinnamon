@@ -8,22 +8,9 @@ from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
 
-def process_hfeed(
-    child, hcard, channel_uid, url, feed_id, feed_title=None, feed_icon=None
-):
-    jf2 = {
-        "url": indieweb_utils.canonicalize_url(
-            child["properties"]["url"][0],
-            url.split("/")[2],
-            child["properties"]["url"][0],
-        ),
-    }
-
-    if child["properties"].get("content"):
-        jf2["type"] = indieweb_utils.get_post_type(child)
-    else:
-        jf2["type"] = "article"
-
+def process_hfeed_author(
+    jf2: dict, url: str, child: dict, hcard: dict, feed_title: str, feed_icon: str
+) -> dict:
     if hcard:
         jf2["author"] = {
             "type": "card",
@@ -35,8 +22,13 @@ def process_hfeed(
             ),
         }
 
-        # if hcard[0]["properties"].get("photo"):
-        #     jf2["photo"] = indieweb_utils.canonicalize_url(hcard[0]["properties"]["photo"][0], url.split("/")[2], child["properties"]["url"][0])
+        if hcard[0]["properties"].get("photo"):
+            jf2["photo"] = indieweb_utils.canonicalize_url(
+                hcard[0]["properties"]["photo"][0],
+                url.split("/")[2],
+                child["properties"]["url"][0],
+            )
+
     elif child["properties"].get("author") is not None and isinstance(
         child["properties"].get("author"), dict
     ):
@@ -66,7 +58,7 @@ def process_hfeed(
                     url.split("/")[2],
                     child["properties"]["url"][0],
                 )
-    elif feed_title != None:
+    elif feed_title is not None:
         jf2["author"] = {
             "type": "card",
             "name": feed_title,
@@ -75,8 +67,55 @@ def process_hfeed(
             ),
         }
 
-        if feed_icon != None:
+        if feed_icon is not None:
             jf2["author"]["photo"] = feed_icon
+
+    return jf2
+
+
+def get_name_and_content(child: dict, jf2: dict, url: str) -> dict:
+    if child["properties"].get("name"):
+        jf2["title"] = child["properties"].get("name")[0]
+    elif jf2.get("author") and jf2["author"]["name"]:
+        jf2["title"] = f"Post by {jf2['author']['name']}"
+    else:
+        jf2["title"] = f"Post by {url.split('/')[2]}"
+
+    if child["properties"].get("content"):
+        jf2["content"] = {
+            "html": child["properties"].get("content")[0]["html"],
+            "text": BeautifulSoup(
+                child["properties"].get("content")[0]["value"], "lxml"
+            ).get_text(separator="\n"),
+        }
+    elif child["properties"].get("summary"):
+        jf2["content"] = {
+            "text": BeautifulSoup(
+                child["properties"].get("summary")[0], "lxml"
+            ).get_text(separator="\n"),
+            "html": child["properties"].get("summary")[0],
+        }
+
+    return jf2
+
+
+def process_hfeed(
+    child, hcard, channel_uid, url, feed_id, feed_title=None, feed_icon=None
+):
+    jf2 = {
+        "url": indieweb_utils.canonicalize_url(
+            child["properties"]["url"][0],
+            url.split("/")[2],
+            child["properties"]["url"][0],
+        ),
+    }
+
+    if child["properties"].get("content"):
+        jf2["type"] = indieweb_utils.get_post_type(child)
+    else:
+        jf2["type"] = "article"
+
+    jf2 = process_hfeed_author(jf2, url, child, hcard, feed_title, feed_icon)
 
     if not child.get("properties"):
         return
@@ -99,35 +138,7 @@ def process_hfeed(
     if child["properties"].get("category"):
         jf2["category"] = child["properties"].get("category")[0]
 
-    if child["properties"].get("name"):
-        jf2["title"] = child["properties"].get("name")[0]
-    elif jf2.get("author") and jf2["author"]["name"]:
-        jf2["title"] = f"Post by {jf2['author']['name']}"
-    else:
-        jf2["title"] = f"Post by {url.split('/')[2]}"
-
-    if child["properties"].get("content"):
-        jf2["content"] = {
-            "html": child["properties"].get("content")[0]["html"],
-            "text": BeautifulSoup(
-                child["properties"].get("content")[0]["value"], "lxml"
-            ).get_text(separator="\n"),
-        }
-    elif child["properties"].get("summary"):
-        jf2["content"] = {
-            "text": BeautifulSoup(
-                child["properties"].get("summary")[0], "lxml"
-            ).get_text(separator="\n"),
-            "html": child["properties"].get("summary")[0],
-        }
-    # this is non standard but supported by jvt.me, whose bookmarks I would like to see properly in my reader
-    elif child["properties"].get("bridgy-twitter-content"):
-        jf2["content"] = {
-            "text": BeautifulSoup(
-                child["properties"].get("bridgy-twitter-content")[0], "lxml"
-            ).get_text(separator="\n"),
-            "html": child["properties"].get("bridgy-twitter-content")[0],
-        }
+    jf2 = get_name_and_content(child, jf2, url)
 
     wm_properties = ["in-reply-to", "like-of", "bookmark-of", "repost-of"]
 

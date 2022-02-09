@@ -360,9 +360,25 @@ select {
 #mobile_navigation, .mobile_close, .mobile {
 	display: none;
 }
-@media only screen and (max-width: 900px) {
+.post_container_footer {
+	display: flex;
+}
+@media only screen and (max-width: 1000px) {
 	article img, .blogList img {
 		width: 100% !important;
+	}
+	.post_container_footer {
+		display: block;
+		text-align: center;
+	}
+	.post_container_footer .flex_right_home {
+		flex: none;
+	}
+	.post_container_footer button {
+		margin-top: 10px;
+	}
+	.post_container_footer .reaction, .post_container_footer .reaction-no-link {
+		margin-bottom: 0;
 	}
 	.flex_left_home {
 		flex: none;

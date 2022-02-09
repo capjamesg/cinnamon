@@ -14,7 +14,7 @@ The Microsub server currently supports:
 - Unsubscribing from a feed
 - Marking entries in a feed view as read
 
-This project is in active development. The entire Micropub specification is not yet incorporated into this project.
+This project is in active development. The entire Microsub specification is not yet incorporated into this project.
 
 ## Screenshots
 
@@ -98,6 +98,8 @@ This project is licensed under the [MIT license](LICENSE).
 ## Acknowledgements
 
 The author of this project would like to thank the [Feather](https://github.com/feathericons/feather) open source icon set for creating an open repository of icons. This project uses a few icons from Feather in the mobile view.
+
+This project uses the "[Complete list of github markdown emoji markup](https://gist.github.com/rxaviers/7360908)" Gist for its emoji autocomplete dictionary.
 
 ## Maintainers
 

@@ -10,9 +10,9 @@ import string
 import feedparser
 import mf2py
 import requests
+from dates import find_poll_cadence
 
 from config import PROJECT_DIRECTORY, WEBHOOK_CHANNEL, WEBHOOK_TOKEN
-from dates import find_poll_cadence
 from feeds import hfeed, json_feed, xml_feed
 
 logging.basicConfig(
@@ -32,17 +32,204 @@ if os.path.isfile(PROJECT_DIRECTORY.rstrip("/") + "/feed_items.json"):
     os.remove(PROJECT_DIRECTORY.rstrip("/") + "/feed_items.json")
 
 
+def handle_xml_feed(channel_uid, url, feed_id, etag):
+    feed = feedparser.parse(url)
+    print("entries found: " + str(len(feed.entries)))
+    logging.debug("entries found: " + str(len(feed.entries)))
+
+    validate_entry_count(feed.entries, url, feed_id)
+
+    dates = []
+
+    for entry in feed.entries[:10]:
+        result, published = xml_feed.process_xml_feed(entry, feed, url)
+
+        ten_random_letters = "".join(
+            random.choice(string.ascii_lowercase) for _ in range(10)
+        )
+
+        record = {
+            "channel_uid": channel_uid,
+            "result": json.dumps(result),
+            "published": published,
+            "unread": "unread",
+            "url": result["url"],
+            "uid": ten_random_letters,
+            "hidden": 0,
+            "feed_id": feed_id,
+            "etag": etag,
+            "feed_url": url,
+        }
+
+        dates.append(published)
+
+        with open(PROJECT_DIRECTORY + "/feed_items.json", "a+") as file:
+            file.write(json.dumps(record) + "\n")
+
+    poll_cadence = find_poll_cadence(dates)
+
+    poll_cadences.append((poll_cadence, url))
+
+
+def handle_json_feed(channel_uid, url, feed_id, etag, s):
+    try:
+        feed = requests.get(url)
+    except requests.exceptions.RequestException:
+        return
+
+    if feed.status_code != 200:
+        return
+
+    # get etag header
+    etag = feed.headers.get("etag", "")
+
+    if etag != "" and etag == s[2]:
+        logging.debug(f"{url} has not changed since last poll, skipping")
+        return
+
+    feed = feed.json()
+
+    dates = []
+
+    print("entries found: " + str(len(feed.get("items", []))))
+
+    validate_entry_count(feed.get("items", []), url, feed_id)
+
+    for entry in feed.get("items", []):
+        result, published = json_feed.process_json_feed(entry, feed)
+
+        if result is None:
+            continue
+
+        ten_random_letters = "".join(
+            random.choice(string.ascii_lowercase) for _ in range(10)
+        )
+
+        record = {
+            "channel_uid": channel_uid,
+            "result": json.dumps(result),
+            "published": published,
+            "unread": "unread",
+            "url": result["url"],
+            "uid": ten_random_letters,
+            "hidden": 0,
+            "feed_id": feed_id,
+            "etag": etag,
+            "feed_url": url,
+        }
+
+        with open(PROJECT_DIRECTORY + "/feed_items.json", "a+") as file:
+            file.write(json.dumps(record) + "\n")
+
+        dates.append(published)
+
+    poll_cadence = find_poll_cadence(dates)
+
+    poll_cadences.append((poll_cadence, url))
+
+
+def handle_hfeed(channel_uid, url, feed_id, etag):
+    session = requests.Session()
+    session.max_redirects = 2
+
+    accept_headers = {
+        "Accept": "text/html",
+    }
+
+    try:
+        r = session.get(url, allow_redirects=True, timeout=10, headers=accept_headers)
+    except requests.exceptions.RequestException:
+        return None
+
+    mf2_raw = mf2py.parse(r.text)
+
+    hcard = [item for item in mf2_raw["items"] if item["type"][0] == "h-card"]
+
+    h_feed = [
+        item
+        for item in mf2_raw["items"]
+        if item["type"] and item["type"][0] == "h-feed"
+    ]
+
+    feed_title = None
+    feed_icon = None
+
+    dates = []
+
+    if len(h_feed) > 0:
+        feed = h_feed[0]["children"]
+        feed_title = h_feed[0]["properties"].get("name")
+
+        if feed_title:
+            feed_title = feed_title[0]
+
+        feed_icon = h_feed[0]["properties"].get("icon")
+
+        if feed_icon:
+            feed_icon = feed_icon[0]
+        feed = [item for item in feed if item["type"] == ["h-entry"]]
+    else:
+        # get all non h-card items
+        # this will let the program parse non h-entry feeds such as h-event feeds
+        feed = [
+            item
+            for item in mf2_raw["items"]
+            if item["type"] and item["type"][0] != ["h-card"]
+        ]
+
+        if len(feed) == 0:
+            return None
+
+    print("entries found: " + str(len(feed)))
+
+    validate_entry_count(feed, url, feed_id)
+
+    for child in feed[:10]:
+        result = hfeed.process_hfeed(
+            child, hcard, channel_uid, url, feed_id, feed_title
+        )
+
+        ten_random_letters = "".join(
+            random.choice(string.ascii_lowercase) for _ in range(10)
+        )
+
+        record = {
+            "channel_uid": channel_uid,
+            "result": json.dumps(result),
+            "published": result["published"],
+            "unread": "unread",
+            "url": result["url"],
+            "uid": ten_random_letters,
+            "hidden": 0,
+            "feed_id": feed_id,
+            "etag": etag,
+            "feed_url": url,
+        }
+
+        with open(PROJECT_DIRECTORY + "/feed_items.json", "a+") as file:
+            file.write(json.dumps(record) + "\n")
+
+        dates.append(result["published"])
+
+    poll_cadence = find_poll_cadence(dates)
+
+    poll_cadences.append((poll_cadence, url))
+
+
 def validate_entry_count(entries, feed_url, feed_id):
     length = len(entries)
 
     if length < 3:
         published = datetime.datetime.now().strftime("%Y%m%d")
 
+        message = f"""{feed_url} feed does not have any posts.
+                    Please check that the feed URL is working correctly."""
+
         jf2 = {
             "type": "entry",
             "content": {
-                "text": f"{feed_url} feed does not have any posts. Please check that the feed URL is working correctly.",
-                "html": f"{feed_url} feed does not have any posts. Please check that the feed URL is working correctly.",
+                "text": message,
+                "html": message,
             },
             "published": published,
             "title": f"{feed_url} feed does not have any posts",
@@ -77,10 +264,8 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
     try:
         r = session.head(url, allow_redirects=True, timeout=10)
-    except:
+    except requests.exceptions.RequestException:
         return
-
-    print(url)
 
     # get content type of url
     if r.headers.get("content-type"):
@@ -113,175 +298,12 @@ def extract_feed_items(s, url, channel_uid, feed_id):
     logging.debug("polling " + url)
 
     if "xml" in content_type or content_type == "binary/octet-stream":
-        feed = feedparser.parse(url)
-        print(feed.entries)
-        print("entries found: " + str(len(feed.entries)))
-        logging.debug("entries found: " + str(len(feed.entries)))
-
-        validate_entry_count(feed.entries, url, feed_id)
-
-        dates = []
-
-        for entry in feed.entries[:10]:
-            result, published = xml_feed.process_xml_feed(entry, feed, url)
-
-            ten_random_letters = "".join(
-                random.choice(string.ascii_lowercase) for _ in range(10)
-            )
-
-            record = {
-                "channel_uid": channel_uid,
-                "result": json.dumps(result),
-                "published": published,
-                "unread": "unread",
-                "url": result["url"],
-                "uid": ten_random_letters,
-                "hidden": 0,
-                "feed_id": feed_id,
-                "etag": etag,
-                "feed_url": url,
-            }
-
-            dates.append(published)
-
-            with open(PROJECT_DIRECTORY + "/feed_items.json", "a+") as file:
-                file.write(json.dumps(record) + "\n")
-
-        poll_cadence = find_poll_cadence(dates)
-
-        poll_cadences.append((poll_cadence, url))
+        handle_xml_feed(channel_uid, url, feed_id, etag)
 
     elif "application/json" in content_type:
-        try:
-            feed = requests.get(url)
-        except:
-            return
-
-        if feed.status_code != 200:
-            return
-
-        # get etag header
-        etag = feed.headers.get("etag", "")
-
-        if etag != "" and etag == s[2]:
-            logging.debug(f"{url} has not changed since last poll, skipping")
-            return
-
-        feed = feed.json()
-
-        dates = []
-
-        print("entries found: " + str(len(feed.get("items", []))))
-
-        validate_entry_count(feed.get("items", []), url, feed_id)
-
-        for entry in feed.get("items", []):
-            result, published = json_feed.process_json_feed(entry, feed)
-
-            if result != None:
-                ten_random_letters = "".join(
-                    random.choice(string.ascii_lowercase) for _ in range(10)
-                )
-
-                record = {
-                    "channel_uid": channel_uid,
-                    "result": json.dumps(result),
-                    "published": published,
-                    "unread": "unread",
-                    "url": result["url"],
-                    "uid": ten_random_letters,
-                    "hidden": 0,
-                    "feed_id": feed_id,
-                    "etag": etag,
-                    "feed_url": url,
-                }
-
-                dates.append(published)
-
-        poll_cadence = find_poll_cadence(dates)
-
-        poll_cadences.append((poll_cadence, url))
-
+        handle_json_feed(channel_uid, url, feed_id, etag, s)
     else:
-        session = requests.Session()
-        session.max_redirects = 2
-
-        accept_headers = {
-            "Accept": "text/html",
-        }
-
-        try:
-            r = session.get(
-                url, allow_redirects=True, timeout=10, headers=accept_headers
-            )
-        except:
-            return None
-
-        mf2_raw = mf2py.parse(r.text)
-
-        hcard = [item for item in mf2_raw["items"] if item["type"][0] == "h-card"]
-
-        h_feed = [
-            item
-            for item in mf2_raw["items"]
-            if item["type"] and item["type"][0] == "h-feed"
-        ]
-
-        feed_title = None
-        feed_icon = None
-
-        if len(h_feed) > 0:
-            feed = h_feed[0]["children"]
-            feed_title = h_feed[0]["properties"].get("name")
-
-            if feed_title:
-                feed_title = feed_title[0]
-
-            feed_icon = h_feed[0]["properties"].get("icon")
-
-            if feed_icon:
-                feed_icon = feed_icon[0]
-            feed = [item for item in feed if item["type"] == ["h-entry"]]
-        else:
-            # get all non h-card items
-            # this will let the program parse non h-entry feeds such as h-event feeds
-            feed = [
-                item
-                for item in mf2_raw["items"]
-                if item["type"] and item["type"][0] != ["h-card"]
-            ]
-
-            if len(feed) == 0:
-                return None
-
-        print("entries found: " + str(len(feed)))
-
-        validate_entry_count(feed, url, feed_id)
-
-        for child in feed[:10]:
-            result = hfeed.process_hfeed(
-                child, hcard, channel_uid, url, feed_id, feed_title
-            )
-
-            ten_random_letters = "".join(
-                random.choice(string.ascii_lowercase) for _ in range(10)
-            )
-
-            record = {
-                "channel_uid": channel_uid,
-                "result": json.dumps(result),
-                "published": result["published"],
-                "unread": "unread",
-                "url": result["url"],
-                "uid": ten_random_letters,
-                "hidden": 0,
-                "feed_id": feed_id,
-                "etag": etag,
-                "feed_url": url,
-            }
-
-            with open(PROJECT_DIRECTORY + "/feed_items.json", "a+") as file:
-                file.write(json.dumps(record) + "\n")
+        handle_hfeed(channel_uid, url, feed_id, etag)
 
 
 def poll_feeds():
@@ -310,31 +332,24 @@ def poll_feeds():
             channel_uids = []
             tasks = []
 
-            subscriptions = [
-                [
-                    "https://webmention.jamesg.blog/rss?key=capjamesgwebmentionendpoint555",
-                    "",
-                    "",
-                    "",
-                ]
-            ]
-
             for s in subscriptions:
-                if s[0] != None:
-                    url = s[0]
-                    feed_id = s[3]
+                if s[0] is None:
+                    continue
 
-                    # get channel uid
-                    try:
-                        channel_uid = cursor.execute(
-                            "SELECT uid FROM channels WHERE uid = ?;", (s[1],)
-                        ).fetchone()
-                        if channel_uid:
-                            channel_uids.append(channel_uid[0])
-                    except Exception as e:
-                        print(e)
-                        logging.debug("channel uid not found")
-                        # continue
+                url = s[0]
+                feed_id = s[3]
+
+                # get channel uid
+                try:
+                    channel_uid = cursor.execute(
+                        "SELECT uid FROM channels WHERE uid = ?;", (s[1],)
+                    ).fetchone()
+                    if channel_uid:
+                        channel_uids.append(channel_uid[0])
+                except Exception as e:
+                    print(e)
+                    logging.debug("channel uid not found")
+                    # continue
 
                 tasks.append(
                     executor.submit(extract_feed_items, s, url, channel_uid, feed_id)
@@ -347,6 +362,61 @@ def poll_feeds():
                     print(e)
 
     logging.debug("polled all subscriptions")
+
+
+def write_record_to_database(line, cursor, last_id):
+    record = json.loads(line)
+
+    logging.debug("Adding: " + record["url"])
+
+    # check if url in db
+    in_db = cursor.execute(
+        "SELECT * FROM timeline WHERE url = ?", (record["url"],)
+    ).fetchall()
+
+    if len(in_db) > 0:
+        return
+
+    if type(record["channel_uid"]) == list:
+        record["channel_uid"] = record["channel_uid"][0]
+
+    if record["channel_uid"] == WEBHOOK_CHANNEL and WEBHOOK_TOKEN != "":
+        record_jf2 = json.loads(record["result"])
+        # send notification to calibot that a new post has been found
+        data = {
+            "message": "{} ({}) has been published in the {} channel.".format(
+                record_jf2["title"],
+                record_jf2["url"],
+                record["channel_uid"],
+            )
+        }
+
+        headers = {"Authorization": "Bearer " + WEBHOOK_TOKEN}
+
+        requests.post("https://cali.jamesg.blog/webhook", data=data, headers=headers)
+
+    cursor.execute(
+        """INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+        (
+            record["channel_uid"],
+            record["result"],
+            record["published"],
+            record["unread"],
+            record["url"],
+            record["uid"],
+            record["hidden"],
+            record["feed_id"],
+            last_id,
+        ),
+    )
+
+    last_id += 1
+
+    # update following to add new etag so we can track modifications to a feed
+    cursor.execute(
+        "UPDATE following SET etag = ? WHERE url = ?;",
+        (record["etag"], record["feed_url"]),
+    )
 
 
 def add_feed_items_to_database():
@@ -365,66 +435,13 @@ def add_feed_items_to_database():
 
             last_id = cursor.execute("SELECT MAX(id) FROM timeline;").fetchone()
 
-            if last_id[0] != None:
+            if last_id[0] is not None:
                 last_id = last_id[0] + 1
             else:
                 last_id = 0
 
             for line in f:
-                record = json.loads(line)
-
-                logging.debug("Adding: " + record["url"])
-
-                # check if url in db
-                in_db = cursor.execute(
-                    "SELECT * FROM timeline WHERE url = ?", (record["url"],)
-                ).fetchall()
-
-                if len(in_db) > 0:
-                    continue
-
-                if type(record["channel_uid"]) == list:
-                    record["channel_uid"] = record["channel_uid"][0]
-
-                if record["channel_uid"] == WEBHOOK_CHANNEL and WEBHOOK_TOKEN != "":
-                    record_jf2 = json.loads(record["result"])
-                    # send notification to calibot that a new post has been found
-                    data = {
-                        "message": "{} ({}) has been published in the {} channel.".format(
-                            record_jf2["title"],
-                            record_jf2["url"],
-                            record["channel_uid"],
-                        )
-                    }
-
-                    headers = {"Authorization": "Bearer " + WEBHOOK_TOKEN}
-
-                    requests.post(
-                        "https://cali.jamesg.blog/webhook", data=data, headers=headers
-                    )
-
-                cursor.execute(
-                    """INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
-                    (
-                        record["channel_uid"],
-                        record["result"],
-                        record["published"],
-                        record["unread"],
-                        record["url"],
-                        record["uid"],
-                        record["hidden"],
-                        record["feed_id"],
-                        last_id,
-                    ),
-                )
-
-                last_id += 1
-
-                # update following to add new etag so we can track modifications to a feed
-                cursor.execute(
-                    "UPDATE following SET etag = ? WHERE url = ?;",
-                    (record["etag"], record["feed_url"]),
-                )
+                write_record_to_database(line, cursor, last_id)
 
 
 if __name__ == "__main__":

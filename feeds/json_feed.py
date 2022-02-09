@@ -5,13 +5,7 @@ from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
 
-def process_json_feed(item, feed):
-    result = {
-        "type": "entry",
-    }
-
-    result["url"] = item.get("url")
-
+def process_json_feed_author(item: dict, feed: dict, result: dict) -> dict:
     if feed.get("author") and not item.get("author"):
         result["author"] = {"type": "card", "name": feed.get("author").get("name")}
         if feed.get("home_page_url"):
@@ -26,7 +20,7 @@ def process_json_feed(item, feed):
                 item.get("url").split("/")[2],
                 feed.get("feed_url"),
             )
-    elif item.get("author") != None and item["author"].get("url"):
+    elif item.get("author") is not None and item["author"].get("url"):
         result["author"] = {
             "type": "card",
             "name": item.get("author").get("name"),
@@ -50,23 +44,42 @@ def process_json_feed(item, feed):
             ),
         }
 
+    return result
+
+
+def process_attachments(item: dict, result: dict) -> dict:
+    for i in item.get("attachments"):
+        if "audio" in i.get("mime_type"):
+            result["audio"] = [
+                {"content_type": i.get("mime_type"), "url": i.get("url")}
+            ]
+            break
+        elif "video" in i.get("mime_type"):
+            result["video"] = [
+                {"content_type": i.get("mime_type"), "url": i.get("url")}
+            ]
+            break
+
+    return result
+
+
+def process_json_feed(item: dict, feed: dict) -> dict:
+    result = {
+        "type": "entry",
+        "url": indieweb_utils.canonicalize_url(
+            item.get("url"), item.get("url").split("/")[2], item.get("url")
+        ),
+    }
+
     if item.get("image"):
         result["photo"] = item.get("image")
+
+    result = process_json_feed_author(item, feed, result)
 
     # get audio or video attachment
     # only collect one because clients will only be expected to render one attachment
     if item.get("attachments"):
-        for i in item.get("attachments"):
-            if "audio" in i.get("mime_type"):
-                result["audio"] = [
-                    {"content_type": i.get("mime_type"), "url": i.get("url")}
-                ]
-                break
-            elif "video" in i.get("mime_type"):
-                result["video"] = [
-                    {"content_type": i.get("mime_type"), "url": i.get("url")}
-                ]
-                break
+        result = process_attachments(item, result)
 
     if item.get("published"):
         parse_date = parse(item["published"])

@@ -64,7 +64,7 @@
                                     <a onclick="event.preventDefault(); send_reaction('bookmark-of', 'bookmark', '${as_json["items"][i]["url"]}', '${as_json["items"][i]["_id"]}')"\
                                     href="{{ session.get('micropub_url') }}/post?type=bookmark&bookmark-of=${as_json["items"][i]["url"]}" class="reaction">🔖</a>
                                     <a href="/reader/{{ page_channel__id }}/delete?entry_id=${as_json["items"][i]["_id"]}" class="reaction">🗑️</a>
-                                    <a onclick="event.preventDefault(); toggle_textbox('${as_json["items"][i]["_id"]}')" href="{{ session.get('micropub_url') }}/post?in-reply-to=${as_json["items"][i]["url"]}" class="reaction">💬</a>
+                                    <a onclick="event.preventDefault(); trigger_modal('${as_json["items"][i]["_id"]}-textbox')" href="{{ session.get('micropub_url') }}/post?in-reply-to=${as_json["items"][i]["url"]}" class="reaction">💬</a>
                                 {% endif %}
                                 <a href="${as_json["items"][i]["url"]}" class="reaction-no-link">Read Full Post 📚</a>
                             </p>

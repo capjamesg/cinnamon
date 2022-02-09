@@ -5,7 +5,7 @@ import requests
 from dateutil import parser
 from flask import Flask, render_template, request, send_from_directory, session
 
-from check_token import verify
+from authentication.check_token import verify
 from config import SENTRY_DSN, SENTRY_SERVER_NAME
 
 # set up sentry for error handling
@@ -18,6 +18,33 @@ if SENTRY_DSN != "":
         integrations=[FlaskIntegration()],
         traces_sample_rate=1.0,
         server_name=SENTRY_SERVER_NAME,
+    )
+
+
+def handle_error(request, session, error_code):
+    auth_result = verify(request.headers, session)
+
+    if auth_result:
+        headers = {"Authorization": session["access_token"]}
+
+        channel_req = requests.get(
+            session.get("server_url") + "?action=channels", headers=headers
+        )
+
+        all_channels = channel_req.json()["channels"]
+    else:
+        all_channels = []
+
+    if error_code == 404:
+        template = "404.html"
+    else:
+        template = "500.html"
+
+    return (
+        render_template(
+            template, title="Error", error=error_code, channels=all_channels
+        ),
+        500,
     )
 
 
@@ -39,13 +66,21 @@ def create_app():
 
     app.register_blueprint(main_blueprint)
 
-    from client import client as client_blueprint
+    from client.client_views import client as client_blueprint
 
     app.register_blueprint(client_blueprint)
 
-    from auth import auth as auth_blueprint
+    from authentication.auth import auth as auth_blueprint
 
     app.register_blueprint(auth_blueprint)
+
+    from server.websub import websub as websub_blueprint
+
+    app.register_blueprint(websub_blueprint)
+
+    from server.server_views import server_views as server_views_blueprint
+
+    app.register_blueprint(server_views_blueprint)
 
     # filter used to parse dates
     # source: https://stackoverflow.com/questions/4830535/how-do-i-format-a-date-in-jinja2
@@ -58,67 +93,15 @@ def create_app():
 
     @app.errorhandler(404)
     def page_not_found(e):
-        auth_result = verify(request.headers, session)
-
-        if auth_result:
-            headers = {"Authorization": session["access_token"]}
-
-            channel_req = requests.get(
-                session.get("server_url") + "?action=channels", headers=headers
-            )
-
-            all_channels = channel_req.json()["channels"]
-        else:
-            all_channels = []
-
-        return (
-            render_template(
-                "404.html", title="Page not found", error=404, channels=all_channels
-            ),
-            404,
-        )
+        return handle_error(request, session, 400)
 
     @app.errorhandler(405)
     def method_not_allowed(e):
-        auth_result = verify(request.headers, session)
-
-        if auth_result:
-            headers = {"Authorization": session["access_token"]}
-
-            channel_req = requests.get(
-                session.get("server_url") + "?action=channels", headers=headers
-            )
-
-            all_channels = channel_req.json()["channels"]
-        else:
-            all_channels = []
-        return (
-            render_template(
-                "404.html", title="Method not allowed", error=405, channels=all_channels
-            ),
-            405,
-        )
+        return handle_error(request, session, 405)
 
     @app.errorhandler(500)
-    def server_error(e):
-        auth_result = verify(request.headers, session)
-
-        if auth_result:
-            headers = {"Authorization": session["access_token"]}
-
-            channel_req = requests.get(
-                session.get("server_url") + "?action=channels", headers=headers
-            )
-
-            all_channels = channel_req.json()["channels"]
-        else:
-            all_channels = []
-        return (
-            render_template(
-                "404.html", title="Server error", error=500, channels=all_channels
-            ),
-            500,
-        )
+    def server_error():
+        handle_error(request, session, 500)
 
     @app.route("/robots.txt")
     def robots():
@@ -127,6 +110,14 @@ def create_app():
     @app.route("/favicon.ico")
     def favicon():
         return send_from_directory(app.static_folder, "favicon.ico")
+
+    @app.route("/manifest.json")
+    def web_app_manifest():
+        return send_from_directory("static", "manifest.json")
+
+    @app.route("/reader.js")
+    def reader_js_file():
+        return send_from_directory("static", "reader.js")
 
     @app.route("/assets/<path:path>")
     def assets(path):

@@ -104,7 +104,7 @@
         {% endif %}
         {% if session.get("me") %}
         <ul id="desktop_navigation">
-          <li><a href="#" onclick="subscribe_modal()" class="subscribe_button">Subscribe</a></li>
+          <li><a href="#" onclick="trigger_modal('subscribe-modal')" class="subscribe_button">Subscribe</a></li>
           <li><a href="/following">🧑‍🤝‍🧑 Following</a></li>
           <li><a href="/lists">📚 Lists</a></li>
           <li><a href="/search">🔎 Search</a></li>
@@ -112,7 +112,7 @@
           <li><a href="/settings">👤 {{ session.get("me").replace("https://", "").strip("/") }}</a></li>
           <li><a href="/logout">🔒 Logout</a></li>
         </ul>
-        <p id="mobile_navigation"><img src="https://jamesg.blog/assets/coffeeshop.jpg" height="40" width="40" onclick="show_settings()" /></p>
+        <p id="mobile_navigation"><img src="https://jamesg.blog/assets/coffeeshop.jpg" height="40" width="40" onclick="trigger_modal('settings')" /></p>
         {% else %}
         <ul>
           <li><a href="/setup">Setup</a></li>
