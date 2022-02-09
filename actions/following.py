@@ -10,7 +10,7 @@ from urllib.parse import urlparse as parse_url
 
 from config import CLIENT_ID
 
-def get_follow(channel: str, request: dict) -> dict:
+def get_follow(channel: str) -> dict:
     connection = sqlite3.connect("microsub.db")
 
     if not channel:

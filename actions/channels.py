@@ -7,7 +7,7 @@ from flask import jsonify, request
 from .change_to_json import change_to_json
 
 
-def get_channels(request: request) -> dict:
+def get_channels() -> dict:
     connection = sqlite3.connect("microsub.db")
 
     with connection:

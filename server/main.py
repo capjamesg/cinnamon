@@ -34,11 +34,11 @@ def process_get_request(request: request, action: str, identifier: str, channel:
     elif action == "timeline" and identifier:
         return get_post(request)
     elif action == "follow":
-        return get_follow(channel, request)
+        return get_follow(channel)
     elif action == "mute":
         return get_muted(request)
     elif action == "channels":
-        return get_channels(request)
+        return get_channels()
     elif action == "search" and not channel:
         return search_for_feeds(request)
     elif action == "search" and channel:
@@ -137,8 +137,12 @@ def home():
     if not action:
         return jsonify({"error": "No action specified."}), 400
 
-    process_get_request(request, action, identifier, channel)
-    process_post_request(request, action, method)
+    print(action)
+
+    if request.method == "GET":
+        return process_get_request(request, action, identifier, channel)
+    elif request.method == "POST":
+        return process_post_request(request, action, method)
 
     return (
         jsonify(
