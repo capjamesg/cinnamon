@@ -21,11 +21,11 @@ This project is in active development. The entire Microsub specification is not 
 
 ## Screenshots
 
-## Desktop
+### Desktop
 
 ![Microsub desktop feed](screenshots/desktop.png)
 
-## Mobile
+### Mobile
 
 ![Microsub mobile feed](screenshots/mobile.png)
 
