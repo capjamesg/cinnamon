@@ -335,7 +335,7 @@ def poll_feeds():
             (cadence,),
         ).fetchall()
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
             channel_uids = []
             tasks = []
 
@@ -367,7 +367,7 @@ def poll_feeds():
                     task.result()
                 except Exception as e:
                     print(e)
-                    raise Exception
+                    continue
 
     print("polled all subscriptions")
 

@@ -167,7 +167,7 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
     """
     parsed_url = parse_url(url)
 
-    if not entry.link:
+    if not entry or not entry.get("link"):
         return None, None
 
     if entry.get("author"):
