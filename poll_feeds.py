@@ -12,11 +12,10 @@ import mf2py
 import requests
 from dates import find_poll_cadence
 
-from config import PROJECT_DIRECTORY, WEBHOOK_CHANNEL, WEBHOOK_TOKEN
+from config import PROJECT_DIRECTORY, WEBHOOK_CHANNEL, WEBHOOK_TOKEN, WEBHOOK_URL
 from feeds import hfeed, json_feed, xml_feed
 
 logging.basicConfig(
-    level=logging.DEBUG,
     filename=f"logs/{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.log",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -32,10 +31,15 @@ if os.path.isfile(PROJECT_DIRECTORY.rstrip("/") + "/feed_items.json"):
     os.remove(PROJECT_DIRECTORY.rstrip("/") + "/feed_items.json")
 
 
-def handle_xml_feed(channel_uid, url, feed_id, etag):
-    feed = feedparser.parse(url)
+def handle_xml_feed(channel_uid: str, url: str, feed_id: str, etag: str) -> None:
+    try:
+        feed = requests.get(url)
+    except requests.exceptions.RequestException:
+        return
+
+    feed = feedparser.parse(feed.text)
+
     print("entries found: " + str(len(feed.entries)))
-    logging.debug("entries found: " + str(len(feed.entries)))
 
     validate_entry_count(feed.entries, url, feed_id)
 
@@ -43,6 +47,9 @@ def handle_xml_feed(channel_uid, url, feed_id, etag):
 
     for entry in feed.entries[:10]:
         result, published = xml_feed.process_xml_feed(entry, feed, url)
+
+        if result == None:
+            continue
 
         ten_random_letters = "".join(
             random.choice(string.ascii_lowercase) for _ in range(10)
@@ -71,7 +78,7 @@ def handle_xml_feed(channel_uid, url, feed_id, etag):
     poll_cadences.append((poll_cadence, url))
 
 
-def handle_json_feed(channel_uid, url, feed_id, etag, s):
+def handle_json_feed(channel_uid: str, url: str, feed_id: str, etag: str, s: list) -> None:
     try:
         feed = requests.get(url)
     except requests.exceptions.RequestException:
@@ -84,7 +91,7 @@ def handle_json_feed(channel_uid, url, feed_id, etag, s):
     etag = feed.headers.get("etag", "")
 
     if etag != "" and etag == s[2]:
-        logging.debug(f"{url} has not changed since last poll, skipping")
+        print(f"{url} has not changed since last poll, skipping")
         return
 
     feed = feed.json()
@@ -156,7 +163,7 @@ def handle_hfeed(channel_uid, url, feed_id, etag):
 
     dates = []
 
-    if len(h_feed) > 0:
+    if len(h_feed) > 0 and h_feed[0].get("children"):
         feed = h_feed[0]["children"]
         feed_title = h_feed[0]["properties"].get("name")
 
@@ -188,6 +195,9 @@ def handle_hfeed(channel_uid, url, feed_id, etag):
         result = hfeed.process_hfeed(
             child, hcard, channel_uid, url, feed_id, feed_title
         )
+
+        if result == {}:
+            continue
 
         ten_random_letters = "".join(
             random.choice(string.ascii_lowercase) for _ in range(10)
@@ -280,7 +290,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         etag = ""
 
     if etag != "" and etag == s[2]:
-        logging.debug(f"{url} has not changed since last poll, skipping")
+        print(f"{url} has not changed since last poll, skipping")
         return None
 
     # get last modified date of url
@@ -292,14 +302,11 @@ def extract_feed_items(s, url, channel_uid, feed_id):
     if last_modified != "" and datetime.datetime.strptime(
         last_modified, "%a, %d %b %Y %H:%M:%S %Z"
     ) < datetime.datetime.now() - datetime.timedelta(hours=12):
-        logging.debug(f"{url} has not been modified in the last 12 hours, skipping")
-        return None
-
-    logging.debug("polling " + url)
+        print(f"{url} has not been modified in the last 12 hours, skipping")
+        return
 
     if "xml" in content_type or content_type == "binary/octet-stream":
         handle_xml_feed(channel_uid, url, feed_id, etag)
-
     elif "application/json" in content_type:
         handle_json_feed(channel_uid, url, feed_id, etag, s)
     else:
@@ -348,7 +355,7 @@ def poll_feeds():
                         channel_uids.append(channel_uid[0])
                 except Exception as e:
                     print(e)
-                    logging.debug("channel uid not found")
+                    print("channel uid not found")
                     # continue
 
                 tasks.append(
@@ -360,14 +367,15 @@ def poll_feeds():
                     task.result()
                 except Exception as e:
                     print(e)
+                    raise Exception
 
-    logging.debug("polled all subscriptions")
+    print("polled all subscriptions")
 
 
 def write_record_to_database(line, cursor, last_id):
     record = json.loads(line)
 
-    logging.debug("Adding: " + record["url"])
+    print("Adding: " + record["url"])
 
     # check if url in db
     in_db = cursor.execute(
@@ -393,7 +401,10 @@ def write_record_to_database(line, cursor, last_id):
 
         headers = {"Authorization": "Bearer " + WEBHOOK_TOKEN}
 
-        requests.post("https://cali.jamesg.blog/webhook", data=data, headers=headers)
+        try:
+            requests.post(WEBHOOK_URL, data=data, headers=headers)
+        except requests.exceptions.RequestException:
+            print("error sending webhook")
 
     cursor.execute(
         """INSERT INTO timeline VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
@@ -420,7 +431,7 @@ def write_record_to_database(line, cursor, last_id):
 
 
 def add_feed_items_to_database():
-    logging.debug("adding feed items to database")
+    print("adding feed items to database")
 
     with open(PROJECT_DIRECTORY.rstrip("/") + "/feed_items.json", "r") as f:
         connection = sqlite3.connect(PROJECT_DIRECTORY.rstrip("/") + "/microsub.db")
@@ -442,6 +453,7 @@ def add_feed_items_to_database():
 
             for line in f:
                 write_record_to_database(line, cursor, last_id)
+                last_id += 1
 
 
 if __name__ == "__main__":

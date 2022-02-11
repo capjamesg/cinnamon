@@ -108,6 +108,9 @@ def process_hfeed(
     parsed_url = parse_url(url)
     domain_name = parsed_url.netloc
 
+    if not child.get("properties") or not child["properties"].get("url"):
+        return {}
+
     jf2 = {
         "url": indieweb_utils.canonicalize_url(
             child["properties"]["url"][0],
@@ -122,9 +125,6 @@ def process_hfeed(
         jf2["type"] = "article"
 
     jf2 = process_hfeed_author(jf2, url, child, hcard, feed_title, feed_icon)
-
-    if not child.get("properties"):
-        return
 
     if child["properties"].get("photo"):
         jf2["photo"] = indieweb_utils.canonicalize_url(

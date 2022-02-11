@@ -23,7 +23,10 @@ def find_poll_cadence(dates):
 
         average_interval.append(day_delta + hour_delta)
 
-    last_five_average = sum(average_interval[:5]) / len(average_interval[:5])
+    if len(average_interval[:5]) > 0 and sum(average_interval[:5]) > 0:
+        last_five_average = sum(average_interval[:5]) / len(average_interval[:5])
+    else:
+        last_five_average = 24
 
     if last_five_average < 24:
         update_cadence = "hourly"

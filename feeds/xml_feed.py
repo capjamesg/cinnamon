@@ -26,7 +26,7 @@ def get_published_date(entry: dict) -> str:
         + str(datetime.datetime.now().second).zfill(2)
     )
 
-    published = entry.updated_parsed.tm_year
+    published = str(entry.updated_parsed.tm_year)
     published += month_with_padded_zero
     published += day_with_padded_zero
     published += "T" + hour_minute_second
@@ -144,9 +144,10 @@ def get_featured_photo(result: dict, url: str, parse_post: BeautifulSoup) -> dic
         all_images = [i for i in all_images if "u-photo" not in i.get("class", [])]
 
     if len(all_images) > 0:
-        result["photo"] = indieweb_utils.canonicalize_url(
-            all_images[0]["src"], parsed_url.netloc, all_images[0]["src"]
-        )
+        if all_images[0].get("src"):
+            result["photo"] = indieweb_utils.canonicalize_url(
+                all_images[0]["src"], parsed_url.netloc, all_images[0]["src"]
+            )
 
     return result
 
@@ -165,6 +166,9 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
     :rtype: dict
     """
     parsed_url = parse_url(url)
+
+    if not entry.link:
+        return None, None
 
     if entry.get("author"):
         author = {"type": "card", "name": entry.author, "url": entry.author_detail}
@@ -213,7 +217,7 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
         "content": content,
         "post-type": "entry",
         "title": "",
-        "url": entry.link,
+        "url": entry.link
     }
 
     if entry.get("title"):
