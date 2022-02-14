@@ -1,4 +1,5 @@
 import requests
+from flask import session
 
 from config import ME
 
@@ -16,7 +17,7 @@ def verify(headers, session):
     # )
 
     # if request.status_code != 200 or (
-    #     request.json().get("me") and request.json()["me"] != ME
+    #     request.json().get("me") and request.json()["me"].strip("/") != ME.strip("/")
     # ):
     #     return False
 
