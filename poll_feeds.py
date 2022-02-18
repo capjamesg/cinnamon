@@ -33,7 +33,7 @@ if os.path.isfile(PROJECT_DIRECTORY.rstrip("/") + "/feed_items.json"):
 
 def handle_xml_feed(channel_uid: str, url: str, feed_id: str, etag: str) -> None:
     try:
-        feed = requests.get(url)
+        feed = requests.get(url, timeout=20)
     except requests.exceptions.RequestException:
         return
 
@@ -80,7 +80,7 @@ def handle_xml_feed(channel_uid: str, url: str, feed_id: str, etag: str) -> None
 
 def handle_json_feed(channel_uid: str, url: str, feed_id: str, etag: str, s: list) -> None:
     try:
-        feed = requests.get(url)
+        feed = requests.get(url, timeout=20)
     except requests.exceptions.RequestException:
         return
 
@@ -325,14 +325,13 @@ def poll_feeds():
         # current hour
         current_hour = datetime.datetime.now().hour
 
-        if current_hour == 0:
-            cadence = "daily"
-        else:
-            cadence = "hourly"
+        # if current_hour == 0:
+        #     cadence = "daily"
+        # else:
+        #     cadence = "hourly"
 
         subscriptions = cursor.execute(
-            "SELECT url, channel, etag, id FROM following WHERE blocked = 0 AND poll_cadence = ?;",
-            (cadence,),
+            "SELECT url, channel, etag, id FROM following WHERE blocked = 0"
         ).fetchall()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:

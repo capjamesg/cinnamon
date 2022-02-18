@@ -18,6 +18,13 @@ client = Blueprint("client", __name__)
 
 @client.route("/reader")
 def reader_redirect():
+    session["me"] = "s"
+    session["access_token"] = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtZSI6Imh0dHBzOi8vamFtZXNnLmJsb2ciLCJleHBpcmVzIjoxNjQ0ODU5MTkyLCJjbGllbnRfaWQiOiJodHRwczovL21pY3JvcHViLmphbWVzZy5ibG9nLyIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vbWljcm9wdWIuamFtZXNnLmJsb2cvY2FsbGJhY2siLCJzY29wZSI6ImNyZWF0ZSB1cGRhdGUgZGVsZXRlIHVuZGVsZXRlIG1lZGlhICIsInJlc291cmNlIjoiYWxsIn0.V3dywtAswOtC-mEwAlA3J2QplkQppJpi9Hg04GCyd8s"
+    session["scopes"] = "read write channels"
+    session["media_endpoint"] = "https://micropub.jamesg.blog/media"
+    session["micropub_url"] = "https://micropub.jamesg.blog/micropub"
+    session["server_url"] = "http://0.0.0.0:5000/endpoint"
+    session["token_endpoint"] = "https://auth.jamesg.blog/token"
     return redirect("/reader/all")
 
 

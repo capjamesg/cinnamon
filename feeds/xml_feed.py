@@ -8,15 +8,19 @@ from urllib.parse import urlparse as parse_url
 
 
 def get_published_date(entry: dict) -> str:
-    if entry.get("published"):
+    if entry.get("published_parsed"):
         month_with_padded_zero = str(entry.published_parsed.tm_mon).zfill(2)
         day_with_padded_zero = str(entry.published_parsed.tm_mday).zfill(2)
-    elif entry.get("updated"):
+        published = str(entry.published_parsed.tm_year)
+    elif entry.get("updated_parsed"):
         month_with_padded_zero = str(entry.updated_parsed.tm_mon).zfill(2)
         day_with_padded_zero = str(entry.updated_parsed.tm_mday).zfill(2)
+        published = str(entry.updated_parsed.tm_year)
     else:
         month_with_padded_zero = str(datetime.datetime.now().month).zfill(2)
         day_with_padded_zero = str(datetime.datetime.now().day).zfill(2)
+
+        published = str(datetime.datetime.now().year)
 
     hour_minute_second = (
         str(datetime.datetime.now().hour).zfill(2)
@@ -26,7 +30,6 @@ def get_published_date(entry: dict) -> str:
         + str(datetime.datetime.now().second).zfill(2)
     )
 
-    published = str(entry.updated_parsed.tm_year)
     published += month_with_padded_zero
     published += day_with_padded_zero
     published += "T" + hour_minute_second
@@ -225,7 +228,10 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
     else:
         result["title"] = f"Post by {author.get('name', url.split('/')[2])}"
 
-    retrieve_post = requests.get(entry.link)
+    try:
+        retrieve_post = requests.get(entry.link, timeout=10)
+    except:
+        return None, None
 
     parse_post = BeautifulSoup(retrieve_post.text, "lxml")
 
