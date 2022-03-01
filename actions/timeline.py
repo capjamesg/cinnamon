@@ -18,7 +18,7 @@ def get_timeline(request: request) -> dict:
 
         channel_arg = "channel = ? AND"
         second_channel_arg = "channel = ? AND"
-        channel_tuple = (channel,)
+        channel_tuple = (channel, channel,)
 
         if channel == "all":
             channel_arg = ""
