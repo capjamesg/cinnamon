@@ -4,7 +4,7 @@ import random
 import string
 
 import indieweb_utils
-from bs4 import BeautifulSoup
+from .clean import clean_html_from_entry
 from dateutil.parser import parse
 from urllib.parse import urlparse as parse_url
 
@@ -86,16 +86,12 @@ def get_name_and_content(child: dict, jf2: dict, url: str) -> dict:
 
     if child["properties"].get("content"):
         jf2["content"] = {
-            "html": child["properties"].get("content")[0]["html"],
-            "text": BeautifulSoup(
-                child["properties"].get("content")[0]["value"], "lxml"
-            ).get_text(separator="\n"),
+            "html": clean_html_from_entry(child["properties"].get("content")[0]["html"]),
+            "text": child["properties"].get("content")[0]["value"],
         }
     elif child["properties"].get("summary"):
         jf2["content"] = {
-            "text": BeautifulSoup(
-                child["properties"].get("summary")[0], "lxml"
-            ).get_text(separator="\n"),
+            "text": clean_html_from_entry(child["properties"].get("summary")[0]),
             "html": child["properties"].get("summary")[0],
         }
 

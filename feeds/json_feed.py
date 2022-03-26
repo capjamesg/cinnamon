@@ -4,6 +4,7 @@ import indieweb_utils
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 from urllib.parse import urlparse as parse_url
+from .clean import clean_html_from_entry
 
 
 def process_json_feed_author(item: dict, feed: dict, result: dict) -> dict:
@@ -105,11 +106,9 @@ def process_json_feed(item: dict, feed: dict) -> dict:
 
     result["published"] = date
 
-    parsed_html = BeautifulSoup(item.get("content_html"), "lxml")
-
     if item.get("content_html"):
         result["content"] = {}
-        result["content"]["text"] = parsed_html.get_text(separator="\n")
+        result["content"]["text"] = clean_html_from_entry(item.get("content_html"))
         result["content"]["html"] = item.get("content_html")
 
     if item.get("title"):

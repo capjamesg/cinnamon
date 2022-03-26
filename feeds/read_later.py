@@ -6,6 +6,7 @@ import indieweb_utils
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse as parse_url
+from .clean import clean_html_from_entry
 
 
 def save_read_later_to_database(record: dict) -> None:
@@ -77,7 +78,7 @@ def read_later(url: str) -> None:
     :rtype: None
     """
     parsed_url = parse_url(url)
-    
+
     try:
         r = requests.get(url, timeout=5, allow_redirects=True)
     except requests.exceptions.RequestException:
@@ -94,6 +95,8 @@ def read_later(url: str) -> None:
         content = soup.find(".h-entry").get_text(separator="\n")
     elif soup.find("article"):
         content = soup.find("article").get_text(separator="\n")
+    else:
+        content = clean_html_from_entry(soup)
 
     date = datetime.datetime.now().strftime("%Y%m%d")
 

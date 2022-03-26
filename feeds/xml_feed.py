@@ -5,6 +5,7 @@ import indieweb_utils
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse as parse_url
+from .clean import clean_html_from_entry
 
 
 def get_published_date(entry: dict) -> str:
@@ -39,20 +40,14 @@ def get_published_date(entry: dict) -> str:
 
 def get_content(entry: dict) -> dict:
     if entry.get("content"):
-        soup = BeautifulSoup(entry.content[0].value, "lxml")
-
         content = {
-            "text": soup.get_text(separator="\n"),
+            "text": clean_html_from_entry(entry.content[0].value),
             "html": entry.content[0].value,
         }
     elif entry.get("summary"):
-        soup = BeautifulSoup(entry.summary, "lxml")
-
-        content = {"text": soup.get_text(separator="\n"), "html": entry.summary}
+        content = {"text": clean_html_from_entry(entry.summary), "html": entry.summary}
     elif entry.get("description"):
-        soup = BeautifulSoup(entry.description, "lxml")
-
-        content = {"text": soup.get_text(separator="\n"), "html": entry.description}
+        content = {"text": clean_html_from_entry(entry.description), "html": entry.description}
     elif entry.get("title") and entry.get("link"):
         # get feed author
         content = {
@@ -220,7 +215,7 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
         "content": content,
         "post-type": "entry",
         "title": "",
-        "url": entry.link
+        "url": entry.link,
     }
 
     if entry.get("title"):
