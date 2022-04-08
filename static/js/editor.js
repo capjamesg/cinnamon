@@ -11,6 +11,8 @@ var emojis = [];
 var showing_person_tags = [];
 var showing_hash_tags = [];
 
+var is_private = false;
+
 function hide_all_forms() {
     var forms = ["#rating_form", "#rsvp_form", "#gif_search_bar", "#reply_to"];
     for (var i = 0; i < forms.length; i++) {

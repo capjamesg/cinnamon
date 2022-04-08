@@ -244,6 +244,7 @@ def react_to_post():
             "type": ["h-entry"],
             "properties": {"content": [content], "category": hashtags},
         }
+
     else:
         request_to_make = {
             "h": "entry",
@@ -254,6 +255,9 @@ def react_to_post():
                 "category": [request.form.get("reaction")],
             },
         }
+
+    if request.form.get("private") and request.form.get("private") == "true":
+        request_to_make["private"] = ["true"]
 
     r = requests.post(
         session.get("micropub_url"), json=request_to_make, headers=headers

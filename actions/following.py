@@ -10,6 +10,7 @@ from urllib.parse import urlparse as parse_url
 
 from config import CLIENT_ID
 
+
 def get_follow(channel: str) -> dict:
     connection = sqlite3.connect("microsub.db")
 
@@ -63,9 +64,7 @@ def create_follow(request: request) -> dict:
         title = url
         favicon = ""
 
-        home_page_request = requests.get(
-            indieweb_utils.canonicalize_url(url, url)
-        ).text
+        home_page_request = requests.get(indieweb_utils.canonicalize_url(url, url)).text
 
         home_page = BeautifulSoup(home_page_request, "lxml")
 
@@ -109,9 +108,7 @@ def get_feed_icon(home_page: BeautifulSoup, url: str) -> str:
     url_domain = parse_url(url).netloc
 
     if favicon:
-        favicon = indieweb_utils.canonicalize_url(
-            favicon.get("href"), url_domain, url
-        )
+        favicon = indieweb_utils.canonicalize_url(favicon.get("href"), url_domain, url)
     else:
         favicon = ""
 
@@ -133,7 +130,7 @@ def get_feed_icon(home_page: BeautifulSoup, url: str) -> str:
             favicon = ""
 
     if not favicon or favicon == "":
-        favicon = "/static/gradient.png"
+        favicon = "/static/image/gradient.png"
 
     return favicon
 

@@ -6,6 +6,9 @@ for (var i = 0; i < js_req.length; i++) {
 
 function trigger_modal(id, is_editor_box = false) {
     var modal = document.getElementById(id);
+    if (id == "private") {
+        is_private = !is_private;
+    }
     if (modal.style.display == "none") {
         if (is_editor_box) {
             hide_all_forms();
@@ -63,7 +66,8 @@ function submit_micropub(id, url) {
             "h": "entry",
             "in-reply-to": url,
             "content": form.value,
-            "uid": id
+            "uid": id,
+            "private": is_private
         })
     }).then(function(response) {
         if (response.ok) {
@@ -125,14 +129,16 @@ function post_note(all_uploaded_photos) {
             "h": "entry",
             "in-reply-to": in_reply_to.value,
             "content": content,
-            "uid": in_reply_to.value
+            "uid": in_reply_to.value,
+            "private": is_private
         });
     } else {
         var url = "/react?is_reply=note";
 
         var post_body = new URLSearchParams({
             "h": "entry",
-            "content": content
+            "content": content,
+            "private": is_private
         })
     }
 

@@ -13,6 +13,7 @@
                         <span onclick="trigger_modal('rating_form', true)" class="reaction">⭐</span>
                         <span onclick="trigger_modal('reply_to', true)" class="reaction">↩️</span>
                         <span onclick="trigger_modal('gif_search_bar', true)" class="reaction">🎥</span>
+                        <span onclick="trigger_modal('private', true)" class="reaction">🔒</span>
                     </p>
                     <div class="flex_right_home">
                         (<span id="character_count">0</span>)
@@ -20,6 +21,7 @@
                     </div>
                     <p id="data_message"></p>
                 </div>
+                <p id="private" style="display: none;">This post will be private.</p>
                 <div aria-labelledby="Post content" id="content" name="content" contenteditable="true" placeholder="Express yourself..." role="textbox"></div>
                 <p id="photos"></p>
                 <input aria-labelledby="In reply to URL" type="text" id="reply_to" placeholder="In reply to" style="display: none;" />

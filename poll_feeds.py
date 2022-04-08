@@ -78,7 +78,9 @@ def handle_xml_feed(channel_uid: str, url: str, feed_id: str, etag: str) -> None
     poll_cadences.append((poll_cadence, url))
 
 
-def handle_json_feed(channel_uid: str, url: str, feed_id: str, etag: str, s: list) -> None:
+def handle_json_feed(
+    channel_uid: str, url: str, feed_id: str, etag: str, s: list
+) -> None:
     try:
         feed = requests.get(url, timeout=20)
     except requests.exceptions.RequestException:
