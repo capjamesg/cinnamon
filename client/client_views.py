@@ -257,7 +257,7 @@ def react_to_post():
         }
 
     if request.form.get("private") and request.form.get("private") == "true":
-        request_to_make["private"] = ["true"]
+        request_to_make["properties"]["private"] = ["true"]
 
     r = requests.post(
         session.get("micropub_url"), json=request_to_make, headers=headers
