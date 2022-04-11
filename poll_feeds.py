@@ -274,10 +274,19 @@ def extract_feed_items(s, url, channel_uid, feed_id):
     session = requests.Session()
     session.max_redirects = 2
 
+    headers = {
+        "If-None-Match": s[2],
+        "If-Modified-Since": s[4],
+    }
+
     try:
-        r = session.head(url, allow_redirects=True, timeout=10)
+        r = session.head(url, allow_redirects=True, timeout=10, headers=headers)
     except requests.exceptions.RequestException:
-        return
+        return [None, None]
+
+    if r.status_code == 304:
+        # nothing has changed, escape
+        return [None, None]
 
     # get content type of url
     if r.headers.get("content-type"):
@@ -293,7 +302,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
 
     if etag != "" and etag == s[2]:
         print(f"{url} has not changed since last poll, skipping")
-        return None
+        return [None, None]
 
     # get last modified date of url
     if r.headers.get("last-modified"):
@@ -305,7 +314,7 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         last_modified, "%a, %d %b %Y %H:%M:%S %Z"
     ) < datetime.datetime.now() - datetime.timedelta(hours=12):
         print(f"{url} has not been modified in the last 12 hours, skipping")
-        return
+        return [None, None]
 
     if "xml" in content_type or content_type == "binary/octet-stream":
         handle_xml_feed(channel_uid, url, feed_id, etag)
@@ -313,6 +322,8 @@ def extract_feed_items(s, url, channel_uid, feed_id):
         handle_json_feed(channel_uid, url, feed_id, etag, s)
     else:
         handle_hfeed(channel_uid, url, feed_id, etag)
+
+    return r.headers.get("Last-Modified", ""), feed_id
 
 
 def poll_feeds():
@@ -324,16 +335,8 @@ def poll_feeds():
         # don't poll feeds that have been blocked
         # see https://indieweb.org/Microsub-spec#Blocking
 
-        # current hour
-        current_hour = datetime.datetime.now().hour
-
-        # if current_hour == 0:
-        #     cadence = "daily"
-        # else:
-        #     cadence = "hourly"
-
         subscriptions = cursor.execute(
-            "SELECT url, channel, etag, id FROM following WHERE blocked = 0"
+            "SELECT url, channel, etag, id, poll_cadence FROM following WHERE blocked = 0"
         ).fetchall()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
@@ -365,7 +368,13 @@ def poll_feeds():
 
             for task in concurrent.futures.as_completed(tasks):
                 try:
-                    task.result()
+                    modified_since, feed_item = task.result()
+
+                    if modified_since is not None:
+                        cursor.execute(
+                            "UPDATE following SET poll_cadence = ? WHERE id = ?;",
+                            (modified_since, feed_item),
+                        )
                 except Exception as e:
                     print(e)
                     continue
