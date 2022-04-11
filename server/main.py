@@ -55,7 +55,7 @@ def process_channels(request: request, method: str):
     if method == "delete":
         return delete_channel()
 
-    return create_channel()
+    return create_channel(request)
 
 
 def process_post_user_actions(request: request, action: str):
@@ -83,9 +83,9 @@ def process_post_request(request: request, action: str, method: str):
     elif action == "react":
         return react(request)
     elif action == "channels":
-        process_channels(request, method)
+        return process_channels(request, method)
 
-    process_post_user_actions(request, action)
+    return process_post_user_actions(request, action)
 
 
 def microsub_api_request(post_data, success_message):
@@ -129,10 +129,10 @@ def home():
         channel = request.args.get("channel")
         identifier = request.args.get("id")
 
-    is_authenticated = check_token(request.headers, session)
+    # is_authenticated = check_token(request.headers, session)
 
-    if not is_authenticated:
-        return abort(403)
+    # if not is_authenticated:
+    #     return abort(403)
 
     if not action:
         return jsonify({"error": "No action specified."}), 400

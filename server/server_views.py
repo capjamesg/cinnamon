@@ -154,9 +154,9 @@ def get_all_feeds():
 
     if request.method == "POST":
         req = {
-            "action": "channels",
+            "action": "follow",
             "channel": "all",
-            "name": request.form.get("name"),
+            "url": request.form.get("url"),
         }
 
         microsub_api_request(

@@ -63,9 +63,9 @@
         {% if channels[1]['uid'] != channel_id %}
         <a href="/reader/{{ page_channel_uid }}/delete?entry_id={{ w['_id'] }}" class="reaction">🗑️</a>
 
-        {% if show_all_content != True and not w['_id'].startswith("http") %}
+        {% if show_all_content != True and not w.get('_id', '').startswith("http") %}
             <a href="/read/{{ w['_id'] }}" class="reaction-no-link">Read Full Post 📚</a>
-        {% elif show_all_content != True and w['_id'].startswith("http") %}
+        {% elif show_all_content != True and w.get('_id', '').startswith("http") %}
             <a href="{{ w['url'] }}" class="reaction-no-link" target="_blank">Read Full Post 📚</a>
         {% endif %}
 

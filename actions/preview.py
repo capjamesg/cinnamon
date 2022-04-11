@@ -12,6 +12,7 @@ from urllib.parse import urlparse as parse_url
 def process_h_feed_preview(
     r: requests.Request, items_to_return: list, url: str
 ) -> list:
+    print(r.headers)
     parsed = mf2py.parse(r.text)
 
     h_card = None
@@ -42,6 +43,8 @@ def get_preview_items(content_type: str, url: str, r: requests.Request) -> list:
 
     if "xml" in content_type or ".xml" in url:
         feed = feedparser.parse(url)
+
+        print(url)
 
         for entry in feed.entries:
             result, _ = xml_feed.process_xml_feed(entry, feed, url)
@@ -79,7 +82,7 @@ def preview(request: request) -> dict:
     else:
         content_type = ""
 
-    items_to_return, content_type = get_preview_items(soup, url, content_type)
+    items_to_return, content_type = get_preview_items(content_type, url, r)
 
     feed = {"url": url, "feed_type": content_type}
 
@@ -88,7 +91,7 @@ def preview(request: request) -> dict:
     url_protocol = parsed_url.scheme
     url_domain = parsed_url.netloc
 
-    url_to_check = url_protocol + "//" + url_domain
+    url_to_check = url_protocol + "://" + url_domain
 
     soup = BeautifulSoup(requests.get(url_to_check).text, "lxml")
 

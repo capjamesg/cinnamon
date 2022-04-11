@@ -380,7 +380,7 @@ def preview_feed():
 
     try:
         microsub_req = requests.post(
-            session.get("server_url"), data=data, headers=headers, timeout=5
+            session.get("server_url"), headers=headers, data=data, timeout=15
         )
 
         feed_data = microsub_req.json()
@@ -391,6 +391,12 @@ def preview_feed():
 
     except requests.exceptions.Timeout:
         flash("The feed preview request timed out.")
+    except Exception as e:
+        print(e)
+        flash("There was an error previewing the feed.")
+        return redirect("/reader/all")
+
+    print(session.get("server_url"))
 
     channel_req = requests.get(
         session.get("server_url") + "?action=channels", headers=headers
@@ -628,7 +634,7 @@ def discover_feed():
         flash("No feed could be found attached to the web page you submitted.")
         return redirect("/following")
 
-    return redirect(f"/preview?url={feeds[0]}")
+    return redirect(f"/preview?url={feeds[0].url}")
 
 
 @client.route("/mute", methods=["POST"])

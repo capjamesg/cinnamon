@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="feed flex_right_home">
+    <ul id="feed_list">
+    <li style="text-align: right;">
+        <div class="post_container_footer">
+            <p class="reaction_set flex_left_home" style="margin-top: 0; width: initial;">
+                <input type="file" id="post_image" style="display: none;">
+                <label for="post_image" class="reaction">📷</label>
+                <span onclick="trigger_modal('rsvp_form', true)" class="reaction">📅</span>
+                <span onclick="trigger_modal('rating_form', true)" class="reaction">⭐</span>
+                <span onclick="trigger_modal('reply_to', true)" class="reaction">↩️</span>
+                <span onclick="trigger_modal('gif_search_bar', true)" class="reaction">🎥</span>
+                <span onclick="trigger_modal('private', true)" class="reaction">🔒</span>
+            </p>
+            <div class="flex_right_home">
+                (<span id="character_count">0</span>)
+                <button id="post_button" style="width: 100px; text-align: center;" onclick="post_note(all_uploaded_photos)">Post</button>
+            </div>
+            <p id="data_message"></p>
+        </div>
+        <p id="private" style="display: none;">This post will be private.</p>
+        <div aria-labelledby="Post content" id="content" name="content" contenteditable="true" placeholder="Express yourself..." role="textbox"></div>
+        <p id="photos"></p>
+        <input aria-labelledby="In reply to URL" type="text" id="reply_to" placeholder="In reply to" style="display: none;" />
+        <div class="post_form rating_form" id="rating_form">
+            <label for="rating">Rating:</label>
+            <input type="number" id="rating" placeholder="Rating" />
+        </div>
+        <div class="post_form rsvp_form" id="rsvp_form">
+            <label for="rsvp">RSVP:</label><br>
+            <select id="rsvp">
+                <option value="" selected>Select</option>
+                <option value="yes">Yes</option>
+                <option value="maybe">Maybe</option>
+                <option value="no">No</option>
+            </select><br>
+        </div>
+        <input aria-labelledby="Search for a GIF" type="text" id="gif_search_bar" placeholder="Search for a GIF" style="display: none;" />
+        <p id="gif_list"></p>
+    </li>
+</ul>
+</section>
+{% endblock %}

@@ -43,6 +43,7 @@ def create_follow(request: request) -> dict:
 
     with connection:
         cursor = connection.cursor()
+        print(request.form)
 
         url = request.form.get("url").strip()
 
