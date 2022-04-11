@@ -76,7 +76,7 @@ def create_follow(request: request) -> dict:
         last_id = cursor.execute("SELECT MAX(id) FROM following").fetchone()
 
         if last_id and last_id[0] is not None:
-            last_id = last_id[0] + 1
+            last_id = int(last_id[0]) + 1
         else:
             last_id = 1
 

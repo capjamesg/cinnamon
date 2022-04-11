@@ -183,27 +183,6 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
             "url": feed.feed.get("link"),
         }
 
-    # get home page
-    # get content type of url
-    session = requests.Session()
-    session.max_redirects = 2
-
-    try:
-        # follow one redirect
-        r = session.get(url, allow_redirects=True, timeout=10)
-    except requests.exceptions.RequestException:
-        return None, None
-
-    soup = BeautifulSoup(r.text, "lxml")
-
-    # get favicon
-    favicon = soup.find("link", rel="shortcut icon")
-
-    if favicon:
-        author["photo"] = indieweb_utils.canonicalize_url(
-            favicon["href"], parsed_url.netloc, favicon["href"]
-        )
-
     content = get_content(entry)
 
     published = get_published_date(entry)
@@ -222,24 +201,6 @@ def process_xml_feed(entry: dict, feed: str, url: str) -> dict:
         result["title"] = entry.title
     else:
         result["title"] = f"Post by {author.get('name', url.split('/')[2])}"
-
-    try:
-        retrieve_post = requests.get(entry.link, timeout=10)
-    except:
-        return None, None
-
-    parse_post = BeautifulSoup(retrieve_post.text, "lxml")
-
-    # get og_image tag
-    og_image = parse_post.find("meta", property="og:image")
-
-    if og_image:
-        result["photo"] = indieweb_utils.canonicalize_url(
-            og_image["content"], url.split("/")[2], og_image["content"]
-        )
-
-    if not result.get("photo"):
-        result = get_featured_photo(result, url, parse_post)
 
     published = published.split("T")[0]
 

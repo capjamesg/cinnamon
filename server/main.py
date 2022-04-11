@@ -129,10 +129,10 @@ def home():
         channel = request.args.get("channel")
         identifier = request.args.get("id")
 
-    # is_authenticated = check_token(request.headers, session)
+    is_authenticated = check_token(request.headers, session)
 
-    # if not is_authenticated:
-    #     return abort(403)
+    if not is_authenticated:
+        return abort(403)
 
     if not action:
         return jsonify({"error": "No action specified."}), 400
