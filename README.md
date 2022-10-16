@@ -155,7 +155,7 @@ This tree was generated using the following command:
 
 ## License
 
-This project is licensed under an [MIT license](LICENSE).
+This project is licensed under an [MIT 0 license](LICENSE).
 
 ## Acknowledgements
 
