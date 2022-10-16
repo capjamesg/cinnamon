@@ -1,6 +1,6 @@
 MIT No Attribution
 
-Copyright <year> <copyright holders>
+Copyright 2022 capjamesg
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this
 software and associated documentation files (the "Software"), to deal in the Software
