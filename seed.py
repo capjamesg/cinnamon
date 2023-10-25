@@ -50,6 +50,7 @@ with connection:
         uid text,
         channel text,
         approved integer
+    )    
     """
     )
 
